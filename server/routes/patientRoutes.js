@@ -1,0 +1,48 @@
+import express from 'express';
+import { body } from 'express-validator';
+import {
+  getPatients,
+  createPatient,
+  getPatient,
+  updatePatient,
+  deletePatient,
+  getQrData,
+} from '../controllers/patientController.js';
+import { protect } from '../middleware/authMiddleware.js';
+
+const router = express.Router();
+
+router.use(protect);
+
+const pinValidation = body('pharmacyPin')
+  .matches(/^\d{4}$/)
+  .withMessage('Pharmacy PIN must be exactly 4 digits');
+
+router.get('/', getPatients);
+router.post(
+  '/',
+  [
+    body('name').trim().notEmpty(),
+    body('dateOfBirth').optional().isISO8601(),
+    body('allergies').optional().isString(),
+    body('notes').optional().isString(),
+    pinValidation,
+  ],
+  createPatient
+);
+router.get('/:id', getPatient);
+router.put(
+  '/:id',
+  [
+    body('name').optional().trim().notEmpty(),
+    body('dateOfBirth').optional().isISO8601(),
+    body('allergies').optional().isString(),
+    body('notes').optional().isString(),
+    body('pharmacyPin').optional().matches(/^\d{4}$/),
+  ],
+  updatePatient
+);
+router.delete('/:id', deletePatient);
+router.get('/:id/qr', getQrData);
+
+export default router;
