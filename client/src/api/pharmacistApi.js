@@ -1,12 +1,10 @@
-import axios from 'axios';
+import axiosInstance from './axiosInstance';
 
-const baseURL = import.meta.env.VITE_API_BASE_URL || '/api';
-
-/** Public endpoints — no auth cookie required */
+/** Public endpoints — no auth required; uses same API base as the rest of the app */
 export function getPharmacistData(qrToken) {
-  return axios.get(`${baseURL}/pharmacist/${qrToken}`).then((r) => r.data);
+  return axiosInstance.get(`/pharmacist/${qrToken}`).then((r) => r.data);
 }
 
 export function dispense(qrToken, body) {
-  return axios.post(`${baseURL}/pharmacist/${qrToken}/dispense`, body).then((r) => r.data);
+  return axiosInstance.post(`/pharmacist/${qrToken}/dispense`, body).then((r) => r.data);
 }

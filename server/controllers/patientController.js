@@ -96,12 +96,17 @@ export const deletePatient = async (req, res, next) => {
   }
 };
 
+function frontendBaseUrl() {
+  const raw = process.env.CLIENT_URL || 'http://localhost:5173';
+  const first = raw.split(',')[0].trim();
+  return first.replace(/\/$/, '');
+}
+
 export const getQrData = async (req, res, next) => {
   try {
     const patient = await ensureOwner(req.params.id, req.user._id);
     if (!patient) return res.status(404).json({ message: 'Patient not found' });
-    const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
-    const qrUrl = `${clientUrl.replace(/\/$/, '')}/pharmacist/${patient.qrToken}`;
+    const qrUrl = `${frontendBaseUrl()}/pharmacist/${patient.qrToken}`;
     res.json({ qrToken: patient.qrToken, qrUrl });
   } catch (err) {
     next(err);
