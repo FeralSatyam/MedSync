@@ -5,6 +5,15 @@
 body {
   margin: 0;
   min-height: 100vh;
+  font-family:
+    Inter,
+    Roboto,
+    'Segoe UI',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Helvetica Neue',
+    Arial,
+    sans-serif;
   @apply bg-slate-50 text-slate-900 antialiased;
 }
 

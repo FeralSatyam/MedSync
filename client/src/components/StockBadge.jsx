@@ -1,7 +1,7 @@
 const colours = {
-  red: 'bg-red-100 text-red-800 border border-red-200',
-  yellow: 'bg-amber-100 text-amber-800 border border-amber-200',
-  green: 'bg-green-100 text-green-800 border border-green-200',
+  red: 'bg-red-50 text-red-700 ring-1 ring-red-200',
+  yellow: 'bg-amber-50 text-amber-700 ring-1 ring-amber-200',
+  green: 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200',
 };
 
 const labels = {
@@ -17,7 +17,7 @@ export default function StockBadge({ status, daysLeft }) {
       : ` · ~${daysLeft} day${daysLeft === 1 ? '' : 's'} left`;
   return (
     <span
-      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${colours[status] || colours.green}`}
+      className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${colours[status] || colours.green}`}
     >
       {labels[status] || 'In stock'}
       {dayLabel}
