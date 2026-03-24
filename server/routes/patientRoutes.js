@@ -24,8 +24,12 @@ router.post(
   [
     body('name').trim().notEmpty(),
     body('dateOfBirth').optional().isISO8601(),
+    body('relation')
+      .trim()
+      .notEmpty()
+      .isIn(['self', 'mother', 'father', 'grandmother', 'grandfather', 'spouse', 'other'])
+      .withMessage('Relation is invalid'),
     body('allergies').optional().isString(),
-    body('notes').optional().isString(),
     pinValidation,
   ],
   createPatient
@@ -36,9 +40,12 @@ router.put(
   [
     body('name').optional().trim().notEmpty(),
     body('dateOfBirth').optional().isISO8601(),
+    body('relation')
+      .optional()
+      .trim()
+      .isIn(['self', 'mother', 'father', 'grandmother', 'grandfather', 'spouse', 'other'])
+      .withMessage('Relation is invalid'),
     body('allergies').optional().isString(),
-    body('notes').optional().isString(),
-    body('pharmacyPin').optional().matches(/^\d{4}$/),
   ],
   updatePatient
 );

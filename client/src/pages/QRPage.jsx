@@ -1,26 +1,35 @@
-import { useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import QRDisplay from '../components/QRDisplay';
-import { getPatient, getQrData } from '../api/patientApi';
+import { QRCodeCanvas } from 'qrcode.react';
+
+import { getPatient } from '../api/patientApi';
+import { useAppStore } from '../store/appStore';
+
+function formatRelation(rel) {
+  if (!rel) return '';
+  return rel.charAt(0).toUpperCase() + rel.slice(1);
+}
 
 export default function QRPage() {
-  const { patientId } = useParams();
+  const navigate = useNavigate();
+  const activePatientId = useAppStore((s) => s.activePatientId);
   const [patient, setPatient] = useState(null);
-  const [qrUrl, setQrUrl] = useState('');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
+      setLoading(true);
       try {
-        const [p, qr] = await Promise.all([getPatient(patientId), getQrData(patientId)]);
-        if (!cancelled) {
-          setPatient(p);
-          setQrUrl(qr.qrUrl);
+        if (!activePatientId) {
+          navigate('/dashboard');
+          return;
         }
+        const data = await getPatient(activePatientId);
+        if (!cancelled) setPatient(data);
       } catch {
-        if (!cancelled) toast.error('Could not load QR');
+        toast.error('Could not load QR');
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -28,38 +37,74 @@ export default function QRPage() {
     return () => {
       cancelled = true;
     };
-  }, [patientId]);
+  }, [activePatientId, navigate]);
 
-  function promptBrightness() {
-    toast('Increase screen brightness for easier scanning at the pharmacy.', { icon: '☀️' });
-  }
+  const qrValue = useMemo(() => {
+    if (!patient?.qrToken) return '';
+    return `${window.location.origin}/pharma/${patient.qrToken}`;
+  }, [patient]);
 
   if (loading || !patient) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-white">
-        <p className="text-slate-600">Loading QR…</p>
+      <div className="flex min-h-screen items-center justify-center bg-bg">
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-border border-t-mint" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-white">
-      <div className="mx-auto flex max-w-lg flex-col items-center px-4 py-12">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-bg px-[24px] py-[36px]">
+      <div
+        className="w-full text-center rounded-[22px] bg-card border border-border p-[34px]"
+        style={{ maxWidth: 350, boxShadow: '0 8px 40px rgba(15,31,61,0.14)' }}
+      >
+        <div className="font-display text-[20px] font-bold text-navy mb-[3px]">{patient.name}</div>
+        <div className="text-[12px] text-muted mb-[24px]">
+          {formatRelation(patient.relation)} · QR Code
+        </div>
+
+        <div className="flex justify-center mb-[20px]">
+          <div style={{ borderRadius: 10, overflow: 'hidden' }}>
+            <QRCodeCanvas
+              value={qrValue}
+              size={200}
+              fgColor="#0f1f3d"
+              bgColor="#ffffff"
+              level="H"
+            />
+          </div>
+        </div>
+
+        <div className="bg-mint-light rounded-[10px] px-[15px] py-[12px] text-[12px] text-navy leading-[1.65] mb-[16px]">
+          The pharmacist scans this QR and instantly sees your full medicine list, exact dosages and doctor's
+          prescription — no verbal communication needed.
+        </div>
+
         <button
           type="button"
-          onClick={promptBrightness}
-          className="mb-6 text-sm text-teal-700 underline"
+          onClick={() => navigate('/dashboard')}
+          className="w-full bg-navy text-white rounded-[10px] px-[11px] py-[11px] mb-[9px] text-[13px] font-medium cursor-pointer hover:bg-navy-mid transition-all"
         >
-          Tip: increase brightness before showing
+          Back to Dashboard
         </button>
-        <QRDisplay value={qrUrl} size={320} subtitle={patient.name} />
-        <p className="mt-6 max-w-sm text-center text-xs text-slate-500 break-all">{qrUrl}</p>
-        <Link
-          to={`/dashboard?patient=${patientId}`}
-          className="mt-10 rounded-lg border border-slate-300 px-4 py-2 text-sm text-slate-700"
+
+        <button
+          type="button"
+          onClick={() => navigate(`/pharma/${patient.qrToken}`)}
+          className="w-full rounded-[10px] border border-border bg-transparent px-[18px] py-[9px] text-[12px] font-medium text-navy flex justify-center items-center gap-[7px] cursor-pointer hover:bg-[#f7f9ff] transition-all"
         >
-          Back to dashboard
-        </Link>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path
+              d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"
+              stroke="#0f1f3d"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            <circle cx="12" cy="12" r="3" stroke="#0f1f3d" strokeWidth="2" />
+          </svg>
+          Preview Pharmacist View
+        </button>
       </div>
     </div>
   );

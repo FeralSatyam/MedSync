@@ -35,6 +35,10 @@ app.use(
   cors({
     origin(origin, callback) {
       if (!origin) return callback(null, true);
+      // Dev convenience: allow any localhost port to avoid CORS issues.
+      if (origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:')) {
+        return callback(null, true);
+      }
       if (allowedOrigins.includes(origin)) return callback(null, origin);
       callback(null, false);
     },
@@ -44,6 +48,7 @@ app.use(
 app.use(morgan('dev'));
 app.use(cookieParser());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 app.use('/api/auth', authRoutes);
 app.use('/api/patients', patientRoutes);

@@ -1,94 +1,87 @@
-import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { useAuthStore } from './store/authStore';
-import ProtectedRoute from './components/ProtectedRoute';
-import Login from './pages/Login';
-import Register from './pages/Register';
-import Dashboard from './pages/Dashboard';
-import PatientProfiles from './pages/PatientProfiles';
-import AddMedicine from './pages/AddMedicine';
-import QRPage from './pages/QRPage';
-import PharmacistView from './pages/PharmacistView';
 
-function HomeRedirect() {
-  const user = useAuthStore((s) => s.user);
-  const hydrated = useAuthStore((s) => s.hydrated);
-  if (!hydrated) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50">
-        <p className="text-slate-600">Loading…</p>
-      </div>
-    );
-  }
-  return <Navigate to={user ? '/dashboard' : '/login'} replace />;
+import LoginPage from './pages/LoginPage';
+import DashboardPage from './pages/DashboardPage';
+import AddMedicinePage from './pages/AddMedicinePage';
+import QRPage from './pages/QRPage';
+import PharmacistPage from './pages/PharmacistPage';
+import ProfilePage from './pages/ProfilePage';
+
+function ProtectedRoute({ children }) {
+  const token = useAuthStore((s) => s.token);
+  return token ? children : <Navigate to="/login" replace />;
 }
 
-function AppShell() {
-  const hydrate = useAuthStore((s) => s.hydrate);
-
-  useEffect(() => {
-    hydrate();
-  }, [hydrate]);
-
+export default function App() {
   return (
-    <>
-      <Toaster position="top-center" />
+    <BrowserRouter>
+      <Toaster
+        position="bottom-right"
+        toastOptions={{
+          style: {
+            fontFamily: '"DM Sans", sans-serif',
+            fontWeight: 500,
+            fontSize: '13px',
+            borderRadius: '10px',
+            padding: '12px 16px',
+          },
+          success: {
+            style: { background: '#0f1f3d', color: '#ffffff' },
+            iconTheme: { primary: '#00c896', secondary: '#ffffff' },
+          },
+          error: {
+            style: { background: '#c0392b', color: '#ffffff' },
+          },
+          duration: 3500,
+        }}
+      />
       <Routes>
-        <Route path="/" element={<HomeRedirect />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/pharma/:qrToken" element={<PharmacistPage />} />
         <Route
           path="/dashboard"
           element={
             <ProtectedRoute>
-              <Dashboard />
+              <DashboardPage />
             </ProtectedRoute>
           }
         />
         <Route
-          path="/patients"
+          path="/add-medicine"
           element={
             <ProtectedRoute>
-              <PatientProfiles />
+              <AddMedicinePage />
             </ProtectedRoute>
           }
         />
         <Route
-          path="/dashboard/add/:patientId"
+          path="/add-medicine/:medicineId"
           element={
             <ProtectedRoute>
-              <AddMedicine />
+              <AddMedicinePage />
             </ProtectedRoute>
           }
         />
         <Route
-          path="/dashboard/medicine/:medicineId/edit"
-          element={
-            <ProtectedRoute>
-              <AddMedicine />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/dashboard/qr/:patientId"
+          path="/qr"
           element={
             <ProtectedRoute>
               <QRPage />
             </ProtectedRoute>
           }
         />
-        <Route path="/pharmacist/:qrToken" element={<PharmacistView />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <ProfilePage />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
-    </>
-  );
-}
-
-export default function App() {
-  return (
-    <BrowserRouter>
-      <AppShell />
     </BrowserRouter>
   );
 }

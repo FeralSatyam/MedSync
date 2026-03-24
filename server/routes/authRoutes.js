@@ -1,7 +1,16 @@
 import express from 'express';
 import { body } from 'express-validator';
 import rateLimit from 'express-rate-limit';
-import { register, login, logout, getMe } from '../controllers/authController.js';
+import {
+  register,
+  login,
+  logout,
+  getMe,
+  updateMe,
+  deleteMe,
+  requestPasswordOtp,
+  resetPasswordWithOtp,
+} from '../controllers/authController.js';
 import { protect } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
@@ -15,7 +24,7 @@ const authLimiter = rateLimit({
 const registerValidation = [
   body('name').trim().notEmpty().withMessage('Name is required'),
   body('email').isEmail().normalizeEmail(),
-  body('password').isLength({ min: 8 }).withMessage('Password must be at least 8 characters'),
+  body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
 ];
 
 const loginValidation = [
@@ -26,6 +35,19 @@ const loginValidation = [
 router.post('/register', authLimiter, registerValidation, register);
 router.post('/login', authLimiter, loginValidation, login);
 router.post('/logout', logout);
+router.post('/forgot-password/request-otp', authLimiter, [body('email').isEmail().normalizeEmail()], requestPasswordOtp);
+router.post(
+  '/forgot-password/reset',
+  authLimiter,
+  [
+    body('email').isEmail().normalizeEmail(),
+    body('otp').isLength({ min: 6, max: 6 }),
+    body('newPassword').isLength({ min: 6 }),
+  ],
+  resetPasswordWithOtp
+);
 router.get('/me', protect, getMe);
+router.put('/me', protect, [body('name').optional().trim().notEmpty(), body('email').optional().isEmail().normalizeEmail()], updateMe);
+router.delete('/me', protect, deleteMe);
 
 export default router;
