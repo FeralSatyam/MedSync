@@ -18,6 +18,10 @@ function createTransporter() {
   });
 }
 
+export function isMailerConfigured() {
+  return Boolean(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS);
+}
+
 export async function sendOtpEmail({ to, otp }) {
   if (!cachedTransporter) cachedTransporter = createTransporter();
   if (!cachedTransporter) {

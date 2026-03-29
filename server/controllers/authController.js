@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken';
 import { validationResult } from 'express-validator';
 import User from '../models/User.js';
-import { sendOtpEmail } from '../utils/mailer.js';
+import { isMailerConfigured, sendOtpEmail } from '../utils/mailer.js';
 
 const signToken = (id) =>
   jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -121,7 +121,20 @@ export const requestPasswordOtp = async (req, res, next) => {
     user.resetOtpExpires = new Date(Date.now() + 10 * 60 * 1000);
     await user.save();
 
-    await sendOtpEmail({ to: user.email, otp });
+    if (isMailerConfigured()) {
+      await sendOtpEmail({ to: user.email, otp });
+    } else if (process.env.NODE_ENV !== 'production') {
+      // Dev fallback so forgot-password flow is testable without SMTP.
+      console.warn(`[DEV OTP] ${user.email} -> ${otp}`);
+      return res.json({
+        success: true,
+        message: 'SMTP not configured. OTP returned for development use.',
+        devOtp: otp,
+      });
+    } else {
+      return res.status(500).json({ message: 'Email service is not configured.' });
+    }
+
     res.json({ success: true, message: 'OTP sent to your email.' });
   } catch (err) {
     next(err);

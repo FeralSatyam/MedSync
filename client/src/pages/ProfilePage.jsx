@@ -12,9 +12,12 @@ export default function ProfilePage() {
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
   const login = useAuthStore((s) => s.login);
+  const token = useAuthStore((s) => s.token);
   const [stats, setStats] = useState({ totalPatients: 0, totalMedicines: 0, activeAlerts: 0 });
   const [name, setName] = useState(user?.name || '');
   const [email, setEmail] = useState(user?.email || '');
+  const [isEditing, setIsEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -44,6 +47,44 @@ export default function ProfilePage() {
     logout();
     localStorage.removeItem('medsync-auth');
     navigate('/login');
+  }
+
+  function startEdit() {
+    setName(user?.name || '');
+    setEmail(user?.email || '');
+    setIsEditing(true);
+  }
+
+  function cancelEdit() {
+    setName(user?.name || '');
+    setEmail(user?.email || '');
+    setIsEditing(false);
+  }
+
+  async function saveProfile() {
+    const trimmedName = name.trim();
+    const trimmedEmail = email.trim().toLowerCase();
+    if (!trimmedName) {
+      toast.error('Name is required');
+      return;
+    }
+    const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail);
+    if (!emailOk) {
+      toast.error('Enter a valid email');
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const res = await updateMe({ name: trimmedName, email: trimmedEmail });
+      login(res.user, token);
+      setIsEditing(false);
+      toast.success('Profile updated');
+    } catch (err) {
+      toast.error(err?.response?.data?.message || 'Update failed');
+    } finally {
+      setSaving(false);
+    }
   }
 
   const initials = (user?.name || 'MS')
@@ -90,35 +131,53 @@ export default function ProfilePage() {
 
       <div className="mt-[20px] bg-card border border-border rounded-[16px] overflow-hidden">
         <div className="px-[18px] py-[15px] border-b border-border">
-          <div className="text-[14px] font-semibold text-navy mb-[8px]">Manage Account</div>
+          <div className="mb-[10px] flex items-center justify-between">
+            <div className="text-[14px] font-semibold text-navy">Manage Account</div>
+            {!isEditing ? (
+              <button
+                type="button"
+                className="rounded-btn border border-border bg-transparent px-[12px] py-[6px] text-[12px] font-semibold text-navy"
+                onClick={startEdit}
+              >
+                Edit Profile
+              </button>
+            ) : null}
+          </div>
           <div className="grid gap-[10px]">
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full rounded-btn border-[1.5px] border-border bg-card px-[15px] py-[11px] text-[14px] text-navy outline-none"
+              disabled={!isEditing}
+              className="w-full rounded-btn border-[1.5px] border-border bg-card px-[15px] py-[11px] text-[14px] text-navy outline-none disabled:bg-[#f8f9fc] disabled:text-muted"
               placeholder="Full name"
             />
             <input
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-btn border-[1.5px] border-border bg-card px-[15px] py-[11px] text-[14px] text-navy outline-none"
+              disabled={!isEditing}
+              className="w-full rounded-btn border-[1.5px] border-border bg-card px-[15px] py-[11px] text-[14px] text-navy outline-none disabled:bg-[#f8f9fc] disabled:text-muted"
               placeholder="Email"
             />
-            <button
-              type="button"
-              className="rounded-btn bg-navy text-white px-[18px] py-[9px] text-[13px] font-semibold cursor-pointer w-fit"
-              onClick={async () => {
-                try {
-                  const res = await updateMe({ name, email });
-                  login(res.user, useAuthStore.getState().token);
-                  toast.success('Profile updated');
-                } catch (err) {
-                  toast.error(err?.response?.data?.message || 'Update failed');
-                }
-              }}
-            >
-              Save changes
-            </button>
+            {isEditing ? (
+              <div className="flex gap-[8px]">
+                <button
+                  type="button"
+                  className="rounded-btn border border-border bg-transparent px-[18px] py-[9px] text-[13px] font-semibold cursor-pointer"
+                  onClick={cancelEdit}
+                  disabled={saving}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="rounded-btn bg-navy text-white px-[18px] py-[9px] text-[13px] font-semibold cursor-pointer w-fit disabled:opacity-60"
+                  onClick={saveProfile}
+                  disabled={saving}
+                >
+                  {saving ? 'Saving...' : 'Save Changes'}
+                </button>
+              </div>
+            ) : null}
           </div>
         </div>
       </div>

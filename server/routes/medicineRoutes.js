@@ -34,7 +34,11 @@ router.get('/patient/:patientId', getMedicinesByPatient);
 function uploadPrescriptionSafe(req, res, next) {
   uploadPrescription.single('prescriptionImage')(req, res, (err) => {
     if (err) {
-      return res.status(400).json({ message: err.message || 'Prescription upload failed' });
+      console.error('[uploadPrescriptionSafe] upload error:', err);
+      return res.status(400).json({
+        message: err?.message || 'Prescription upload failed',
+        code: err?.code || 'UPLOAD_ERROR',
+      });
     }
     next();
   });
