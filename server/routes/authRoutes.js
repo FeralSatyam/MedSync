@@ -10,6 +10,8 @@ import {
   deleteMe,
   requestPasswordOtp,
   resetPasswordWithOtp,
+  sendVerifyOtp,
+  verifyEmail,
 } from '../controllers/authController.js';
 import { protect } from '../middleware/authMiddleware.js';
 
@@ -19,6 +21,12 @@ const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 50,
   message: { message: 'Too many requests from this IP, please try again later.' },
+});
+
+const otpLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5, // max 5 OTP requests per 15 min
+  message: { message: 'Too many OTP requests. Please wait 15 minutes.' },
 });
 
 const registerValidation = [
@@ -49,5 +57,9 @@ router.post(
 router.get('/me', protect, getMe);
 router.put('/me', protect, [body('name').optional().trim().notEmpty(), body('email').optional().isEmail().normalizeEmail()], updateMe);
 router.delete('/me', protect, deleteMe);
+
+// NEW
+router.post('/send-verify-otp', otpLimiter, [body('email').isEmail().normalizeEmail()], sendVerifyOtp);
+router.post('/verify-email', authLimiter, [body('email').isEmail().normalizeEmail(), body('otp').isLength({ min: 6, max: 6 })], verifyEmail);
 
 export default router;

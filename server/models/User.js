@@ -6,8 +6,15 @@ const UserSchema = new mongoose.Schema(
     name: { type: String, required: true, trim: true },
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
     password: { type: String, required: true, minlength: 6 },
+
+    // existing — keep as-is
     resetOtp: { type: String, default: '' },
     resetOtpExpires: { type: Date },
+
+    // NEW — email verification
+    isVerified: { type: Boolean, default: false },
+    verifyOtp: { type: String, default: '' },
+    verifyOtpExpires: { type: Date },
   },
   { timestamps: true }
 );
