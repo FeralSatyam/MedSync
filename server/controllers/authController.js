@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken';
 import { validationResult } from 'express-validator';
 import User from '../models/User.js';
-import { isMailerConfigured, sendOtpEmail } from '../utils/mailer.js';
+import { isMailerConfigured, sendOtpEmail, sendVerifyOtpEmail } from '../utils/mailer.js';
 
 const signToken = (id) =>
   jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -26,13 +26,24 @@ export const register = async (req, res, next) => {
     if (existing) {
       return res.status(400).json({ message: 'Email already registered' });
     }
-    // User model pre-save hook hashes `password`.
     const user = await User.create({ name, email, password });
-    const token = signToken(user._id);
-    res.cookie('token', token, cookieOptions);
+
+    // Auto-send verification OTP right after registration
+    const otp = String(Math.floor(100000 + Math.random() * 900000));
+    user.verifyOtp = otp;
+    user.verifyOtpExpires = new Date(Date.now() + 10 * 60 * 1000);
+    await user.save();
+
+    if (isMailerConfigured()) {
+      await sendVerifyOtpEmail({ to: user.email, otp });
+    } else if (process.env.NODE_ENV !== 'production') {
+      console.warn(`[DEV VERIFY OTP] ${user.email} -> ${otp}`);
+    }
+
+    // Return user but do NOT issue JWT yet — force verification first
     res.status(201).json({
-      user: { id: user._id, name: user.name, email: user.email },
-      token,
+      message: 'Account created. Please verify your email.',
+      email: user.email,
     });
   } catch (err) {
     next(err);
@@ -50,6 +61,16 @@ export const login = async (req, res, next) => {
     if (!user || !(await user.matchPassword(password))) {
       return res.status(401).json({ message: 'Invalid email or password' });
     }
+
+    // Block login if email not verified
+    if (!user.isVerified) {
+      return res.status(403).json({
+        message: 'Please verify your email before logging in.',
+        needsVerification: true,
+        email: user.email,
+      });
+    }
+
     const token = signToken(user._id);
     res.cookie('token', token, cookieOptions);
     res.json({
@@ -81,7 +102,6 @@ export const updateMe = async (req, res, next) => {
     const { name, email } = req.body;
     const user = await User.findById(req.user._id).select('+password');
     if (!user) return res.status(404).json({ message: 'User not found' });
-
     if (email && email !== user.email) {
       const exists = await User.findOne({ email });
       if (exists) return res.status(400).json({ message: 'Email already in use' });
@@ -89,7 +109,6 @@ export const updateMe = async (req, res, next) => {
     }
     if (name) user.name = name;
     await user.save();
-
     res.json({ user: { id: user._id, name: user.name, email: user.email } });
   } catch (err) {
     next(err);
@@ -113,7 +132,6 @@ export const requestPasswordOtp = async (req, res, next) => {
     }
     const { email } = req.body;
     const user = await User.findOne({ email });
-    // Always return success-like response to avoid account enumeration.
     if (!user) return res.json({ success: true, message: 'If the email exists, OTP was sent.' });
 
     const otp = String(Math.floor(100000 + Math.random() * 900000));
@@ -124,7 +142,6 @@ export const requestPasswordOtp = async (req, res, next) => {
     if (isMailerConfigured()) {
       await sendOtpEmail({ to: user.email, otp });
     } else if (process.env.NODE_ENV !== 'production') {
-      // Dev fallback so forgot-password flow is testable without SMTP.
       console.warn(`[DEV OTP] ${user.email} -> ${otp}`);
       return res.json({
         success: true,
@@ -162,6 +179,72 @@ export const resetPasswordWithOtp = async (req, res, next) => {
     await user.save();
 
     res.json({ success: true, message: 'Password has been reset. Please log in.' });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// ─── NEW: Send email verification OTP ────────────────────────────────────────
+export const sendVerifyOtp = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ message: 'Email is required' });
+
+    const user = await User.findOne({ email });
+    if (!user) return res.status(404).json({ message: 'No account found with this email' });
+    if (user.isVerified) return res.status(400).json({ message: 'Email is already verified' });
+
+    const otp = String(Math.floor(100000 + Math.random() * 900000));
+    user.verifyOtp = otp;
+    user.verifyOtpExpires = new Date(Date.now() + 10 * 60 * 1000);
+    await user.save();
+
+    if (isMailerConfigured()) {
+      await sendVerifyOtpEmail({ to: user.email, otp });
+    } else if (process.env.NODE_ENV !== 'production') {
+      console.warn(`[DEV VERIFY OTP] ${user.email} -> ${otp}`);
+      return res.json({ success: true, message: 'Dev mode: OTP logged to console.', devOtp: otp });
+    } else {
+      return res.status(500).json({ message: 'Email service is not configured.' });
+    }
+
+    res.json({ success: true, message: 'Verification OTP sent to your email.' });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// ─── NEW: Verify email with OTP ───────────────────────────────────────────────
+export const verifyEmail = async (req, res, next) => {
+  try {
+    const { email, otp } = req.body;
+    if (!email || !otp) return res.status(400).json({ message: 'Email and OTP are required' });
+
+    const user = await User.findOne({ email });
+    if (!user) return res.status(404).json({ message: 'No account found with this email' });
+    if (user.isVerified) return res.status(400).json({ message: 'Email is already verified' });
+
+    if (user.verifyOtp !== String(otp)) {
+      return res.status(400).json({ message: 'Incorrect OTP. Please try again.' });
+    }
+    if (user.verifyOtpExpires < new Date()) {
+      return res.status(400).json({ message: 'OTP has expired. Please request a new one.' });
+    }
+
+    user.isVerified = true;
+    user.verifyOtp = '';
+    user.verifyOtpExpires = null;
+    await user.save();
+
+    // Issue JWT so user is logged in immediately after verifying
+    const token = signToken(user._id);
+    res.cookie('token', token, cookieOptions);
+    res.json({
+      success: true,
+      message: 'Email verified! Welcome to MedSync.',
+      user: { id: user._id, name: user.name, email: user.email },
+      token,
+    });
   } catch (err) {
     next(err);
   }

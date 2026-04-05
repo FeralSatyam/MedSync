@@ -38,3 +38,10 @@ export async function resetPasswordWithOtp(payload) {
   const { data } = await axiosInstance.post('/auth/forgot-password/reset', payload);
   return data;
 }
+// ADD these two at the bottom of your existing authApi.js
+
+export const sendVerifyOtp = (email) =>
+  axiosInstance.post('/auth/send-verify-otp', { email }).then((r) => r.data);
+
+export const verifyEmail = (email, otp) =>
+  axiosInstance.post('/auth/verify-email', { email, otp }).then((r) => r.data);
