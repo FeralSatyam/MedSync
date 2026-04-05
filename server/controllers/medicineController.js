@@ -2,6 +2,7 @@ import { validationResult } from 'express-validator';
 import Medicine from '../models/Medicine.js';
 import Patient from '../models/Patient.js';
 import cloudinary from '../config/cloudinary.js';
+import { getStockStatus } from '../utils/stockUtils.js';
 
 const ensurePatientOwned = async (patientId, userId) => {
   return Patient.findOne({ _id: patientId, userId });
@@ -19,8 +20,20 @@ export const getMedicinesByPatient = async (req, res, next) => {
     const { patientId } = req.params;
     const patient = await ensurePatientOwned(patientId, req.user._id);
     if (!patient) return res.status(404).json({ message: 'Patient not found' });
-    const medicines = await Medicine.find({ patientId, isActive: true }).sort({ name: 1 });
-    res.json(medicines);
+    const medicines = await Medicine.find({ patientId, isActive: true });
+
+    const enriched = medicines.map((m) => {
+      const obj = m.toObject();
+      const { status, daysLeft } = getStockStatus(obj);
+      obj.stockStatus = status;
+      obj.daysLeft = daysLeft;
+      return obj;
+    });
+
+    const order = { red: 0, amber: 1, green: 2 };
+    enriched.sort((a, b) => (order[a.stockStatus] ?? 3) - (order[b.stockStatus] ?? 3));
+
+    res.json(enriched);
   } catch (err) {
     next(err);
   }
@@ -36,31 +49,29 @@ export const createMedicine = async (req, res, next) => {
     const patient = await ensurePatientOwned(patientId, req.user._id);
     if (!patient) return res.status(404).json({ message: 'Patient not found' });
 
-    let prescriptionImageUrl = '';
-    let prescriptionPublicId = '';
+    let prescriptionImgUrl = '';
+    let prescriptionImgId = '';
     if (req.file) {
-      prescriptionImageUrl = req.file.path || req.file.secure_url || '';
-      prescriptionPublicId = req.file.filename || req.file.public_id || '';
+      prescriptionImgUrl = req.file.secure_url || req.file.path || '';
+      prescriptionImgId = req.file.public_id || req.file.filename || '';
     }
 
     const medicine = await Medicine.create({
       patientId,
       name: req.body.name,
       strength: req.body.strength,
+      unit: req.body.unit || 'mg',
       frequencyPerDay: Number(req.body.frequencyPerDay),
       dosePerIntake: Number(req.body.dosePerIntake),
       currentStock: Number(req.body.currentStock),
       refillThreshold: req.body.refillThreshold != null ? Number(req.body.refillThreshold) : 7,
-      prescriptionImageUrl,
-      prescriptionPublicId,
+      instructions: req.body.instructions || '',
       doctorName: req.body.doctorName || '',
       hospitalName: req.body.hospitalName || '',
-      prescriptionIssuedDate: req.body.prescriptionIssuedDate
-        ? new Date(req.body.prescriptionIssuedDate)
-        : undefined,
-      prescriptionValidUntil: req.body.prescriptionValidUntil
-        ? new Date(req.body.prescriptionValidUntil)
-        : undefined,
+      prescriptionDate: req.body.prescriptionDate ? new Date(req.body.prescriptionDate) : undefined,
+      prescriptionValid: req.body.prescriptionValid ? new Date(req.body.prescriptionValid) : undefined,
+      prescriptionImgUrl,
+      prescriptionImgId,
     });
     res.status(201).json(medicine);
   } catch (err) {
@@ -76,10 +87,12 @@ export const updateMedicine = async (req, res, next) => {
     const fields = [
       'name',
       'strength',
+      'unit',
       'frequencyPerDay',
       'dosePerIntake',
       'currentStock',
       'refillThreshold',
+      'instructions',
       'doctorName',
       'hospitalName',
       'isActive',
@@ -95,27 +108,23 @@ export const updateMedicine = async (req, res, next) => {
         }
       }
     }
-    if (req.body.prescriptionIssuedDate !== undefined) {
-      medicine.prescriptionIssuedDate = req.body.prescriptionIssuedDate
-        ? new Date(req.body.prescriptionIssuedDate)
-        : null;
+    if (req.body.prescriptionDate !== undefined) {
+      medicine.prescriptionDate = req.body.prescriptionDate ? new Date(req.body.prescriptionDate) : null;
     }
-    if (req.body.prescriptionValidUntil !== undefined) {
-      medicine.prescriptionValidUntil = req.body.prescriptionValidUntil
-        ? new Date(req.body.prescriptionValidUntil)
-        : null;
+    if (req.body.prescriptionValid !== undefined) {
+      medicine.prescriptionValid = req.body.prescriptionValid ? new Date(req.body.prescriptionValid) : null;
     }
 
     if (req.file) {
-      if (medicine.prescriptionPublicId) {
+      if (medicine.prescriptionImgId) {
         try {
-          await cloudinary.uploader.destroy(medicine.prescriptionPublicId);
+          await cloudinary.uploader.destroy(medicine.prescriptionImgId);
         } catch {
           /* ignore */
         }
       }
-      medicine.prescriptionImageUrl = req.file.path || req.file.secure_url || '';
-      medicine.prescriptionPublicId = req.file.filename || req.file.public_id || '';
+      medicine.prescriptionImgUrl = req.file.secure_url || req.file.path || '';
+      medicine.prescriptionImgId = req.file.public_id || req.file.filename || '';
     }
 
     await medicine.save();
@@ -133,7 +142,7 @@ export const restockMedicine = async (req, res, next) => {
     }
     const medicine = await ensureMedicineOwned(req.params.id, req.user._id);
     if (!medicine) return res.status(404).json({ message: 'Medicine not found' });
-    const add = Number(req.body.quantityAdded);
+    const add = Number(req.body.quantity);
     medicine.currentStock = Math.max(0, medicine.currentStock + add);
     await medicine.save();
     res.json(medicine);
@@ -146,9 +155,9 @@ export const deleteMedicine = async (req, res, next) => {
   try {
     const medicine = await ensureMedicineOwned(req.params.id, req.user._id);
     if (!medicine) return res.status(404).json({ message: 'Medicine not found' });
-    if (medicine.prescriptionPublicId) {
+    if (medicine.prescriptionImgId) {
       try {
-        await cloudinary.uploader.destroy(medicine.prescriptionPublicId);
+        await cloudinary.uploader.destroy(medicine.prescriptionImgId);
       } catch {
         /* ignore */
       }

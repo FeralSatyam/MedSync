@@ -1,10 +1,8 @@
-import bcrypt from 'bcryptjs';
 import { v4 as uuidv4 } from 'uuid';
 import { validationResult } from 'express-validator';
 import Patient from '../models/Patient.js';
 import Medicine from '../models/Medicine.js';
-
-const SALT_ROUNDS = 12;
+import cloudinary from '../config/cloudinary.js';
 
 const ensureOwner = async (patientId, userId) => {
   const patient = await Patient.findOne({ _id: patientId, userId });
@@ -13,10 +11,14 @@ const ensureOwner = async (patientId, userId) => {
 
 export const getPatients = async (req, res, next) => {
   try {
-    const patients = await Patient.find({ userId: req.user._id }).sort({ createdAt: -1 });
+    const patients = await Patient.find({ userId: req.user._id })
+      .select('-pharmacyPin')
+      .sort({ createdAt: -1 });
     res.json(patients);
   } catch (err) {
-    next(err);
+    console.error('[getPatients] Error:', err);
+    if (typeof next === 'function') return next(err);
+    return res.status(500).json({ message: err?.message || 'Server error' });
   }
 };
 
@@ -26,23 +28,24 @@ export const createPatient = async (req, res, next) => {
     if (!errors.isEmpty()) {
       return res.status(400).json({ message: 'Validation failed', errors: errors.array() });
     }
-    const { name, dateOfBirth, allergies, notes, pharmacyPin } = req.body;
+    const { name, dateOfBirth, relation, allergies, pharmacyPin } = req.body;
     const qrToken = uuidv4();
-    const hashedPin = await bcrypt.hash(String(pharmacyPin), SALT_ROUNDS);
     const patient = await Patient.create({
       userId: req.user._id,
       name,
       dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : undefined,
+      relation,
       allergies: allergies || '',
-      notes: notes || '',
       qrToken,
-      pharmacyPin: hashedPin,
+      pharmacyPin: String(pharmacyPin),
     });
     const out = patient.toObject();
     delete out.pharmacyPin;
     res.status(201).json(out);
   } catch (err) {
-    next(err);
+    console.error('[createPatient] Error:', err);
+    if (typeof next === 'function') return next(err);
+    return res.status(500).json({ message: err?.message || 'Server error' });
   }
 };
 
@@ -54,7 +57,9 @@ export const getPatient = async (req, res, next) => {
     delete out.pharmacyPin;
     res.json(out);
   } catch (err) {
-    next(err);
+    console.error('[getPatient] Error:', err);
+    if (typeof next === 'function') return next(err);
+    return res.status(500).json({ message: err?.message || 'Server error' });
   }
 };
 
@@ -67,20 +72,18 @@ export const updatePatient = async (req, res, next) => {
     const patient = await ensureOwner(req.params.id, req.user._id);
     if (!patient) return res.status(404).json({ message: 'Patient not found' });
 
-    const { name, dateOfBirth, allergies, notes, pharmacyPin } = req.body;
+    const { name, dateOfBirth, relation, allergies } = req.body;
     if (name !== undefined) patient.name = name;
     if (dateOfBirth !== undefined) patient.dateOfBirth = dateOfBirth ? new Date(dateOfBirth) : null;
     if (allergies !== undefined) patient.allergies = allergies;
-    if (notes !== undefined) patient.notes = notes;
-    if (pharmacyPin !== undefined && pharmacyPin !== '') {
-      patient.pharmacyPin = await bcrypt.hash(String(pharmacyPin), SALT_ROUNDS);
-    }
     await patient.save();
     const out = patient.toObject();
     delete out.pharmacyPin;
     res.json(out);
   } catch (err) {
-    next(err);
+    console.error('[updatePatient] Error:', err);
+    if (typeof next === 'function') return next(err);
+    return res.status(500).json({ message: err?.message || 'Server error' });
   }
 };
 
@@ -88,11 +91,23 @@ export const deletePatient = async (req, res, next) => {
   try {
     const patient = await ensureOwner(req.params.id, req.user._id);
     if (!patient) return res.status(404).json({ message: 'Patient not found' });
+    // Cascade delete medicines AND delete Cloudinary prescription images.
+    const meds = await Medicine.find({ patientId: patient._id, prescriptionImgId: { $ne: '' } }).lean();
+    for (const med of meds) {
+      if (!med.prescriptionImgId) continue;
+      try {
+        await cloudinary.uploader.destroy(med.prescriptionImgId);
+      } catch {
+        /* ignore cloudinary cleanup errors */
+      }
+    }
     await Medicine.deleteMany({ patientId: patient._id });
     await patient.deleteOne();
     res.json({ message: 'Patient deleted' });
   } catch (err) {
-    next(err);
+    console.error('[deletePatient] Error:', err);
+    if (typeof next === 'function') return next(err);
+    return res.status(500).json({ message: err?.message || 'Server error' });
   }
 };
 
@@ -109,6 +124,8 @@ export const getQrData = async (req, res, next) => {
     const qrUrl = `${frontendBaseUrl()}/pharmacist/${patient.qrToken}`;
     res.json({ qrToken: patient.qrToken, qrUrl });
   } catch (err) {
-    next(err);
+    console.error('[getQrData] Error:', err);
+    if (typeof next === 'function') return next(err);
+    return res.status(500).json({ message: err?.message || 'Server error' });
   }
 };

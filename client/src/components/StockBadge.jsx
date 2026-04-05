@@ -1,26 +1,40 @@
-const colours = {
-  red: 'bg-red-50 text-red-700 ring-1 ring-red-200',
-  yellow: 'bg-amber-50 text-amber-700 ring-1 ring-amber-200',
-  green: 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200',
+const VARIANTS = {
+  red: {
+    background: '#fff0f0',
+    color: '#e84040',
+    text: 'Out of stock',
+  },
+  amber: {
+    background: '#fff8ec',
+    color: '#9a6200',
+    text: 'Running low',
+  },
+  green: {
+    background: '#edfaf3',
+    color: '#27ae60',
+    text: 'In stock',
+  },
 };
 
-const labels = {
-  red: 'Out of stock',
-  yellow: 'Running low',
-  green: 'In stock',
-};
+export default function StockBadge({ status }) {
+  const v = VARIANTS[status] || VARIANTS.green;
 
-export default function StockBadge({ status, daysLeft }) {
-  const dayLabel =
-    daysLeft === Infinity || daysLeft == null
-      ? ''
-      : ` · ~${daysLeft} day${daysLeft === 1 ? '' : 's'} left`;
   return (
     <span
-      className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${colours[status] || colours.green}`}
+      style={{
+        padding: '3px 9px',
+        borderRadius: '99px',
+        fontSize: '10px',
+        fontWeight: 700,
+        letterSpacing: '0.02em',
+        background: v.background,
+        color: v.color,
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
     >
-      {labels[status] || 'In stock'}
-      {dayLabel}
+      {v.text}
     </span>
   );
 }

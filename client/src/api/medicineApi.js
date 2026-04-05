@@ -16,7 +16,9 @@ export const updateMedicine = (id, body) => {
 };
 
 export const restockMedicine = (id, quantityAdded) =>
-  axiosInstance.put(`/medicines/${id}/restock`, { quantityAdded }).then((r) => r.data);
+  axiosInstance
+    .patch(`/medicines/${id}/restock`, { quantity: quantityAdded })
+    .then((r) => r.data);
 
 export const deleteMedicine = (id) =>
   axiosInstance.delete(`/medicines/${id}`).then((r) => r.data);

@@ -4,9 +4,16 @@ import cloudinary from '../config/cloudinary.js';
 
 const allowedMime = new Set([
   'image/jpeg',
+  'image/jpg',
   'image/png',
   'image/webp',
   'image/gif',
+  'image/heic',
+  'image/heif',
+  'image/avif',
+  'image/bmp',
+  'image/tiff',
+  'image/jfif',
   'application/pdf',
 ]);
 
@@ -14,12 +21,12 @@ const storage = new CloudinaryStorage({
   cloudinary,
   params: {
     folder: 'medsync/prescriptions',
-    allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'pdf'],
+    allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'pdf', 'heic', 'heif', 'avif', 'bmp', 'tiff', 'jfif'],
   },
 });
 
 function fileFilter(req, file, cb) {
-  if (allowedMime.has(file.mimetype)) {
+  if (allowedMime.has(file.mimetype) || file.mimetype.startsWith('image/')) {
     cb(null, true);
   } else {
     cb(new Error('Invalid file type. Use JPG, PNG, or PDF.'), false);
