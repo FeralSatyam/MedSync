@@ -109,7 +109,7 @@ export default function PharmacistPage() {
   return (
     <div className="min-h-screen bg-bg">
       {/* Top Bar */}
-      <div className="bg-navy px-[24px] py-[10px] flex items-center gap-[10px]">
+      <div className="bg-navy px-[14px] sm:px-[24px] py-[10px] flex items-center gap-[10px]">
         <div className="flex items-center gap-[8px]">
           <div
             className="flex h-[26px] w-[26px] items-center justify-center rounded-[7px]"
@@ -125,8 +125,8 @@ export default function PharmacistPage() {
               />
             </svg>
           </div>
-          <div className="font-display text-[14px] font-bold text-white">MedSync</div>
-          <div className="text-[11px] text-white/30 font-body">— Pharmacist View</div>
+          <div className="font-display text-[13px] sm:text-[14px] font-bold text-white">MedSync</div>
+          <div className="hidden sm:block text-[11px] text-white/30 font-body">— Pharmacist View</div>
         </div>
 
         <div className="flex-1" />
@@ -134,19 +134,19 @@ export default function PharmacistPage() {
         <button
           type="button"
           onClick={() => navigate('/qr')}
-          className="px-[12px] py-[5px] rounded-[7px] border border-[rgba(255,255,255,0.15)] bg-transparent text-[rgba(255,255,255,0.6)] text-[11px] cursor-pointer font-body"
+          className="px-[10px] sm:px-[12px] py-[5px] rounded-[7px] border border-[rgba(255,255,255,0.15)] bg-transparent text-[rgba(255,255,255,0.6)] text-[10px] sm:text-[11px] cursor-pointer font-body"
         >
           ← Back to QR
         </button>
       </div>
 
       {/* Content */}
-      <div className="flex-1 px-[26px] py-[22px] max-w-[980px] mx-auto w-full">
+      <div className="flex-1 px-[14px] sm:px-[20px] md:px-[26px] py-[16px] sm:py-[22px] max-w-[980px] mx-auto w-full">
         {/* Patient Header */}
-        <div className="bg-navy rounded-[16px] p-[19px_24px] flex items-center justify-between mb-[16px] text-white">
+        <div className="bg-navy rounded-[16px] p-[16px] sm:p-[19px_24px] flex flex-col gap-[10px] sm:flex-row sm:items-center sm:justify-between mb-[16px] text-white">
           <div>
-            <div className="font-display text-[20px] font-bold mb-[2px]">{patient.name}</div>
-            <div className="text-[12px] text-white/50">
+            <div className="font-display text-[clamp(18px,4vw,20px)] font-bold mb-[2px]">{patient.name}</div>
+            <div className="text-[11px] sm:text-[12px] text-white/50">
               DOB: {formatDateISO(patient.dateOfBirth)} · Scanned: {formatTime(data?.scanTimestamp)}
             </div>
           </div>
@@ -167,7 +167,7 @@ export default function PharmacistPage() {
         </div>
 
         {/* Body: 2 columns */}
-        <div className="grid grid-cols-[1.4fr_1fr] gap-[16px]">
+        <div className="grid grid-cols-1 lg:grid-cols-[1.4fr_1fr] gap-[16px]">
           {/* Left: Medicine List */}
           <div>
             <div className="text-[10px] font-bold tracking-[0.1em] text-muted uppercase mb-[10px]">MEDICINE LIST</div>
@@ -183,7 +183,7 @@ export default function PharmacistPage() {
               return (
                 <div
                   key={m._id}
-                  className="bg-card border border-border rounded-[16px] p-[13px_15px] mb-[9px] relative overflow-hidden flex items-center gap-[12px]"
+                  className="bg-card border border-border rounded-[16px] p-[12px] sm:p-[13px_15px] mb-[9px] relative overflow-hidden flex items-center gap-[12px]"
                   style={{ background: '#ffffff' }}
                 >
                   <div
@@ -199,14 +199,14 @@ export default function PharmacistPage() {
                   />
 
                   <div className="flex-1">
-                    <div className="font-display text-[14px] font-bold text-navy">
+                    <div className="font-display text-[13px] sm:text-[14px] font-bold text-navy">
                       {m.name} <span className="font-normal text-muted text-[11px]">({m.strength}{m.unit})</span>
                     </div>
-                    <div className="text-[12px] text-muted mt-[2px]">
+                    <div className="text-[11px] sm:text-[12px] text-muted mt-[2px]">
                       {m.frequencyPerDay}× daily · 1 tab/dose · {m.instructions || 'After meals'}
                     </div>
                     <div
-                      className="text-[12px] text-muted mt-[3px]"
+                      className="text-[11px] sm:text-[12px] text-muted mt-[3px]"
                       dangerouslySetInnerHTML={{ __html: qtyLabel }}
                     />
                   </div>
@@ -241,7 +241,14 @@ export default function PharmacistPage() {
                         className="rounded-[10px] overflow-hidden border border-dashed border-border cursor-pointer"
                         onClick={() => setLightboxUrl(m.prescriptionImgUrl)}
                       >
-                        <img src={m.prescriptionImgUrl} alt="Prescription" style={{ width: '100%', maxHeight: 140, objectFit: 'cover' }} />
+                        <img
+                          src={m.prescriptionImgUrl}
+                          alt="Prescription"
+                          style={{ width: '100%', maxHeight: 140, objectFit: 'cover' }}
+                          loading="lazy"
+                          decoding="async"
+                          sizes="(max-width: 1024px) 100vw, 360px"
+                        />
                       </div>
                     ) : null
                   )}
@@ -292,14 +299,14 @@ export default function PharmacistPage() {
       {/* Dispense Modal */}
       {dispenseOpen ? (
         <div
-          className="fixed inset-0 z-[1000] flex items-center justify-center p-[20px] bg-[rgba(15,31,61,0.45)] backdrop-blur"
+          className="fixed inset-0 z-[1000] flex items-center justify-center p-[12px] sm:p-[20px] bg-[rgba(15,31,61,0.45)] backdrop-blur"
           role="dialog"
           aria-modal="true"
           onMouseDown={(e) => {
             if (e.target === e.currentTarget) setDispenseOpen(false);
           }}
         >
-          <div className="bg-card rounded-[16px] p-[26px] w-full max-w-[420px] relative shadow-modal">
+          <div className="bg-card rounded-[16px] p-[18px] sm:p-[26px] w-full max-w-[420px] relative shadow-modal max-h-[92vh] overflow-y-auto">
             <div
               className="absolute top-[13px] right-[13px] h-[27px] w-[27px] rounded-full bg-bg cursor-pointer flex items-center justify-center border-none"
               onClick={() => setDispenseOpen(false)}
@@ -311,8 +318,8 @@ export default function PharmacistPage() {
               </svg>
             </div>
 
-            <div className="font-display text-[18px] font-bold text-navy mb-[4px]">Confirm Dispensing</div>
-            <div className="text-[13px] text-muted mb-[18px]">
+            <div className="font-display text-[clamp(16px,4vw,18px)] font-bold text-navy mb-[4px]">Confirm Dispensing</div>
+            <div className="text-[12px] sm:text-[13px] text-muted mb-[18px]">
               Enter the patient's 4-digit pharmacy PIN to confirm medicines were dispensed
             </div>
 
@@ -408,6 +415,9 @@ export default function PharmacistPage() {
             src={lightboxUrl}
             alt="Prescription"
             style={{ width: '100%', maxWidth: 680, borderRadius: 16, objectFit: 'contain' }}
+            loading="lazy"
+            decoding="async"
+            sizes="(max-width: 768px) 100vw, 680px"
           />
           <button
             type="button"

@@ -13,6 +13,7 @@
     background: #f4f6fb;
     color: #0f1f3d;
     min-height: 100vh;
+    text-rendering: optimizeLegibility;
   }
   h1,
   h2,
@@ -34,5 +35,28 @@
   .hide-scrollbar {
     -ms-overflow-style: none;
     scrollbar-width: none;
+  }
+}
+
+@media (max-width: 640px) {
+  h1 {
+    font-size: clamp(1.35rem, 5.2vw, 1.7rem);
+    line-height: 1.2;
+  }
+  h2 {
+    font-size: clamp(1.15rem, 4.8vw, 1.35rem);
+    line-height: 1.25;
+  }
+  h3 {
+    font-size: clamp(1rem, 4.2vw, 1.2rem);
+    line-height: 1.3;
+  }
+  p,
+  label,
+  button,
+  input,
+  select,
+  textarea {
+    font-size: clamp(0.84rem, 3.6vw, 0.95rem);
   }
 }

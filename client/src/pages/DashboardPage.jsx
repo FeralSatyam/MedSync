@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 
@@ -51,6 +51,7 @@ export default function DashboardPage() {
   const [removeTarget, setRemoveTarget] = useState(null);
 
   const [lightboxUrl, setLightboxUrl] = useState(null);
+  const touchStartXRef = useRef(null);
 
   async function refreshPatients() {
     const data = await getPatients();
@@ -124,21 +125,30 @@ export default function DashboardPage() {
     return Object.values(patientAlertMap).some(Boolean);
   }, [patientAlertMap]);
 
+  function movePatientBySwipe(direction) {
+    if (!patients.length || !activePatientId) return;
+    const currentIdx = patients.findIndex((p) => (p._id || p.id) === activePatientId);
+    if (currentIdx === -1) return;
+    const nextIdx = Math.min(patients.length - 1, Math.max(0, currentIdx + direction));
+    const nextId = patients[nextIdx]?._id || patients[nextIdx]?.id;
+    if (nextId && nextId !== activePatientId) setActivePatientId(nextId);
+  }
+
   return (
     <div className="flex min-h-screen flex-col bg-bg">
       <Navbar hasAlerts={hasAnyAlerts} />
 
-      <div className="dash-wrap flex-1 px-[28px] py-[22px] max-w-[1200px] w-full mx-auto">
+      <div className="dash-wrap flex-1 px-[14px] py-[16px] sm:px-[20px] sm:py-[20px] md:px-[28px] md:py-[22px] max-w-[1200px] w-full mx-auto">
         {/* QR Strip */}
         <div
-          className="mb-[22px] overflow-hidden rounded-card bg-navy flex items-stretch shadow-qr"
+          className="mb-[18px] sm:mb-[22px] overflow-hidden rounded-card bg-navy flex items-stretch shadow-qr"
           style={{ boxShadow: '0 4px 22px rgba(15,31,61,0.2)' }}
         >
           <div className="w-[5px] bg-mint flex-shrink-0" />
-          <div className="flex flex-1 items-center justify-between gap-[16px] p-[18px_22px]">
-            <div>
+          <div className="flex flex-1 items-center justify-between gap-[16px] p-[14px_14px] sm:p-[18px_22px]">
+            <div className="hidden sm:block">
               <div className="mb-[4px] text-[10px] font-bold tracking-[0.12em] text-white/40 uppercase">Pharmacy QR Code</div>
-              <div className="mb-[2px] font-display text-[17px] font-bold text-white">Show your QR at the pharmacy counter</div>
+              <div className="mb-[2px] font-display text-[clamp(15px,2vw,17px)] font-bold text-white">Show your QR at the pharmacy counter</div>
               <div className="text-[12px] text-[rgba(255,255,255,0.45)]">
                 Pharmacist scans once — sees full medicine list, exact dosages & doctor's prescription
               </div>
@@ -147,7 +157,7 @@ export default function DashboardPage() {
             <button
               type="button"
               onClick={() => navigate('/qr')}
-              className="flex shrink-0 items-center gap-[9px] rounded-[10px] border-none bg-mint px-[20px] py-[11px] font-body text-[13px] font-semibold text-white cursor-pointer hover:bg-mint-mid active:scale-[0.97] transition-all whitespace-nowrap"
+              className="mx-auto flex shrink-0 items-center gap-[9px] rounded-[10px] border-none bg-mint px-[16px] py-[10px] sm:px-[20px] sm:py-[11px] font-body text-[12px] sm:text-[13px] font-semibold text-white cursor-pointer hover:bg-mint-mid active:scale-[0.97] transition-all whitespace-nowrap"
             >
               <svg width="17" height="17" viewBox="0 0 21 21" fill="none" aria-hidden="true">
                 <rect x="3" y="3" width="7" height="7" rx="1" fill="currentColor" />
@@ -166,7 +176,21 @@ export default function DashboardPage() {
         {/* Patient Profiles */}
         <div className="mb-[18px]">
           <div className="text-[11px] font-semibold tracking-[0.05em] text-muted mb-[9px] uppercase">Profiles</div>
-          <div className="flex gap-[8px] flex-wrap overflow-x-auto hide-scrollbar items-center">
+          <div
+            className="flex gap-[8px] flex-wrap overflow-x-auto hide-scrollbar items-center"
+            onTouchStart={(e) => {
+              touchStartXRef.current = e.changedTouches[0]?.clientX ?? null;
+            }}
+            onTouchEnd={(e) => {
+              const start = touchStartXRef.current;
+              const end = e.changedTouches[0]?.clientX ?? null;
+              touchStartXRef.current = null;
+              if (start == null || end == null) return;
+              const deltaX = end - start;
+              if (Math.abs(deltaX) < 55) return;
+              movePatientBySwipe(deltaX > 0 ? -1 : 1);
+            }}
+          >
             {patients.map((p) => {
               const hasAlert = !!patientAlertMap[p._id || p.id];
               const statusDotColor = hasAlert ? '#e84040' : '#27ae60';
@@ -176,7 +200,7 @@ export default function DashboardPage() {
                   key={p._id || p.id}
                   type="button"
                   onClick={() => setActivePatientId(p._id || p.id)}
-                  className="flex items-center gap-[6px] cursor-pointer rounded-full border-[1.5px] border-border bg-card px-[15px] py-[7px] text-[12px] font-medium text-muted transition-all"
+                  className="flex items-center gap-[6px] cursor-pointer rounded-full border-[1.5px] border-border bg-card px-[13px] py-[6px] sm:px-[15px] sm:py-[7px] text-[11px] sm:text-[12px] font-medium text-muted transition-all"
                   style={
                     active
                       ? { background: '#0f1f3d', color: '#ffffff', borderColor: '#0f1f3d' }
@@ -191,7 +215,7 @@ export default function DashboardPage() {
 
             <button
               type="button"
-              className="px-[13px] py-[7px] rounded-full border-[1.5px] border-dashed border-border bg-transparent text-muted cursor-pointer text-[12px] font-medium transition-all"
+              className="px-[13px] py-[7px] rounded-full border-[1.5px] border-dashed border-border bg-transparent text-muted cursor-pointer text-[11px] sm:text-[12px] font-medium transition-all"
               style={{ color: '#6b7a99' }}
               onClick={() => {
                 setAddProfileErrors({});
@@ -211,12 +235,12 @@ export default function DashboardPage() {
         </div>
 
         {/* Medicine Section Header */}
-        <div className="flex items-center justify-between mb-[14px]">
-          <div className="font-display text-[16px] font-bold text-navy">My Medicines</div>
+        <div className="mb-[14px] flex flex-col gap-[10px] sm:flex-row sm:items-center sm:justify-between">
+          <div className="font-display text-[clamp(15px,2.8vw,16px)] font-bold text-navy">My Medicines</div>
           <div className="flex gap-[7px]">
             <button
               type="button"
-              className="rounded-btn border border-border bg-transparent px-[12px] py-[7px] text-[12px] font-medium text-navy hover:bg-[#f7f9ff] transition-all flex items-center gap-[7px]"
+              className="rounded-btn border border-border bg-transparent px-[10px] py-[7px] text-[11px] sm:text-[12px] font-medium text-navy hover:bg-[#f7f9ff] transition-all flex items-center gap-[7px]"
               onClick={async () => {
                 if (!activePatientId) return;
                 try {
@@ -243,7 +267,7 @@ export default function DashboardPage() {
 
             <button
               type="button"
-              className="rounded-btn bg-mint px-[14px] py-[7px] text-[12px] font-semibold text-white hover:bg-mint-mid transition-all flex items-center gap-[7px]"
+              className="rounded-btn bg-mint px-[12px] py-[7px] sm:px-[14px] text-[11px] sm:text-[12px] font-semibold text-white hover:bg-mint-mid transition-all flex items-center gap-[7px]"
               onClick={() => navigate('/add-medicine')}
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -263,7 +287,7 @@ export default function DashboardPage() {
             <SkeletonCard />
           </div>
         ) : medicines.length === 0 && !loadingMedicines ? (
-          <div className="col-span-full text-center py-[56px] px-[20px] text-muted">
+          <div className="col-span-full text-center py-[40px] sm:py-[56px] px-[16px] sm:px-[20px] text-muted">
             <svg width="42" height="42" viewBox="0 0 24 24" fill="none" aria-hidden="true" className="mx-auto mb-[13px] text-border">
               <path
                 d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2v-4M9 21H5a2 2 0 0 1-2-2v-4m0 0h18"
@@ -273,11 +297,11 @@ export default function DashboardPage() {
                 strokeLinejoin="round"
               />
             </svg>
-            <div className="font-display text-[16px] font-bold text-navy mb-[6px]">No medicines added yet</div>
-            <div className="text-[13px] text-muted">Click 'Add Medicine' to start tracking</div>
+            <div className="font-display text-[clamp(15px,2.8vw,16px)] font-bold text-navy mb-[6px]">No medicines added yet</div>
+            <div className="text-[12px] sm:text-[13px] text-muted">Click 'Add Medicine' to start tracking</div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-[14px]">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-[12px] sm:gap-[14px]">
             {loadingMedicines ? (
               <>
                 <SkeletonCard />
@@ -310,14 +334,14 @@ export default function DashboardPage() {
       {/* Add Patient Profile Modal */}
       {addProfileOpen ? (
         <div
-          className="fixed inset-0 z-[1000] flex items-center justify-center p-[20px] bg-[rgba(15,31,61,0.45)] backdrop-blur"
+          className="fixed inset-0 z-[1000] flex items-center justify-center p-[12px] sm:p-[20px] bg-[rgba(15,31,61,0.45)] backdrop-blur"
           role="dialog"
           aria-modal="true"
           onMouseDown={(e) => {
             if (e.target === e.currentTarget) setAddProfileOpen(false);
           }}
         >
-          <div className="relative w-full max-w-[420px] rounded-[16px] bg-card p-[26px] shadow-modal">
+          <div className="relative w-full max-w-[420px] rounded-[16px] bg-card p-[18px] sm:p-[26px] shadow-modal max-h-[92vh] overflow-y-auto">
             <div
               className="absolute top-[13px] right-[13px] flex h-[27px] w-[27px] items-center justify-center rounded-full bg-bg cursor-pointer"
               onClick={() => setAddProfileOpen(false)}
@@ -330,8 +354,8 @@ export default function DashboardPage() {
               </svg>
             </div>
 
-            <div className="font-display text-[18px] font-bold text-navy mb-[4px]">Add Patient Profile</div>
-            <div className="text-[13px] text-muted mb-[18px] font-body">Add a family member or yourself</div>
+            <div className="font-display text-[clamp(16px,4vw,18px)] font-bold text-navy mb-[4px]">Add Patient Profile</div>
+            <div className="text-[12px] sm:text-[13px] text-muted mb-[18px] font-body">Add a family member or yourself</div>
 
             <div className="space-y-[14px]">
               <div>
@@ -345,7 +369,7 @@ export default function DashboardPage() {
                 {addProfileErrors.name ? <div className="mt-[7px] text-[12px] font-semibold text-red">{addProfileErrors.name}</div> : null}
               </div>
 
-              <div className="grid grid-cols-2 gap-[12px]">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-[12px]">
                 <div>
                   <label className="mb-[7px] block text-[12px] font-semibold tracking-[0.02em] text-navy">DOB</label>
                   <input
@@ -455,21 +479,21 @@ export default function DashboardPage() {
       {/* Restock Modal */}
       {restockTarget ? (
         <div
-          className="fixed inset-0 z-[1000] flex items-center justify-center p-[20px] bg-[rgba(15,31,61,0.45)] backdrop-blur"
+          className="fixed inset-0 z-[1000] flex items-center justify-center p-[12px] sm:p-[20px] bg-[rgba(15,31,61,0.45)] backdrop-blur"
           role="dialog"
           aria-modal="true"
           onMouseDown={(e) => {
             if (e.target === e.currentTarget) setRestockTarget(null);
           }}
         >
-          <div className="w-full max-w-[420px] rounded-[16px] bg-card p-[26px] relative shadow-modal">
+          <div className="w-full max-w-[420px] rounded-[16px] bg-card p-[18px] sm:p-[26px] relative shadow-modal max-h-[92vh] overflow-y-auto">
             <div className="absolute top-[13px] right-[13px] flex h-[27px] w-[27px] items-center justify-center rounded-full bg-bg cursor-pointer" onClick={() => setRestockTarget(null)}>
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                 <path d="M6 6l12 12M18 6L6 18" stroke="#6b7a99" strokeWidth="2" strokeLinecap="round" />
               </svg>
             </div>
-            <div className="font-display text-[18px] font-bold text-navy mb-[4px]">Restock Medicine</div>
-            <div className="text-[13px] text-muted mb-[18px] font-body">Update stock count after purchasing</div>
+            <div className="font-display text-[clamp(16px,4vw,18px)] font-bold text-navy mb-[4px]">Restock Medicine</div>
+            <div className="text-[12px] sm:text-[13px] text-muted mb-[18px] font-body">Update stock count after purchasing</div>
 
             <div className="bg-bg rounded-[10px] px-[14px] py-[12px] mb-[16px] border border-border">
               <div className="font-display text-[15px] font-bold text-navy mb-[2px]">{restockTarget.name}</div>
@@ -527,21 +551,21 @@ export default function DashboardPage() {
       {/* Delete Modal */}
       {removeTarget ? (
         <div
-          className="fixed inset-0 z-[1000] flex items-center justify-center p-[20px] bg-[rgba(15,31,61,0.45)] backdrop-blur"
+          className="fixed inset-0 z-[1000] flex items-center justify-center p-[12px] sm:p-[20px] bg-[rgba(15,31,61,0.45)] backdrop-blur"
           role="dialog"
           aria-modal="true"
           onMouseDown={(e) => {
             if (e.target === e.currentTarget) setRemoveTarget(null);
           }}
         >
-          <div className="w-full max-w-[420px] rounded-[16px] bg-card p-[26px] relative shadow-modal">
+          <div className="w-full max-w-[420px] rounded-[16px] bg-card p-[18px] sm:p-[26px] relative shadow-modal max-h-[92vh] overflow-y-auto">
             <div className="absolute top-[13px] right-[13px] flex h-[27px] w-[27px] items-center justify-center rounded-full bg-bg cursor-pointer" onClick={() => setRemoveTarget(null)}>
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                 <path d="M6 6l12 12M18 6L6 18" stroke="#6b7a99" strokeWidth="2" strokeLinecap="round" />
               </svg>
             </div>
-            <div className="font-display text-[18px] font-bold text-navy mb-[4px]">Remove Medicine</div>
-            <div className="text-[13px] text-muted mb-[18px] font-body">
+            <div className="font-display text-[clamp(16px,4vw,18px)] font-bold text-navy mb-[4px]">Remove Medicine</div>
+            <div className="text-[12px] sm:text-[13px] text-muted mb-[18px] font-body">
               Remove <strong>{removeTarget.name}</strong> ? This cannot be undone.
             </div>
             <div className="flex gap-[8px] mt-[16px]">
@@ -589,6 +613,9 @@ export default function DashboardPage() {
             alt="Prescription"
             className="w-full max-w-[680px] rounded-card object-contain"
             style={{ borderRadius: 16 }}
+            loading="lazy"
+            decoding="async"
+            sizes="(max-width: 768px) 100vw, 680px"
           />
           <button
             type="button"

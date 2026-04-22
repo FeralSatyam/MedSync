@@ -1,0 +1,17 @@
+{
+  "name": "MedSync",
+  "short_name": "MedSync",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f4f6fb",
+  "theme_color": "#0f1f3d",
+  "description": "Medicine management with refill alerts and QR sharing.",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
