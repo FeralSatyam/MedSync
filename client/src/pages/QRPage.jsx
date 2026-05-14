@@ -55,11 +55,11 @@ export default function QRPage() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-bg px-[24px] py-[36px]">
       <div
-        className="w-full text-center rounded-[22px] bg-card border border-border p-[34px]"
+        className="w-full text-center rounded-[20px] bg-card border border-border p-[34px]"
         style={{ maxWidth: 350, boxShadow: '0 8px 40px rgba(15,31,61,0.14)' }}
       >
-        <div className="font-display text-[20px] font-bold text-navy mb-[3px]">{patient.name}</div>
-        <div className="text-[12px] text-muted mb-[24px]">
+        <div className="font-display text-[22px] font-bold tracking-[-0.4px] text-navy mb-[3px]">{patient.name}</div>
+        <div className="font-body text-[13px] font-medium text-muted mb-[24px]">
           {formatRelation(patient.relation)} · QR Code
         </div>
 
@@ -68,14 +68,14 @@ export default function QRPage() {
             <QRCodeCanvas
               value={qrValue}
               size={200}
-              fgColor="#0f1f3d"
+              fgColor="#1a2540"
               bgColor="#ffffff"
               level="H"
             />
           </div>
         </div>
 
-        <div className="bg-mint-light rounded-[10px] px-[15px] py-[12px] text-[12px] text-navy leading-[1.65] mb-[16px]">
+        <div className="bg-mint-light rounded-[12px] px-[16px] py-[14px] text-[12px] font-body text-navy leading-[1.6] mb-[20px]">
           The pharmacist scans this QR and instantly sees your full medicine list, exact dosages and doctor's
           prescription — no verbal communication needed.
         </div>
@@ -83,7 +83,7 @@ export default function QRPage() {
         <button
           type="button"
           onClick={() => navigate('/dashboard')}
-          className="w-full bg-navy text-white rounded-[10px] px-[11px] py-[11px] mb-[9px] text-[13px] font-medium cursor-pointer hover:bg-navy-mid transition-all"
+          className="w-full bg-primary text-white rounded-[20px] px-[16px] py-[12px] mb-[12px] text-[13px] font-bold tracking-[0.2px] cursor-pointer hover:bg-navy-mid transition-all"
         >
           Back to Dashboard
         </button>
@@ -91,17 +91,17 @@ export default function QRPage() {
         <button
           type="button"
           onClick={() => navigate(`/pharma/${patient.qrToken}`)}
-          className="w-full rounded-[10px] border border-border bg-transparent px-[18px] py-[9px] text-[12px] font-medium text-navy flex justify-center items-center gap-[7px] cursor-pointer hover:bg-[#f7f9ff] transition-all"
+          className="w-full rounded-[20px] border-[1.5px] border-border bg-transparent px-[16px] py-[12px] text-[13px] font-bold tracking-[0.2px] text-navy flex justify-center items-center gap-[8px] cursor-pointer hover:bg-faint transition-all"
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
             <path
               d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"
-              stroke="#0f1f3d"
-              strokeWidth="2"
+              stroke="#1a2540"
+              strokeWidth="2.5"
               strokeLinecap="round"
               strokeLinejoin="round"
             />
-            <circle cx="12" cy="12" r="3" stroke="#0f1f3d" strokeWidth="2" />
+            <circle cx="12" cy="12" r="3" stroke="#1a2540" strokeWidth="2.5" />
           </svg>
           Preview Pharmacist View
         </button>

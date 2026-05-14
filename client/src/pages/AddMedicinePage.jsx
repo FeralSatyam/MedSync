@@ -138,16 +138,16 @@ export default function AddMedicinePage() {
   return (
     <div className="flex min-h-screen flex-col bg-bg">
       {/* Header not using navbar spec here to keep file short */}
-      <div className="flex flex-1 px-[28px] py-[26px] max-w-[680px] w-full mx-auto">
+      <div className="flex flex-1 px-[24px] py-[26px] max-w-[680px] w-full mx-auto">
         <div className="w-full">
           <div className="mb-[24px]">
-            <div className="font-display text-[22px] font-bold text-navy">{isEdit ? 'Edit Medicine' : 'Add New Medicine'}</div>
-            <div className="text-[13px] text-muted mt-[3px] font-body">Fill in details from your doctor's prescription</div>
+            <div className="font-display text-[24px] font-bold tracking-[-0.6px] text-navy">{isEdit ? 'Edit Medicine' : 'Add New Medicine'}</div>
+            <div className="text-[13px] text-muted mt-[4px] font-body">Fill in details from your doctor's prescription</div>
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="w-full">
-            <div className="rounded-[16px] border border-border bg-card p-[22px] mb-[16px]">
-              <div className="font-display text-[14px] font-bold text-navy mb-[16px] pb-[10px] border-b border-border">
+            <div className="rounded-[20px] border border-border bg-card p-[24px] mb-[20px]">
+              <div className="font-display text-[15px] font-bold tracking-[-0.2px] text-navy mb-[20px] pb-[12px] border-b border-faint">
                 Medicine Details
               </div>
 
@@ -256,8 +256,8 @@ export default function AddMedicinePage() {
               </div>
             </div>
 
-            <div className="rounded-[16px] border border-border bg-card p-[22px] mb-[16px]">
-              <div className="font-display text-[14px] font-bold text-navy mb-[16px] pb-[10px] border-b border-border">
+            <div className="rounded-[20px] border border-border bg-card p-[24px] mb-[20px]">
+              <div className="font-display text-[15px] font-bold tracking-[-0.2px] text-navy mb-[20px] pb-[12px] border-b border-faint">
                 Doctor & Prescription
               </div>
 
@@ -297,7 +297,7 @@ export default function AddMedicinePage() {
               </div>
 
               <div
-                className="mt-[16px] border-[2px] border-dashed border-border rounded-[10px] p-[26px] text-center cursor-pointer transition-all hover:border-mint hover:bg-mint-light"
+                className="mt-[20px] border-[1.5px] border-dashed border-border rounded-[20px] p-[32px] text-center cursor-pointer transition-all hover:border-mint hover:bg-mint-light"
                 onClick={() => document.getElementById('prescription-file')?.click()}
               >
                 <input
@@ -326,10 +326,10 @@ export default function AddMedicinePage() {
                 <div className="text-[11px] text-faint mt-[2px]">JPG, PNG, PDF — max 5MB</div>
 
                 {previewUrl ? (
-                  <div className="mt-[12px] rounded-[10px] overflow-hidden border border-border">
-                    <img src={previewUrl} alt="Preview" className="w-full max-h-[170px] object-contain bg-[#f0f0f0]" />
-                    <div className="flex justify-between px-[12px] py-[7px] bg-[#f8f8f8]">
-                      <div className="text-[11px] text-muted font-body">{file?.name}</div>
+                  <div className="mt-[16px] rounded-[16px] overflow-hidden border border-border">
+                    <img src={previewUrl} alt="Preview" className="w-full max-h-[200px] object-contain bg-[#f0f0f0]" />
+                    <div className="flex justify-between px-[16px] py-[10px] bg-[#f8f8f8]">
+                      <div className="text-[12px] text-muted font-body font-semibold">{file?.name}</div>
                       <button
                         type="button"
                         className="text-[11px] text-red font-body border-none bg-transparent cursor-pointer"

@@ -143,10 +143,10 @@ export default function PharmacistPage() {
       {/* Content */}
       <div className="flex-1 px-[26px] py-[22px] max-w-[980px] mx-auto w-full">
         {/* Patient Header */}
-        <div className="bg-navy rounded-[16px] p-[19px_24px] flex items-center justify-between mb-[16px] text-white">
+        <div className="bg-navy rounded-[20px] p-[24px_24px] flex items-center justify-between mb-[20px] text-white">
           <div>
-            <div className="font-display text-[20px] font-bold mb-[2px]">{patient.name}</div>
-            <div className="text-[12px] text-white/50">
+            <div className="font-display text-[22px] font-bold mb-[4px] tracking-[-0.4px]">{patient.name}</div>
+            <div className="text-[13px] text-white/50 font-body">
               DOB: {formatDateISO(patient.dateOfBirth)} · Scanned: {formatTime(data?.scanTimestamp)}
             </div>
           </div>
@@ -183,7 +183,7 @@ export default function PharmacistPage() {
               return (
                 <div
                   key={m._id}
-                  className="bg-card border border-border rounded-[16px] p-[13px_15px] mb-[9px] relative overflow-hidden flex items-center gap-[12px]"
+                  className="bg-card border border-border rounded-[20px] p-[16px] mb-[12px] relative overflow-hidden flex items-center gap-[12px]"
                   style={{ background: '#ffffff' }}
                 >
                   <div
@@ -222,7 +222,7 @@ export default function PharmacistPage() {
 
           {/* Right: Prescription & Allergy */}
           <div>
-            <div className="bg-card border border-border rounded-[16px] p-[16px] mb-[12px]">
+            <div className="bg-card border border-border rounded-[20px] p-[20px] mb-[16px]">
               <div className="font-display text-[14px] font-bold text-navy mb-[2px]">{medicinesSorted[0]?.doctorName || 'Doctor'}</div>
               <div className="text-[12px] text-muted">{medicinesSorted[0]?.hospitalName || ''}</div>
 
@@ -257,7 +257,7 @@ export default function PharmacistPage() {
               )}
             </div>
 
-            <div className="bg-amber-light border border-[rgba(245,216,122,1)] rounded-[16px] p-[13px_15px] mb-[12px]">
+            <div className="bg-amber-light border border-[#f5d87a] rounded-[20px] p-[16px_18px] mb-[16px]">
               <div className="text-[10px] font-bold tracking-[0.06em] text-[#9a6200] uppercase mb-[5px]">
                 ⚠ Allergies / Notes
               </div>
@@ -269,7 +269,7 @@ export default function PharmacistPage() {
             <button
               type="button"
               disabled={dispensed}
-              className="w-full bg-navy text-white rounded-[10px] px-[12px] py-[12px] font-body text-[13px] font-medium cursor-pointer flex items-center justify-center gap-[8px] transition-all hover:bg-navy-mid"
+              className="w-full bg-primary text-white rounded-[20px] px-[12px] py-[14px] font-body text-[14px] font-bold tracking-[0.2px] cursor-pointer flex items-center justify-center gap-[8px] transition-all hover:bg-navy-mid"
               onClick={() => {
                 if (dispensed) return;
                 setPinError('');
@@ -299,7 +299,7 @@ export default function PharmacistPage() {
             if (e.target === e.currentTarget) setDispenseOpen(false);
           }}
         >
-          <div className="bg-card rounded-[16px] p-[26px] w-full max-w-[420px] relative shadow-modal">
+          <div className="bg-card rounded-[20px] p-[32px] w-full max-w-[420px] relative shadow-modal">
             <div
               className="absolute top-[13px] right-[13px] h-[27px] w-[27px] rounded-full bg-bg cursor-pointer flex items-center justify-center border-none"
               onClick={() => setDispenseOpen(false)}
@@ -356,7 +356,7 @@ export default function PharmacistPage() {
               <button
                 type="button"
                 disabled={submitting}
-                className="flex-1 rounded-btn bg-navy py-[12px] text-[13px] font-body font-semibold text-white cursor-pointer flex items-center justify-center gap-[8px] disabled:opacity-60"
+                className="flex-1 rounded-[20px] bg-primary py-[12px] text-[13px] font-body font-bold text-white cursor-pointer flex items-center justify-center gap-[8px] disabled:opacity-60"
                 onClick={async () => {
                   setPinError('');
                   if (!/^\d{4}$/.test(pin)) {

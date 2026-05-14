@@ -1,3 +1,8 @@
+import dns from 'node:dns';
+// Or use: const dns = require('node:dns');
+
+dns.setServers(['8.8.8.8', '8.8.4.4']); // Use Google Public DNS
+
 import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
