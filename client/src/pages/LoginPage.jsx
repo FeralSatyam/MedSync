@@ -226,10 +226,10 @@ export default function LoginPage() {
           </div>
         </div>
 
-        <h1 className="text-[30px] font-display font-semibold text-white leading-[1.3] mb-[18px]">
+        <h1 className="text-[32px] font-display font-bold text-white leading-[1.2] tracking-[-0.5px] mb-[18px]">
           Your medicines, always in the right hands.
         </h1>
-        <p className="text-[14px] text-[rgba(255,255,255,0.5)] leading-[1.75]">
+        <p className="text-[15px] font-body text-[rgba(255,255,255,0.7)] leading-[1.6]">
           Show a single QR code at any pharmacy. The pharmacist sees exact medicine, dose, and prescription — no errors.
         </p>
 
@@ -259,24 +259,24 @@ export default function LoginPage() {
             <div className="font-display text-[17px] font-bold text-navy">MedSync</div>
           </div>
 
-          <h2 className="font-display text-[26px] font-bold text-navy mb-[5px]">
+          <h2 className="font-display text-[28px] font-bold tracking-[-0.4px] text-navy mb-[6px]">
             {mode === 'login' ? 'Sign In' : 'Register'}
           </h2>
-          <p className="text-[14px] text-muted mb-[28px]">
+          <p className="text-[14px] font-body text-muted mb-[32px]">
             {mode === 'login' ? 'Welcome back! Enter your details.' : 'Create an account to start tracking medicines.'}
           </p>
 
           {/* Tab switcher */}
-          <div className="flex gap-[4px] bg-bg rounded-[10px] p-[4px] mb-[22px]">
+          <div className="flex gap-[4px] bg-bg rounded-[14px] p-[5px] mb-[26px]">
             <button type="button" onClick={() => setMode('login')}
-              className={`flex-1 px-[8px] py-[8px] rounded-[7px] text-[13px] cursor-pointer transition-all ${
-                mode === 'login' ? 'bg-card text-navy font-medium shadow-[0_1px_4px_rgba(0,0,0,0.08)]' : 'bg-transparent text-muted'
+              className={`flex-1 px-[8px] py-[10px] rounded-[10px] font-body text-[13px] font-semibold cursor-pointer transition-all ${
+                mode === 'login' ? 'bg-card text-navy shadow-sm' : 'bg-transparent text-muted hover:text-navy'
               }`}>
               Sign In
             </button>
             <button type="button" onClick={() => setMode('register')}
-              className={`flex-1 px-[8px] py-[8px] rounded-[7px] text-[13px] cursor-pointer transition-all ${
-                mode === 'register' ? 'bg-card text-navy font-medium shadow-[0_1px_4px_rgba(0,0,0,0.08)]' : 'bg-transparent text-muted'
+              className={`flex-1 px-[8px] py-[10px] rounded-[10px] font-body text-[13px] font-semibold cursor-pointer transition-all ${
+                mode === 'register' ? 'bg-card text-navy shadow-sm' : 'bg-transparent text-muted hover:text-navy'
               }`}>
               Register
             </button>

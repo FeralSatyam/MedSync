@@ -21,10 +21,10 @@ export default function App() {
         position="bottom-right"
         toastOptions={{
           style: {
-            fontFamily: '"DM Sans", sans-serif',
+            fontFamily: '"Plus Jakarta Sans", sans-serif',
             fontWeight: 500,
             fontSize: '13px',
-            borderRadius: '10px',
+            borderRadius: '12px',
             padding: '12px 16px',
           },
           success: {

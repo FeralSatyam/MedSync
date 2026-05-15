@@ -109,29 +109,29 @@ export default function ProfilePage() {
       </div>
 
       <div className="mt-[16px] grid grid-cols-3 gap-[12px]">
-        <div className="bg-bg rounded-[10px] p-[14px] border border-border">
-          <div className="font-display text-[26px] font-bold text-navy">{stats.totalPatients}</div>
-          <div className="text-[11px] text-muted mt-[2px]">Total Patients</div>
+        <div className="bg-card rounded-[20px] p-[16px] border border-border shadow-card">
+          <div className="font-display text-[26px] font-bold text-navy tracking-[-0.5px]">{stats.totalPatients}</div>
+          <div className="text-[12px] font-body font-semibold text-muted mt-[2px]">Total Patients</div>
         </div>
-        <div className="bg-bg rounded-[10px] p-[14px] border border-border">
-          <div className="font-display text-[26px] font-bold text-navy">{stats.totalMedicines}</div>
-          <div className="text-[11px] text-muted mt-[2px]">Total Medicines</div>
+        <div className="bg-card rounded-[20px] p-[16px] border border-border shadow-card">
+          <div className="font-display text-[26px] font-bold text-navy tracking-[-0.5px]">{stats.totalMedicines}</div>
+          <div className="text-[12px] font-body font-semibold text-muted mt-[2px]">Total Medicines</div>
         </div>
-        <div className="bg-bg rounded-[10px] p-[14px] border border-border">
+        <div className="bg-card rounded-[20px] p-[16px] border border-border shadow-card">
           <div
-            className={`font-display text-[26px] font-bold mt-0 ${
+            className={`font-display text-[26px] tracking-[-0.5px] font-bold mt-0 ${
               stats.activeAlerts > 0 ? 'text-red' : 'text-green'
             }`}
           >
             {stats.activeAlerts}
           </div>
-          <div className="text-[11px] text-muted mt-[2px]">Active Alerts</div>
+          <div className="text-[12px] font-body font-semibold text-muted mt-[2px]">Active Alerts</div>
         </div>
       </div>
 
-      <div className="mt-[20px] bg-card border border-border rounded-[16px] overflow-hidden">
-        <div className="px-[18px] py-[15px] border-b border-border">
-          <div className="mb-[10px] flex items-center justify-between">
+      <div className="mt-[20px] bg-card border border-border rounded-[20px] overflow-hidden shadow-card">
+        <div className="px-[20px] py-[18px] border-b border-border">
+          <div className="mb-[14px] flex items-center justify-between">
             <div className="text-[14px] font-semibold text-navy">Manage Account</div>
             {!isEditing ? (
               <button
@@ -185,12 +185,12 @@ export default function ProfilePage() {
       <button
         type="button"
         onClick={handleSignOut}
-        className="mt-[16px] w-full rounded-[10px] bg-[rgba(255,240,240,1)] border border-[rgba(255,204,204,1)] py-[14px] flex items-center justify-center gap-[8px] font-body text-[13px] font-bold text-red cursor-pointer"
+        className="mt-[20px] w-full rounded-btn bg-[rgba(226,75,74,0.08)] border border-[rgba(226,75,74,0.2)] py-[14px] flex items-center justify-center gap-[8px] font-body text-[14px] font-bold text-red cursor-pointer transition-all hover:bg-[rgba(226,75,74,0.12)] active:scale-[0.98]"
       >
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" stroke="#e84040" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-          <polyline points="16 17 21 12 16 7" stroke="#e84040" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-          <line x1="21" y1="12" x2="9" y2="12" stroke="#e84040" strokeWidth="2" strokeLinecap="round" />
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+          <polyline points="16 17 21 12 16 7" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+          <line x1="21" y1="12" x2="9" y2="12" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
         </svg>
         Sign Out
       </button>
@@ -208,7 +208,7 @@ export default function ProfilePage() {
             toast.error(err?.response?.data?.message || 'Delete account failed');
           }
         }}
-        className="mt-[10px] w-full rounded-[10px] bg-card border border-red px-[14px] py-[12px] text-[13px] font-bold text-red cursor-pointer"
+        className="mt-[12px] w-full rounded-btn bg-card border border-border px-[14px] py-[12px] text-[13px] font-body font-bold text-muted cursor-pointer transition-all hover:bg-faint active:scale-[0.98]"
       >
         Delete Account
       </button>
