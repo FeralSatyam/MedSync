@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 
 import { useAuthStore } from '../store/authStore';
-import { getPatients } from '../api/patientApi';
+import { getPatients, updatePatient, deletePatient } from '../api/patientApi';
 import { getMedicinesForPatient } from '../api/medicineApi';
 import { updateMe, deleteMe } from '../api/authApi';
 
@@ -14,6 +14,9 @@ export default function ProfilePage() {
   const login = useAuthStore((s) => s.login);
   const token = useAuthStore((s) => s.token);
   const [stats, setStats] = useState({ totalPatients: 0, totalMedicines: 0, activeAlerts: 0 });
+  const [patients, setPatients] = useState([]);
+  const [editPatientOpen, setEditPatientOpen] = useState(false);
+  const [editPatientForm, setEditPatientForm] = useState(null);
   const [name, setName] = useState(user?.name || '');
   const [email, setEmail] = useState(user?.email || '');
   const [isEditing, setIsEditing] = useState(false);
@@ -33,7 +36,10 @@ export default function ProfilePage() {
             if (m.stockStatus === 'red' || m.stockStatus === 'amber') activeAlerts += 1;
           });
         });
-        if (!cancelled) setStats({ totalPatients: patients.length, totalMedicines, activeAlerts });
+        if (!cancelled) {
+          setStats({ totalPatients: patients.length, totalMedicines, activeAlerts });
+          setPatients(patients);
+        }
       } catch {
         toast.error('Could not load profile stats');
       }
@@ -59,6 +65,32 @@ export default function ProfilePage() {
     setName(user?.name || '');
     setEmail(user?.email || '');
     setIsEditing(false);
+  }
+
+  const handleDeletePatient = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this family profile?")) return;
+    try {
+      await deletePatient(id);
+      setPatients(patients.filter(p => p._id !== id && p.id !== id));
+      toast.success("Profile deleted");
+    } catch (e) {
+      toast.error("Could not delete profile");
+    }
+  };
+
+  const handleEditPatient = async () => {
+    if(!editPatientForm.name.trim()) return toast.error("Name is required");
+    try {
+      await updatePatient(editPatientForm._id || editPatientForm.id, {
+         name: editPatientForm.name.trim(),
+         relation: editPatientForm.relation
+      });
+      setPatients(patients.map(p => (p._id || p.id) === (editPatientForm._id || editPatientForm.id) ? {...p, ...editPatientForm} : p));
+      setEditPatientOpen(false);
+      toast.success("Profile updated");
+    } catch (e) {
+      toast.error("Could not update profile");
+    }
   }
 
   async function saveProfile() {
@@ -97,7 +129,15 @@ export default function ProfilePage() {
   return (
     <div className="flex-1 px-[28px] py-[24px] max-w-[800px] w-full mx-auto bg-bg min-h-screen">
       <div className="flex items-center justify-between mb-[20px]">
-        <div className="font-display text-[22px] font-bold text-navy">My Profile</div>
+        <div className="flex items-center gap-[12px]">
+          <button onClick={() => navigate('/dashboard')} className="p-[8px] bg-card border border-border rounded-full hover:bg-faint cursor-pointer">
+             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+               <line x1="19" y1="12" x2="5" y2="12"></line>
+               <polyline points="12 19 5 12 12 5"></polyline>
+             </svg>
+          </button>
+          <div className="font-display text-[22px] font-bold text-navy">My Profile</div>
+        </div>
       </div>
 
       <div className="flex flex-col items-center text-center">
@@ -182,6 +222,32 @@ export default function ProfilePage() {
         </div>
       </div>
 
+      {/* Manage Family Profiles */}
+      <div className="mt-[20px] bg-card border border-border rounded-[20px] overflow-hidden shadow-card">
+        <div className="px-[20px] py-[18px] border-b border-border">
+          <div className="mb-[14px] flex items-center justify-between">
+            <div className="text-[14px] font-semibold text-navy">Manage Family Profiles</div>
+          </div>
+          <div className="grid gap-[10px]">
+            {patients.map(p => (
+              <div key={p._id || p.id} className="flex items-center justify-between p-[12px] border border-border rounded-btn bg-card">
+                 <div>
+                    <div className="font-semibold text-[14px] text-navy font-display">{p.name}</div>
+                    <div className="text-[12px] text-muted font-body capitalize">{p.relation}</div>
+                 </div>
+                 <div className="flex gap-[12px]">
+                   <button onClick={() => { setEditPatientForm({...p}); setEditPatientOpen(true); }} className="text-primary text-[12px] font-semibold hover:underline cursor-pointer font-body">Edit</button>
+                   <button onClick={() => handleDeletePatient(p._id || p.id)} className="text-red text-[12px] font-semibold hover:underline cursor-pointer font-body">Delete</button>
+                 </div>
+              </div>
+            ))}
+            {patients.length === 0 && (
+              <div className="text-[13px] text-muted text-center py-[10px]">No family profiles found.</div>
+            )}
+          </div>
+        </div>
+      </div>
+
       <button
         type="button"
         onClick={handleSignOut}
@@ -212,6 +278,38 @@ export default function ProfilePage() {
       >
         Delete Account
       </button>
+
+      {/* Edit Patient Modal */}
+      {editPatientOpen && editPatientForm && (
+        <div className="fixed inset-0 z-[1000] flex items-center justify-center p-[20px] bg-[rgba(15,31,61,0.45)] backdrop-blur">
+          <div className="w-full max-w-[420px] rounded-[16px] bg-card p-[26px] relative shadow-modal">
+            <div className="font-display text-[18px] font-bold text-navy mb-[16px]">Edit Family Profile</div>
+            <div className="space-y-[14px]">
+              <div>
+                <label className="mb-[7px] block text-[12px] font-semibold tracking-[0.02em] text-navy">Name</label>
+                <input value={editPatientForm.name} onChange={e => setEditPatientForm({...editPatientForm, name: e.target.value})} className="w-full rounded-btn border-[1.5px] border-border bg-card px-[15px] py-[11px] text-[14px] text-navy outline-none transition-colors" />
+              </div>
+              <div>
+                <label className="mb-[7px] block text-[12px] font-semibold tracking-[0.02em] text-navy">Relation</label>
+                <select value={editPatientForm.relation} onChange={e => setEditPatientForm({...editPatientForm, relation: e.target.value})} className="w-full rounded-btn border-[1.5px] border-border bg-card px-[15px] py-[11px] text-[14px] text-navy outline-none transition-colors">
+                  <option value="self">self</option>
+                  <option value="mother">mother</option>
+                  <option value="father">father</option>
+                  <option value="grandmother">grandmother</option>
+                  <option value="grandfather">grandfather</option>
+                  <option value="spouse">spouse</option>
+                  <option value="child">child</option>
+                  <option value="other">other</option>
+                </select>
+              </div>
+              <div className="flex gap-[8px] mt-[16px]">
+                <button type="button" onClick={() => setEditPatientOpen(false)} className="flex-1 rounded-btn border-[1.5px] border-border bg-card py-[9px] text-[13px] font-body font-semibold text-navy cursor-pointer">Cancel</button>
+                <button type="button" onClick={handleEditPatient} className="flex-1 rounded-btn bg-navy text-white border-none py-[12px] text-[14px] font-semibold cursor-pointer active:scale-[0.98]">Save Changes</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

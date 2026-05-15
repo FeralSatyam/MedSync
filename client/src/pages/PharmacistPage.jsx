@@ -111,21 +111,15 @@ export default function PharmacistPage() {
       {/* Top Bar */}
       <div className="bg-navy px-[24px] py-[10px] flex items-center gap-[10px]">
         <div className="flex items-center gap-[8px]">
-          <div
-            className="flex h-[26px] w-[26px] items-center justify-center rounded-[7px]"
-            style={{ background: 'rgba(0,200,150,0.2)' }}
-          >
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <path
-                d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2v-4M9 21H5a2 2 0 0 1-2-2v-4m0 0h18"
-                stroke="#00c896"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
+          <div className="flex h-[26px] w-[26px] items-center justify-center">
+            <svg width="26" height="26" viewBox="0 0 100 100" fill="none" aria-hidden="true" className="text-white">
+              <path d="M20 48 V30 C20 15 40 15 40 30 V48 H20 Z" fill="currentColor" />
+              <path d="M20 48 V70 C20 85 40 85 40 70 V48" stroke="currentColor" strokeWidth="5" strokeLinecap="round" />
+              <path d="M40 52 H47 L51 65 L58 35 L64 75 L69 52 H77" stroke="currentColor" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" />
+              <circle cx="82" cy="52" r="4.5" fill="currentColor" />
             </svg>
           </div>
-          <div className="font-display text-[14px] font-bold text-white">MedSync</div>
+          <div className="font-display text-[14px] font-bold tracking-[-0.3px] text-white">MEDSYNC</div>
           <div className="text-[11px] text-white/30 font-body">— Pharmacist View</div>
         </div>
 

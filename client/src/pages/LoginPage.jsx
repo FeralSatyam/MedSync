@@ -8,15 +8,21 @@ import toast from 'react-hot-toast';
 import { login, register, requestPasswordOtp, resetPasswordWithOtp, sendVerifyOtp, verifyEmail } from '../api/authApi';
 import { useAuthStore } from '../store/authStore';
 
+const isValidEmailStr = (email) => {
+  if (!email) return false;
+  const emailRegex = /^[^\s@]+@gmail\.com$/i;
+  return emailRegex.test(email.trim());
+};
+
 const loginSchema = z.object({
-  email: z.string().email('Invalid email').trim(),
+  email: z.string().email('Invalid email').trim().refine(isValidEmailStr, { message: 'Invalid or unsupported email provider' }),
   password: z.string().min(6, 'Password must be at least 6 characters'),
 });
 
 const registerSchema = z.object({
   firstName: z.string().trim().min(1, 'First name is required'),
   lastName: z.string().trim().min(1, 'Last name is required'),
-  email: z.string().email('Invalid email').trim(),
+  email: z.string().email('Invalid email').trim().refine(isValidEmailStr, { message: 'Invalid or unsupported email provider' }),
   password: z.string().min(6, 'Password must be at least 6 characters'),
 });
 
@@ -52,7 +58,7 @@ export default function LoginPage() {
     defaultValues: { firstName: '', lastName: '', email: '', password: '' },
   });
 
-  const demoHint = useMemo(() => 'Demo: demo@medsync.np / demo1234', []);
+  const demoHint = useMemo(() => 'Support: contact@medsync.np', []);
 
   // ── Login ──────────────────────────────────────────────────────────────────
   async function onSubmitLogin(values) {
@@ -66,14 +72,23 @@ export default function LoginPage() {
       const res = err?.response?.data;
       // Account exists but email not verified
       if (res?.needsVerification) {
-        setPendingEmail(res.email || values.email);
-        try {
-          await sendVerifyOtp(res.email || values.email);
-          toast('Please verify your email first. A code has been sent.', { icon: '📧' });
-        } catch {
-          // silent — user can resend
+        const emailToVerify = res.email || values.email;
+        if (!isValidEmailStr(emailToVerify)) {
+          toast.error("Invalid email format. Cannot send OTP.");
+          setMode('login');
+          return;
         }
-        setVerifyStep(true);
+
+        setPendingEmail(emailToVerify);
+        try {
+          await sendVerifyOtp(emailToVerify);
+          toast('Please verify your email first. A code has been sent.', { icon: '📧' });
+          setVerifyStep(true);
+        } catch (verifyErr) {
+          toast.error(verifyErr?.response?.data?.message || "Error sending OTP. Email might be incorrect.");
+          setVerifyStep(false);
+          setMode('register');
+        }
       } else {
         const message = res?.message || err?.message || 'Login failed';
         setFormError(message);
@@ -214,15 +229,15 @@ export default function LoginPage() {
 
         <div className="mb-[52px]">
           <div className="flex items-center gap-[12px]">
-            <div className="h-[44px] w-[44px] rounded-[12px] bg-mint flex items-center justify-center">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <path
-                  d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2v-4M9 21H5a2 2 0 0 1-2-2v-4m0 0h18"
-                  stroke="#ffffff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-                />
+            <div className="flex h-[44px] w-[44px] items-center justify-center">
+              <svg width="44" height="44" viewBox="0 0 100 100" fill="none" aria-hidden="true" className="text-white">
+                <path d="M20 48 V30 C20 15 40 15 40 30 V48 H20 Z" fill="currentColor" />
+                <path d="M20 48 V70 C20 85 40 85 40 70 V48" stroke="currentColor" strokeWidth="5" strokeLinecap="round" />
+                <path d="M40 52 H47 L51 65 L58 35 L64 75 L69 52 H77" stroke="currentColor" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" />
+                <circle cx="82" cy="52" r="4.5" fill="currentColor" />
               </svg>
             </div>
-            <div className="font-display text-[17px] font-bold text-white">MedSync</div>
+            <div className="font-display text-[22px] font-bold tracking-[-0.3px] text-white">MEDSYNC</div>
           </div>
         </div>
 
@@ -248,15 +263,15 @@ export default function LoginPage() {
 
           {/* Mobile mini logo */}
           <div className="md:hidden mb-[22px] flex items-center gap-[12px]">
-            <div className="h-[38px] w-[38px] rounded-[12px] bg-mint flex items-center justify-center">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <path
-                  d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2v-4M9 21H5a2 2 0 0 1-2-2v-4m0 0h18"
-                  stroke="#ffffff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-                />
+            <div className="flex h-[38px] w-[38px] items-center justify-center">
+              <svg width="38" height="38" viewBox="0 0 100 100" fill="none" aria-hidden="true" className="text-[#0d816a]">
+                <path d="M20 48 V30 C20 15 40 15 40 30 V48 H20 Z" fill="currentColor" />
+                <path d="M20 48 V70 C20 85 40 85 40 70 V48" stroke="currentColor" strokeWidth="5" strokeLinecap="round" />
+                <path d="M40 52 H47 L51 65 L58 35 L64 75 L69 52 H77" stroke="currentColor" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" />
+                <circle cx="82" cy="52" r="4.5" fill="currentColor" />
               </svg>
             </div>
-            <div className="font-display text-[17px] font-bold text-navy">MedSync</div>
+            <div className="font-display text-[17px] font-bold tracking-[-0.3px] text-navy">MEDSYNC</div>
           </div>
 
           <h2 className="font-display text-[28px] font-bold tracking-[-0.4px] text-navy mb-[6px]">
@@ -269,15 +284,13 @@ export default function LoginPage() {
           {/* Tab switcher */}
           <div className="flex gap-[4px] bg-bg rounded-[14px] p-[5px] mb-[26px]">
             <button type="button" onClick={() => setMode('login')}
-              className={`flex-1 px-[8px] py-[10px] rounded-[10px] font-body text-[13px] font-semibold cursor-pointer transition-all ${
-                mode === 'login' ? 'bg-card text-navy shadow-sm' : 'bg-transparent text-muted hover:text-navy'
-              }`}>
+              className={`flex-1 px-[8px] py-[10px] rounded-[10px] font-body text-[13px] font-semibold cursor-pointer transition-all ${mode === 'login' ? 'bg-card text-navy shadow-sm' : 'bg-transparent text-muted hover:text-navy'
+                }`}>
               Sign In
             </button>
             <button type="button" onClick={() => setMode('register')}
-              className={`flex-1 px-[8px] py-[10px] rounded-[10px] font-body text-[13px] font-semibold cursor-pointer transition-all ${
-                mode === 'register' ? 'bg-card text-navy shadow-sm' : 'bg-transparent text-muted hover:text-navy'
-              }`}>
+              className={`flex-1 px-[8px] py-[10px] rounded-[10px] font-body text-[13px] font-semibold cursor-pointer transition-all ${mode === 'register' ? 'bg-card text-navy shadow-sm' : 'bg-transparent text-muted hover:text-navy'
+                }`}>
               Register
             </button>
           </div>
@@ -395,12 +408,20 @@ export default function LoginPage() {
                 <button type="button"
                   className="flex-1 rounded-btn bg-navy text-white py-[10px] text-[13px] font-semibold"
                   onClick={async () => {
+                    if (!isValidEmailStr(forgotEmail)) {
+                      toast.error('Invalid email format. Please check and try again.');
+                      setForgotOpen(false);
+                      setMode('login');
+                      return;
+                    }
                     try {
                       await requestPasswordOtp({ email: forgotEmail });
                       setOtpSent(true);
                       toast.success('OTP sent to email');
                     } catch (err) {
                       toast.error(err?.response?.data?.message || 'Could not send OTP');
+                      setForgotOpen(false);
+                      setMode('register');
                     }
                   }}>
                   Send OTP
