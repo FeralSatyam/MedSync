@@ -10,7 +10,8 @@ import { useAuthStore } from '../store/authStore';
 
 const isValidEmailStr = (email) => {
   if (!email) return false;
-  const emailRegex = /^[^\s@]+@gmail\.com$/i;
+  // Standard email format validation (backend will perform MX and disposable checks)
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return emailRegex.test(email.trim());
 };
 

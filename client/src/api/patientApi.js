@@ -13,3 +13,5 @@ export const updatePatient = (id, payload) =>
 export const deletePatient = (id) => axiosInstance.delete(`/patients/${id}`).then((r) => r.data);
 
 export const getQrData = (id) => axiosInstance.get(`/patients/${id}/qr`).then((r) => r.data);
+
+export const generateQrOtp = (id) => axiosInstance.post(`/patients/${id}/generate-otp`).then((r) => r.data);
