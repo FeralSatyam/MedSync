@@ -1,311 +1,539 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { useAppStore } from '../store/appStore';
+import { getPatients, updatePatient } from '../api/patientApi';
 
-import { useAuthStore } from '../store/authStore';
-import { getPatients, updatePatient, deletePatient } from '../api/patientApi';
-import { getMedicinesForPatient } from '../api/medicineApi';
-import { updateMe, deleteMe } from '../api/authApi';
+// SVG Icons
+const Icons = {
+  Camera: () => (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M23 19C23 19.6 22.6 20 22 20H2C1.4 20 1 19.6 1 19V7C1 6.4 1.4 6 2 6H6.7L7.7 4.3C7.9 4 8.2 3.8 8.5 3.8H15.5C15.8 3.8 16.1 4 16.3 4.3L17.3 6H22C22.6 6 23 6.4 23 7V19Z" stroke="currentColor" strokeWidth="1.5" fill="none"/>
+      <circle cx="12" cy="13" r="4" stroke="currentColor" strokeWidth="1.5" fill="none"/>
+    </svg>
+  ),
+  Fingerprint: () => (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12 2C8.5 2 5.5 4.5 5.5 8.5V12C5.5 12 5 14 5 15C5 18 7 20 10 20" stroke="currentColor" strokeWidth="1.5" fill="none"/>
+      <path d="M18.5 12V9.5C18.5 6 16 3.5 12 3.5" stroke="currentColor" strokeWidth="1.5" fill="none"/>
+      <path d="M19 18C19 20.5 16.5 22 14 22" stroke="currentColor" strokeWidth="1.5" fill="none"/>
+      <path d="M15 12V15C15 17 13.5 18.5 12 18.5" stroke="currentColor" strokeWidth="1.5" fill="none"/>
+      <path d="M8 12V14C8 15.5 7 17 6 17" stroke="currentColor" strokeWidth="1.5" fill="none"/>
+      <path d="M21 12V13C21 15 20 17 18.5 18" stroke="currentColor" strokeWidth="1.5" fill="none"/>
+      <circle cx="12" cy="12" r="1.5" fill="currentColor"/>
+    </svg>
+  ),
+  Lock: () => (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="5" y="11" width="14" height="11" rx="2" stroke="currentColor" strokeWidth="1.5" fill="none"/>
+      <path d="M8 11V8C8 5.8 9.8 4 12 4C14.2 4 16 5.8 16 8V11" stroke="currentColor" strokeWidth="1.5" fill="none"/>
+      <circle cx="12" cy="16" r="1.5" fill="currentColor"/>
+      <path d="M12 18V20" stroke="currentColor" strokeWidth="1.5"/>
+    </svg>
+  ),
+  Crown: () => (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M2 18L4 8L8 12L12 4L16 12L20 8L22 18H2Z" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinejoin="round"/>
+      <path d="M4 20H20" stroke="currentColor" strokeWidth="1.5"/>
+    </svg>
+  ),
+  Check: () => (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M20 6L9 17L4 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  ),
+  ArrowLeft: () => (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M15 18L9 12L15 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  ),
+  Close: () => (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+    </svg>
+  ),
+};
+
+// Family Member Component
+function FamilyMemberCard({ member, isActive, onSelect, onImageUpload, imagePreview }) {
+  const initials = member.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+  const fileInputRef = useRef(null);
+
+  return (
+    <div 
+      className={`p-4 rounded-xl cursor-pointer transition-all ${isActive ? 'bg-teal-50 border-2 border-teal-500' : 'bg-white border border-gray-200'}`}
+      onClick={() => onSelect(member)}
+    >
+      <div className="flex items-center gap-3">
+        <div className="relative">
+          <div className="w-14 h-14 rounded-full bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center text-white font-bold text-lg">
+            {imagePreview || initials}
+          </div>
+          <button 
+            onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}
+            className="absolute -bottom-1 -right-1 p-1 bg-white rounded-full shadow-md"
+          >
+            <Icons.Camera />
+          </button>
+          <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => onImageUpload(member, e)} />
+        </div>
+        <div>
+          <h3 className="font-semibold text-gray-800">{member.name}</h3>
+          <p className="text-xs text-gray-500 capitalize">{member.relation}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Feature Card for Pro
+function FeatureCard({ title, description, included }) {
+  return (
+    <div className="flex items-start gap-3 p-3 rounded-lg bg-gray-50">
+      <div className={`mt-0.5 w-5 h-5 rounded-full flex items-center justify-center ${included ? 'bg-teal-500' : 'bg-gray-300'}`}>
+        {included && <Icons.Check />}
+      </div>
+      <div>
+        <h4 className="font-medium text-gray-800 text-sm">{title}</h4>
+        <p className="text-xs text-gray-500">{description}</p>
+      </div>
+    </div>
+  );
+}
 
 export default function ProfilePage() {
   const navigate = useNavigate();
-  const user = useAuthStore((s) => s.user);
-  const logout = useAuthStore((s) => s.logout);
-  const login = useAuthStore((s) => s.login);
-  const token = useAuthStore((s) => s.token);
-  const [stats, setStats] = useState({ totalPatients: 0, totalMedicines: 0, activeAlerts: 0 });
   const [patients, setPatients] = useState([]);
-  const [editPatientOpen, setEditPatientOpen] = useState(false);
-  const [editPatientForm, setEditPatientForm] = useState(null);
-  const [name, setName] = useState(user?.name || '');
-  const [email, setEmail] = useState(user?.email || '');
-  const [isEditing, setIsEditing] = useState(false);
-  const [saving, setSaving] = useState(false);
+  const [selectedMember, setSelectedMember] = useState(null);
+  const [isPro, setIsPro] = useState(false);
+  const [showProModal, setShowProModal] = useState(false);
+  const [showPinModal, setShowPinModal] = useState(false);
+  const [pinInput, setPinInput] = useState('');
+  const [pinError, setPinError] = useState('');
+  const [biometricEnabled, setBiometricEnabled] = useState(false);
+  const [showChangePassword, setShowChangePassword] = useState(false);
+  const [passwordForm, setPasswordForm] = useState({ current: '', new: '', confirm: '' });
+  const [memberImages, setMemberImages] = useState({});
 
+  // Load patients
   useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const patients = await getPatients();
-        const medicinesLists = await Promise.all(patients.map((p) => getMedicinesForPatient(p._id)));
-        const totalMedicines = medicinesLists.reduce((sum, list) => sum + list.length, 0);
-        // Active alerts: red/amber based on stockStatus if present.
-        let activeAlerts = 0;
-        medicinesLists.forEach((list) => {
-          list.forEach((m) => {
-            if (m.stockStatus === 'red' || m.stockStatus === 'amber') activeAlerts += 1;
-          });
-        });
-        if (!cancelled) {
-          setStats({ totalPatients: patients.length, totalMedicines, activeAlerts });
-          setPatients(patients);
-        }
-      } catch {
-        toast.error('Could not load profile stats');
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
+    loadPatients();
+    // Check if user has pro subscription (from localStorage for testing)
+    const proStatus = localStorage.getItem('medsync_pro_status');
+    if (proStatus === 'active') {
+      setIsPro(true);
+    }
+    // Check biometric setting
+    const bioStatus = localStorage.getItem('medsync_biometric');
+    if (bioStatus === 'enabled') {
+      setBiometricEnabled(true);
+    }
   }, []);
 
-  function handleSignOut() {
-    logout();
-    localStorage.removeItem('medsync-auth');
-    navigate('/login');
-  }
-
-  function startEdit() {
-    setName(user?.name || '');
-    setEmail(user?.email || '');
-    setIsEditing(true);
-  }
-
-  function cancelEdit() {
-    setName(user?.name || '');
-    setEmail(user?.email || '');
-    setIsEditing(false);
-  }
-
-  const handleDeletePatient = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this family profile?")) return;
+  const loadPatients = async () => {
     try {
-      await deletePatient(id);
-      setPatients(patients.filter(p => p._id !== id && p.id !== id));
-      toast.success("Profile deleted");
-    } catch (e) {
-      toast.error("Could not delete profile");
+      const data = await getPatients();
+      setPatients(Array.isArray(data) ? data : []);
+      if (data && data.length > 0) {
+        setSelectedMember(data[0]);
+      }
+    } catch (error) {
+      console.error('Error loading patients:', error);
     }
   };
 
-  const handleEditPatient = async () => {
-    if(!editPatientForm.name.trim()) return toast.error("Name is required");
-    try {
-      await updatePatient(editPatientForm._id || editPatientForm.id, {
-         name: editPatientForm.name.trim(),
-         relation: editPatientForm.relation
-      });
-      setPatients(patients.map(p => (p._id || p.id) === (editPatientForm._id || editPatientForm.id) ? {...p, ...editPatientForm} : p));
-      setEditPatientOpen(false);
-      toast.success("Profile updated");
-    } catch (e) {
-      toast.error("Could not update profile");
-    }
-  }
+  const handleImageUpload = async (member, e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-  async function saveProfile() {
-    const trimmedName = name.trim();
-    const trimmedEmail = email.trim().toLowerCase();
-    if (!trimmedName) {
-      toast.error('Name is required');
-      return;
-    }
-    const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail);
-    if (!emailOk) {
-      toast.error('Enter a valid email');
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select an image file');
       return;
     }
 
-    setSaving(true);
-    try {
-      const res = await updateMe({ name: trimmedName, email: trimmedEmail });
-      login(res.user, token);
-      setIsEditing(false);
-      toast.success('Profile updated');
-    } catch (err) {
-      toast.error(err?.response?.data?.message || 'Update failed');
-    } finally {
-      setSaving(false);
+    // Validate size (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error('Image must be less than 2MB');
+      return;
     }
-  }
 
-  const initials = (user?.name || 'MS')
-    .split(' ')
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((p) => p[0]?.toUpperCase())
-    .join('');
+    // Create preview URL
+    const previewUrl = URL.createObjectURL(file);
+    setMemberImages(prev => ({ ...prev, [member._id]: previewUrl }));
+
+    // Here you would upload to your server/Cloudinary
+    toast.success('Profile picture updated (demo)');
+  };
+
+  const handleUpgradeToPro = () => {
+    setShowProModal(true);
+  };
+
+  const handleProPurchase = () => {
+    setShowProModal(false);
+    setShowPinModal(true);
+    setPinInput('');
+    setPinError('');
+  };
+
+  const verifyPin = () => {
+    if (pinInput === '1234') {
+      localStorage.setItem('medsync_pro_status', 'active');
+      setIsPro(true);
+      setShowPinModal(false);
+      toast.success('Successfully upgraded to Pro!');
+    } else {
+      setPinError('Invalid PIN. Please try again.');
+    }
+  };
+
+  const handleRemovePro = () => {
+    localStorage.removeItem('medsync_pro_status');
+    setIsPro(false);
+    toast.success('Pro subscription removed');
+  };
+
+  const toggleBiometric = () => {
+    if (!biometricEnabled) {
+      // Simulate biometric enrollment
+      if (window.PublicKeyCredential) {
+        toast.success('Biometric authentication enabled (demo)');
+        localStorage.setItem('medsync_biometric', 'enabled');
+        setBiometricEnabled(true);
+      } else {
+        toast.error('Biometric authentication not supported on this device');
+      }
+    } else {
+      localStorage.removeItem('medsync_biometric');
+      setBiometricEnabled(false);
+      toast.success('Biometric authentication disabled');
+    }
+  };
+
+  const handleChangePassword = async () => {
+    if (!passwordForm.current || !passwordForm.new || !passwordForm.confirm) {
+      toast.error('Please fill all fields');
+      return;
+    }
+    if (passwordForm.new !== passwordForm.confirm) {
+      toast.error('New passwords do not match');
+      return;
+    }
+    if (passwordForm.new.length < 6) {
+      toast.error('Password must be at least 6 characters');
+      return;
+    }
+    
+    // Simulate API call
+    toast.success('Password changed successfully');
+    setShowChangePassword(false);
+    setPasswordForm({ current: '', new: '', confirm: '' });
+  };
+
+  const handleResetPassword = () => {
+    // Simulate sending reset email
+    toast.success('Password reset link sent to your email');
+  };
+
+  // Pro features list
+  const freeFeatures = [
+    { title: 'Track up to 3 family members', description: 'Manage medications for yourself', included: true },
+    { title: 'Basic medication tracking', description: 'Log and track your medicines', included: true },
+    { title: 'QR code for pharmacy', description: 'Share prescriptions with pharmacy', included: true },
+    { title: 'Email support', description: 'Get help via email', included: true },
+  ];
+
+  const proFeatures = [
+    { title: 'Unlimited family members', description: 'Add all family members', included: isPro },
+    { title: 'Advanced medication analytics', description: 'View detailed health insights', included: isPro },
+    { title: 'AI-powered refill reminders', description: 'Smart notifications for refills', included: isPro },
+    { title: 'Export medical reports', description: 'PDF/CSV export of health data', included: isPro },
+    { title: 'Priority support', description: '24/7 priority customer support', included: isPro },
+    { title: 'Cloud backup', description: 'Secure backup of all data', included: isPro },
+  ];
 
   return (
-    <div className="flex-1 px-[28px] py-[24px] max-w-[800px] w-full mx-auto bg-bg min-h-screen">
-      <div className="flex items-center justify-between mb-[20px]">
-        <div className="flex items-center gap-[12px]">
-          <button onClick={() => navigate('/dashboard')} className="p-[8px] bg-card border border-border rounded-full hover:bg-faint cursor-pointer">
-             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-               <line x1="19" y1="12" x2="5" y2="12"></line>
-               <polyline points="12 19 5 12 12 5"></polyline>
-             </svg>
+    <div className="min-h-screen bg-gray-50 pb-20">
+      {/* Header */}
+      <div className="bg-white border-b border-gray-100 sticky top-0 z-40">
+        <div className="flex items-center gap-3 px-4 h-16">
+          <button onClick={() => navigate(-1)} className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
+            <Icons.ArrowLeft />
           </button>
-          <div className="font-display text-[22px] font-bold text-navy">My Profile</div>
+          <h1 className="text-xl font-bold text-gray-800">Profile</h1>
         </div>
       </div>
 
-      <div className="flex flex-col items-center text-center">
-        <div className="h-[68px] w-[68px] rounded-full bg-navy flex items-center justify-center font-display text-[20px] font-bold text-white">
-          {initials}
-        </div>
-        <div className="font-display text-[20px] font-bold text-navy mt-[12px]">{user?.name || 'User'}</div>
-        <div className="text-[13px] text-muted mt-[2px]">{user?.email || ''}</div>
-      </div>
-
-      <div className="mt-[16px] grid grid-cols-3 gap-[12px]">
-        <div className="bg-card rounded-[20px] p-[16px] border border-border shadow-card">
-          <div className="font-display text-[26px] font-bold text-navy tracking-[-0.5px]">{stats.totalPatients}</div>
-          <div className="text-[12px] font-body font-semibold text-muted mt-[2px]">Total Patients</div>
-        </div>
-        <div className="bg-card rounded-[20px] p-[16px] border border-border shadow-card">
-          <div className="font-display text-[26px] font-bold text-navy tracking-[-0.5px]">{stats.totalMedicines}</div>
-          <div className="text-[12px] font-body font-semibold text-muted mt-[2px]">Total Medicines</div>
-        </div>
-        <div className="bg-card rounded-[20px] p-[16px] border border-border shadow-card">
-          <div
-            className={`font-display text-[26px] tracking-[-0.5px] font-bold mt-0 ${
-              stats.activeAlerts > 0 ? 'text-red' : 'text-green'
-            }`}
-          >
-            {stats.activeAlerts}
-          </div>
-          <div className="text-[12px] font-body font-semibold text-muted mt-[2px]">Active Alerts</div>
-        </div>
-      </div>
-
-      <div className="mt-[20px] bg-card border border-border rounded-[20px] overflow-hidden shadow-card">
-        <div className="px-[20px] py-[18px] border-b border-border">
-          <div className="mb-[14px] flex items-center justify-between">
-            <div className="text-[14px] font-semibold text-navy">Manage Account</div>
-            {!isEditing ? (
-              <button
-                type="button"
-                className="rounded-btn border border-border bg-transparent px-[12px] py-[6px] text-[12px] font-semibold text-navy"
-                onClick={startEdit}
-              >
-                Edit Profile
-              </button>
-            ) : null}
-          </div>
-          <div className="grid gap-[10px]">
-            <input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              disabled={!isEditing}
-              className="w-full rounded-btn border-[1.5px] border-border bg-card px-[15px] py-[11px] text-[14px] text-navy outline-none disabled:bg-[#f8f9fc] disabled:text-muted"
-              placeholder="Full name"
-            />
-            <input
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              disabled={!isEditing}
-              className="w-full rounded-btn border-[1.5px] border-border bg-card px-[15px] py-[11px] text-[14px] text-navy outline-none disabled:bg-[#f8f9fc] disabled:text-muted"
-              placeholder="Email"
-            />
-            {isEditing ? (
-              <div className="flex gap-[8px]">
-                <button
-                  type="button"
-                  className="rounded-btn border border-border bg-transparent px-[18px] py-[9px] text-[13px] font-semibold cursor-pointer"
-                  onClick={cancelEdit}
-                  disabled={saving}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  className="rounded-btn bg-navy text-white px-[18px] py-[9px] text-[13px] font-semibold cursor-pointer w-fit disabled:opacity-60"
-                  onClick={saveProfile}
-                  disabled={saving}
-                >
-                  {saving ? 'Saving...' : 'Save Changes'}
-                </button>
-              </div>
-            ) : null}
-          </div>
-        </div>
-      </div>
-
-      {/* Manage Family Profiles */}
-      <div className="mt-[20px] bg-card border border-border rounded-[20px] overflow-hidden shadow-card">
-        <div className="px-[20px] py-[18px] border-b border-border">
-          <div className="mb-[14px] flex items-center justify-between">
-            <div className="text-[14px] font-semibold text-navy">Manage Family Profiles</div>
-          </div>
-          <div className="grid gap-[10px]">
-            {patients.map(p => (
-              <div key={p._id || p.id} className="flex items-center justify-between p-[12px] border border-border rounded-btn bg-card">
-                 <div>
-                    <div className="font-semibold text-[14px] text-navy font-display">{p.name}</div>
-                    <div className="text-[12px] text-muted font-body capitalize">{p.relation}</div>
-                 </div>
-                 <div className="flex gap-[12px]">
-                   <button onClick={() => { setEditPatientForm({...p}); setEditPatientOpen(true); }} className="text-primary text-[12px] font-semibold hover:underline cursor-pointer font-body">Edit</button>
-                   <button onClick={() => handleDeletePatient(p._id || p.id)} className="text-red text-[12px] font-semibold hover:underline cursor-pointer font-body">Delete</button>
-                 </div>
-              </div>
+      <div className="max-w-2xl mx-auto px-4 py-6 space-y-6">
+        {/* Family Members Section */}
+        <div className="bg-white rounded-xl p-4 shadow-sm">
+          <h2 className="font-semibold text-gray-800 mb-3">Family Members</h2>
+          <div className="space-y-2">
+            {patients.map((member) => (
+              <FamilyMemberCard
+                key={member._id}
+                member={member}
+                isActive={selectedMember?._id === member._id}
+                onSelect={setSelectedMember}
+                onImageUpload={handleImageUpload}
+                imagePreview={memberImages[member._id]}
+              />
             ))}
-            {patients.length === 0 && (
-              <div className="text-[13px] text-muted text-center py-[10px]">No family profiles found.</div>
+          </div>
+        </div>
+
+        {/* Selected Member Details */}
+        {selectedMember && (
+          <div className="bg-white rounded-xl p-4 shadow-sm">
+            <h2 className="font-semibold text-gray-800 mb-3">Member Details</h2>
+            <div className="space-y-3">
+              <div>
+                <label className="text-xs text-gray-500">Full Name</label>
+                <p className="text-gray-800 font-medium">{selectedMember.name}</p>
+              </div>
+              <div>
+                <label className="text-xs text-gray-500">Relation</label>
+                <p className="text-gray-800 font-medium capitalize">{selectedMember.relation}</p>
+              </div>
+              <div>
+                <label className="text-xs text-gray-500">Date of Birth</label>
+                <p className="text-gray-800 font-medium">{selectedMember.dateOfBirth || 'Not set'}</p>
+              </div>
+              <div>
+                <label className="text-xs text-gray-500">Allergies / Notes</label>
+                <p className="text-gray-800 font-medium">{selectedMember.allergies || 'None'}</p>
+              </div>
+              <div>
+                <label className="text-xs text-gray-500">Pharmacy PIN</label>
+                <p className="text-gray-800 font-medium">{'•'.repeat(4)}</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Security Section */}
+        <div className="bg-white rounded-xl p-4 shadow-sm">
+          <h2 className="font-semibold text-gray-800 mb-3">Security</h2>
+          <div className="space-y-3">
+            <button 
+              onClick={() => setShowChangePassword(true)}
+              className="w-full flex items-center justify-between p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <Icons.Lock />
+                <span className="text-gray-700">Change Password</span>
+              </div>
+              <span className="text-gray-400 text-sm">→</span>
+            </button>
+
+            <button 
+              onClick={handleResetPassword}
+              className="w-full flex items-center justify-between p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <path d="M1 12C1 12 4 4 12 4C20 4 23 12 23 12C23 12 20 20 12 20C4 20 1 12 1 12Z" />
+                  <circle cx="12" cy="12" r="3" />
+                </svg>
+                <span className="text-gray-700">Reset Password</span>
+              </div>
+              <span className="text-gray-400 text-sm">→</span>
+            </button>
+
+            <button 
+              onClick={toggleBiometric}
+              className="w-full flex items-center justify-between p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <Icons.Fingerprint />
+                <span className="text-gray-700">Biometric Login</span>
+              </div>
+              <div className={`w-10 h-6 rounded-full transition-colors ${biometricEnabled ? 'bg-teal-500' : 'bg-gray-300'}`}>
+                <div className={`w-5 h-5 rounded-full bg-white shadow-md transform transition-transform mt-0.5 ${biometricEnabled ? 'translate-x-4' : 'translate-x-0.5'}`} />
+              </div>
+            </button>
+          </div>
+        </div>
+
+        {/* Subscription Section */}
+        <div className={`rounded-xl p-4 shadow-sm ${isPro ? 'bg-gradient-to-r from-amber-50 to-yellow-50 border-2 border-amber-400' : 'bg-white'}`}>
+          <div className="flex justify-between items-start mb-3">
+            <div className="flex items-center gap-2">
+              <Icons.Crown />
+              <h2 className="font-semibold text-gray-800">MedSync {isPro ? 'Pro' : 'Free'}</h2>
+            </div>
+            {isPro && (
+              <button onClick={handleRemovePro} className="text-xs text-red-500 hover:text-red-600">Remove Pro</button>
             )}
           </div>
+
+          {/* Features Comparison */}
+          <div className="space-y-3 mb-4">
+            <p className="text-sm text-gray-600">Current Plan Features:</p>
+            {freeFeatures.map((feature, idx) => (
+              <FeatureCard key={idx} {...feature} />
+            ))}
+            <div className="h-px bg-gray-200 my-2" />
+            {proFeatures.map((feature, idx) => (
+              <FeatureCard key={idx} {...feature} />
+            ))}
+          </div>
+
+          {!isPro && (
+            <button 
+              onClick={handleUpgradeToPro}
+              className="w-full bg-gradient-to-r from-amber-500 to-yellow-500 text-white py-3 rounded-lg font-semibold hover:from-amber-600 hover:to-yellow-600 transition-colors"
+            >
+              Upgrade to Pro - $4.99/month
+            </button>
+          )}
+
+          {isPro && (
+            <div className="text-center p-3 bg-amber-100 rounded-lg">
+              <p className="text-sm text-amber-800">✨ You're a Pro member! Enjoy all premium features.</p>
+            </div>
+          )}
+        </div>
+
+        {/* Version Info */}
+        <div className="text-center py-4">
+          <p className="text-xs text-gray-400">MedSync v1.0.0</p>
         </div>
       </div>
 
-      <button
-        type="button"
-        onClick={handleSignOut}
-        className="mt-[20px] w-full rounded-btn bg-[rgba(226,75,74,0.08)] border border-[rgba(226,75,74,0.2)] py-[14px] flex items-center justify-center gap-[8px] font-body text-[14px] font-bold text-red cursor-pointer transition-all hover:bg-[rgba(226,75,74,0.12)] active:scale-[0.98]"
-      >
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-          <polyline points="16 17 21 12 16 7" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-          <line x1="21" y1="12" x2="9" y2="12" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-        </svg>
-        Sign Out
-      </button>
+      {/* Upgrade to Pro Modal */}
+      {showProModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={() => setShowProModal(false)}>
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+            <div className="flex justify-between items-center mb-4">
+              <div className="flex items-center gap-2">
+                <Icons.Crown />
+                <h3 className="text-xl font-bold text-gray-800">Upgrade to Pro</h3>
+              </div>
+              <button onClick={() => setShowProModal(false)} className="text-gray-400 hover:text-gray-600">
+                <Icons.Close />
+              </button>
+            </div>
+            
+            <div className="space-y-4 mb-6">
+              <div className="bg-gradient-to-r from-amber-50 to-yellow-50 p-4 rounded-xl text-center">
+                <p className="text-3xl font-bold text-amber-600">$4.99</p>
+                <p className="text-sm text-gray-600">per month</p>
+              </div>
+              
+              <div className="space-y-2">
+                <p className="font-medium text-gray-800">Pro includes:</p>
+                <ul className="space-y-1">
+                  <li className="flex items-center gap-2 text-sm text-gray-600">✓ Unlimited family members</li>
+                  <li className="flex items-center gap-2 text-sm text-gray-600">✓ Advanced analytics & insights</li>
+                  <li className="flex items-center gap-2 text-sm text-gray-600">✓ AI-powered refill reminders</li>
+                  <li className="flex items-center gap-2 text-sm text-gray-600">✓ Export medical reports</li>
+                  <li className="flex items-center gap-2 text-sm text-gray-600">✓ Priority support</li>
+                </ul>
+              </div>
+              
+              <p className="text-xs text-gray-400 text-center">Cancel anytime • No commitment</p>
+            </div>
 
-      <button
-        type="button"
-        onClick={async () => {
-          if (!window.confirm('Delete your account? This action cannot be undone.')) return;
-          try {
-            await deleteMe();
-            logout();
-            localStorage.removeItem('medsync-auth');
-            navigate('/login');
-          } catch (err) {
-            toast.error(err?.response?.data?.message || 'Delete account failed');
-          }
-        }}
-        className="mt-[12px] w-full rounded-btn bg-card border border-border px-[14px] py-[12px] text-[13px] font-body font-bold text-muted cursor-pointer transition-all hover:bg-faint active:scale-[0.98]"
-      >
-        Delete Account
-      </button>
+            <div className="flex gap-3">
+              <button onClick={() => setShowProModal(false)} className="flex-1 border border-gray-200 rounded-lg py-2.5 text-gray-700 font-medium hover:bg-gray-50">
+                Cancel
+              </button>
+              <button onClick={handleProPurchase} className="flex-1 bg-gradient-to-r from-amber-500 to-yellow-500 text-white rounded-lg py-2.5 font-medium hover:from-amber-600 hover:to-yellow-600">
+                Continue to Payment
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
-      {/* Edit Patient Modal */}
-      {editPatientOpen && editPatientForm && (
-        <div className="fixed inset-0 z-[1000] flex items-center justify-center p-[20px] bg-[rgba(15,31,61,0.45)] backdrop-blur">
-          <div className="w-full max-w-[420px] rounded-[16px] bg-card p-[26px] relative shadow-modal">
-            <div className="font-display text-[18px] font-bold text-navy mb-[16px]">Edit Family Profile</div>
-            <div className="space-y-[14px]">
+      {/* PIN Verification Modal for Testing */}
+      {showPinModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={() => setShowPinModal(false)}>
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+            <div className="text-center mb-4">
+              <h3 className="text-xl font-bold text-gray-800">Verify PIN</h3>
+              <p className="text-sm text-gray-500 mt-1">Enter the test PIN to activate Pro</p>
+            </div>
+            
+            <div className="mb-4">
+              <input
+                type="password"
+                maxLength={4}
+                value={pinInput}
+                onChange={(e) => { setPinInput(e.target.value); setPinError(''); }}
+                placeholder="Enter 4-digit PIN"
+                className="w-full text-center text-2xl tracking-widest border border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                autoFocus
+              />
+              {pinError && <p className="text-xs text-red-500 mt-1 text-center">{pinError}</p>}
+              <p className="text-xs text-gray-400 mt-2 text-center">Test PIN: 1234</p>
+            </div>
+
+            <div className="flex gap-3">
+              <button onClick={() => setShowPinModal(false)} className="flex-1 border border-gray-200 rounded-lg py-2.5 text-gray-700 font-medium hover:bg-gray-50">
+                Cancel
+              </button>
+              <button onClick={verifyPin} className="flex-1 bg-teal-500 text-white rounded-lg py-2.5 font-medium hover:bg-teal-600">
+                Verify & Upgrade
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Change Password Modal */}
+      {showChangePassword && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={() => setShowChangePassword(false)}>
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-bold text-gray-800">Change Password</h3>
+              <button onClick={() => setShowChangePassword(false)} className="text-gray-400 hover:text-gray-600">
+                <Icons.Close />
+              </button>
+            </div>
+            
+            <div className="space-y-4">
               <div>
-                <label className="mb-[7px] block text-[12px] font-semibold tracking-[0.02em] text-navy">Name</label>
-                <input value={editPatientForm.name} onChange={e => setEditPatientForm({...editPatientForm, name: e.target.value})} className="w-full rounded-btn border-[1.5px] border-border bg-card px-[15px] py-[11px] text-[14px] text-navy outline-none transition-colors" />
+                <label className="block text-sm font-medium text-gray-700 mb-1">Current Password</label>
+                <input
+                  type="password"
+                  value={passwordForm.current}
+                  onChange={(e) => setPasswordForm({ ...passwordForm, current: e.target.value })}
+                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                  placeholder="Enter current password"
+                />
               </div>
               <div>
-                <label className="mb-[7px] block text-[12px] font-semibold tracking-[0.02em] text-navy">Relation</label>
-                <select value={editPatientForm.relation} onChange={e => setEditPatientForm({...editPatientForm, relation: e.target.value})} className="w-full rounded-btn border-[1.5px] border-border bg-card px-[15px] py-[11px] text-[14px] text-navy outline-none transition-colors">
-                  <option value="self">self</option>
-                  <option value="mother">mother</option>
-                  <option value="father">father</option>
-                  <option value="grandmother">grandmother</option>
-                  <option value="grandfather">grandfather</option>
-                  <option value="spouse">spouse</option>
-                  <option value="child">child</option>
-                  <option value="other">other</option>
-                </select>
+                <label className="block text-sm font-medium text-gray-700 mb-1">New Password</label>
+                <input
+                  type="password"
+                  value={passwordForm.new}
+                  onChange={(e) => setPasswordForm({ ...passwordForm, new: e.target.value })}
+                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                  placeholder="Enter new password"
+                />
               </div>
-              <div className="flex gap-[8px] mt-[16px]">
-                <button type="button" onClick={() => setEditPatientOpen(false)} className="flex-1 rounded-btn border-[1.5px] border-border bg-card py-[9px] text-[13px] font-body font-semibold text-navy cursor-pointer">Cancel</button>
-                <button type="button" onClick={handleEditPatient} className="flex-1 rounded-btn bg-navy text-white border-none py-[12px] text-[14px] font-semibold cursor-pointer active:scale-[0.98]">Save Changes</button>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Confirm New Password</label>
+                <input
+                  type="password"
+                  value={passwordForm.confirm}
+                  onChange={(e) => setPasswordForm({ ...passwordForm, confirm: e.target.value })}
+                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                  placeholder="Confirm new password"
+                />
               </div>
+            </div>
+
+            <div className="flex gap-3 mt-6">
+              <button onClick={() => setShowChangePassword(false)} className="flex-1 border border-gray-200 rounded-lg py-2.5 text-gray-700 font-medium hover:bg-gray-50">
+                Cancel
+              </button>
+              <button onClick={handleChangePassword} className="flex-1 bg-teal-500 text-white rounded-lg py-2.5 font-medium hover:bg-teal-600">
+                Update Password
+              </button>
             </div>
           </div>
         </div>
@@ -313,4 +541,3 @@ export default function ProfilePage() {
     </div>
   );
 }
-

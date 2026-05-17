@@ -6,6 +6,7 @@ import { createPatient, getPatients } from '../api/patientApi';
 import { deleteMedicine, getMedicinesForPatient, restockMedicine, updateMedicine } from '../api/medicineApi';
 import { getStockStatus, sortMedicinesByUrgency } from '../utils/stockUtils';
 import { useAppStore } from '../store/appStore';
+import { useAuthStore } from '../store/authStore';
 
 // SVG Icons
 const Icons = {
@@ -357,7 +358,8 @@ function DesktopSidebar({ activeTab, onTabChange }) {
   const navigate = useNavigate();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const menuRef = useRef(null);
-  const userName = "User";
+  const authUser = useAuthStore((s) => s.user);
+  const userName = authUser?.name?.split(' ')[0] || 'User';
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -368,6 +370,14 @@ function DesktopSidebar({ activeTab, onTabChange }) {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+  // Handle tab changes including profile and pharmacy navigation
+  useEffect(() => {
+    if (activeTab === 'profile') {
+      navigate('/profile');
+    } else if (activeTab === 'pharmacy') {
+      navigate('/pharmacy');
+    }
+  }, [activeTab, navigate]);
 
   const menuItems = [
     { id: 'home', label: 'Dashboard', icon: Icons.Home },
@@ -413,7 +423,7 @@ function DesktopSidebar({ activeTab, onTabChange }) {
             
             {showUserMenu && (
               <div className="absolute bottom-full left-0 mb-2 w-full bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
-                <button className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                <button onClick={() => navigate('/profile')} className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
                   <Icons.User />
                   My Profile
                 </button>
@@ -465,7 +475,13 @@ function MobileBottomNav({ activeTab, onTabChange, onQRPress }) {
           }
           
           return (
-            <button key={tab.id} onClick={() => onTabChange(tab.id)} className={`flex flex-col items-center gap-1 py-2 px-3 rounded-xl transition-all ${isActive ? 'text-teal-500' : 'text-gray-500 hover:text-gray-700'}`}>
+            <button key={tab.id} onClick={() => {
+              if (tab.id === 'profile') {
+                onTabChange('profile');
+              } else {
+                onTabChange(tab.id);
+              }
+            }} className={`flex flex-col items-center gap-1 py-2 px-3 rounded-xl transition-all ${isActive ? 'text-teal-500' : 'text-gray-500 hover:text-gray-700'}`}>
               <Icon active={isActive} />
               <span className="text-xs font-medium">{tab.label}</span>
             </button>
@@ -513,6 +529,14 @@ export default function DashboardPage() {
 
   const activePatientId = useAppStore((s) => s.activePatientId);
   const setActivePatientId = useAppStore((s) => s.setActivePatientId);
+  const authUser = useAuthStore((s) => s.user);
+  
+  // Get userId from authUser (supports both _id and id)
+  const userId = authUser?._id || authUser?.id;
+  
+  // Debug log
+  console.log('Auth User in Dashboard:', authUser);
+  console.log('User ID:', userId);
 
   const [patientAlertMap, setPatientAlertMap] = useState({});
   const [addProfileOpen, setAddProfileOpen] = useState(false);
@@ -528,6 +552,13 @@ export default function DashboardPage() {
   const [restockQty, setRestockQty] = useState('');
   const [removeTarget, setRemoveTarget] = useState(null);
   const [lightboxUrl, setLightboxUrl] = useState(null);
+
+  // Handle tab changes including profile navigation
+  useEffect(() => {
+    if (activeTab === 'profile') {
+      navigate('/profile');
+    }
+  }, [activeTab, navigate]);
 
   // Close notification when clicking outside
   useEffect(() => {
@@ -797,7 +828,7 @@ export default function DashboardPage() {
       {/* Mobile Bottom Navigation */}
       <MobileBottomNav activeTab={activeTab} onTabChange={setActiveTab} onQRPress={() => navigate('/qr')} />
 
-      {/* Add Profile Modal */}
+      {/* Add Patient Profile Modal */}
       {addProfileOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={() => setAddProfileOpen(false)}>
           <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
@@ -831,7 +862,7 @@ export default function DashboardPage() {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Pharmacy PIN (4-digit) *</label>
                 <input type="text" placeholder="Enter 4-digit PIN" maxLength={4} value={addProfileForm.pharmacyPin} onChange={(e) => setAddProfileForm({...addProfileForm, pharmacyPin: e.target.value.replace(/\D/g, '')})} className="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500" />
-                <p className="text-xs text-gray-400 mt-1">This PIN is required when pharmacist confirms dispensing</p>
+                <p className="text-xs text-gray-400 mt-1">This PIN will be hashed and used for pharmacy verification</p>
                 {addProfileErrors.pharmacyPin && <p className="text-xs text-red-500 mt-1">{addProfileErrors.pharmacyPin}</p>}
               </div>
               <div className="flex gap-3 pt-2">
@@ -841,14 +872,36 @@ export default function DashboardPage() {
                   if (!addProfileForm.name.trim()) errors.name = 'Name is required';
                   if (!addProfileForm.relation) errors.relation = 'Relation is required';
                   if (!/^\d{4}$/.test(addProfileForm.pharmacyPin)) errors.pharmacyPin = 'PIN must be exactly 4 digits';
-                  if (Object.keys(errors).length > 0) { setAddProfileErrors(errors); return; }
+                  
+                  if (Object.keys(errors).length > 0) {
+                    setAddProfileErrors(errors);
+                    return;
+                  }
+                  
+                  if (!userId) {
+                    toast.error('Please log in again');
+                    return;
+                  }
+                  
                   try {
-                    await createPatient(addProfileForm);
+                    await createPatient({
+                      userId: userId,
+                      name: addProfileForm.name.trim(),
+                      dateOfBirth: addProfileForm.dateOfBirth || undefined,
+                      relation: addProfileForm.relation,
+                      allergies: addProfileForm.allergies || '',
+                      pharmacyPin: addProfileForm.pharmacyPin,
+                    });
                     toast.success('Profile added successfully');
                     setAddProfileOpen(false);
                     await refreshPatients();
-                  } catch { toast.error('Failed to add profile'); }
-                }} className="flex-1 bg-teal-500 text-white rounded-lg py-2.5 font-medium hover:bg-teal-600">Add Member</button>
+                  } catch (err) {
+                    console.error('Error:', err.response?.data);
+                    toast.error(err?.response?.data?.message || 'Failed to add profile');
+                  }
+                }} className="flex-1 bg-teal-500 text-white rounded-lg py-2.5 font-medium hover:bg-teal-600">
+                  Add Member
+                </button>
               </div>
             </div>
           </div>

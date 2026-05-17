@@ -3,6 +3,7 @@ import toast from 'react-hot-toast';
 import { Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import { getPatients, createPatient, deletePatient } from '../api/patientApi';
+import { useAuthStore } from '../store/authStore';
 
 export default function PatientProfiles() {
   const [list, setList] = useState([]);
@@ -15,6 +16,14 @@ export default function PatientProfiles() {
     pharmacyPin: '',
   });
   const [saving, setSaving] = useState(false);
+  
+  // Get authenticated user from store
+  const authUser = useAuthStore((s) => s.user);
+  const userId = authUser?._id || authUser?.id;
+  
+  // Debug log
+  console.log('Auth User in PatientProfiles:', authUser);
+  console.log('User ID:', userId);
 
   async function load() {
     setLoading(true);
@@ -34,13 +43,22 @@ export default function PatientProfiles() {
 
   async function handleCreate(e) {
     e.preventDefault();
+    
+    // Check if user is logged in
+    if (!userId) {
+      toast.error('Please log in again');
+      return;
+    }
+    
     if (!/^\d{4}$/.test(form.pharmacyPin)) {
       toast.error('Pharmacy PIN must be exactly 4 digits');
       return;
     }
+    
     setSaving(true);
     try {
       await createPatient({
+        userId: userId,  // CRITICAL: Add the userId field
         name: form.name,
         dateOfBirth: form.dateOfBirth || undefined,
         allergies: form.allergies,
@@ -51,6 +69,7 @@ export default function PatientProfiles() {
       setForm({ name: '', dateOfBirth: '', allergies: '', notes: '', pharmacyPin: '' });
       load();
     } catch (err) {
+      console.error('Error:', err.response?.data);
       toast.error(err.response?.data?.message || 'Could not create profile');
     } finally {
       setSaving(false);
