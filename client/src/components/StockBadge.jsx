@@ -1,17 +1,17 @@
 const VARIANTS = {
   red: {
-    background: '#fff0f0',
-    color: '#e84040',
-    text: 'Out of stock',
+    background: '#fcebeb',
+    color: '#a32d2d',
+    text: 'Low stock',
   },
   amber: {
-    background: '#fff8ec',
-    color: '#9a6200',
-    text: 'Running low',
+    background: '#faeeda',
+    color: '#854f0b',
+    text: 'Refill soon',
   },
   green: {
-    background: '#edfaf3',
-    color: '#27ae60',
+    background: '#e1f5ee',
+    color: '#0f6e56',
     text: 'In stock',
   },
 };
@@ -21,17 +21,10 @@ export default function StockBadge({ status }) {
 
   return (
     <span
+      className="font-display inline-flex items-center justify-center tracking-[0.3px] px-[9px] py-[3px] rounded-[20px] text-[10px] font-bold"
       style={{
-        padding: '3px 9px',
-        borderRadius: '99px',
-        fontSize: '10px',
-        fontWeight: 700,
-        letterSpacing: '0.02em',
         background: v.background,
         color: v.color,
-        display: 'inline-flex',
-        alignItems: 'center',
-        justifyContent: 'center',
       }}
     >
       {v.text}

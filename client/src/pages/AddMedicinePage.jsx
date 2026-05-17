@@ -7,6 +7,7 @@ import toast from 'react-hot-toast';
 
 import { useAppStore } from '../store/appStore';
 import { createMedicine, getMedicinesForPatient, updateMedicine } from '../api/medicineApi';
+import SimpleCamera from '../components/SimpleCamera'; // ADD THIS IMPORT
 
 const schema = z.object({
   name: z.string().trim().min(1, 'Medicine name is required'),
@@ -31,6 +32,8 @@ export default function AddMedicinePage() {
 
   const [file, setFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState('');
+  const [showCamera, setShowCamera] = useState(false); // ADD THIS STATE
+  // const [processing, setProcessing] = useState(false); // ADD THIS STATE
 
   const {
     register,
@@ -52,6 +55,18 @@ export default function AddMedicinePage() {
       prescriptionValid: '',
     },
   });
+
+  // ADD THIS FUNCTION - Handles camera capture
+  const handleCameraCapture = (medicineName) => {
+  if (medicineName && medicineName.trim()) {
+    setValue('name', medicineName.trim());
+    toast.success(`Medicine name set to: ${medicineName}`);
+  } else {
+    toast.error('No medicine name captured');
+  }
+  setShowCamera(false);
+  // Remove any setProcessing calls - we don't need it
+};
 
   useEffect(() => {
     if (!activePatientId) {
@@ -138,27 +153,42 @@ export default function AddMedicinePage() {
   return (
     <div className="flex min-h-screen flex-col bg-bg">
       {/* Header not using navbar spec here to keep file short */}
-      <div className="flex flex-1 px-[28px] py-[26px] max-w-[680px] w-full mx-auto">
+      <div className="flex flex-1 px-[24px] py-[26px] max-w-[680px] w-full mx-auto">
         <div className="w-full">
           <div className="mb-[24px]">
-            <div className="font-display text-[22px] font-bold text-navy">{isEdit ? 'Edit Medicine' : 'Add New Medicine'}</div>
-            <div className="text-[13px] text-muted mt-[3px] font-body">Fill in details from your doctor's prescription</div>
+            <div className="font-display text-[24px] font-bold tracking-[-0.6px] text-navy">{isEdit ? 'Edit Medicine' : 'Add New Medicine'}</div>
+            <div className="text-[13px] text-muted mt-[4px] font-body">Fill in details from your doctor's prescription</div>
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="w-full">
-            <div className="rounded-[16px] border border-border bg-card p-[22px] mb-[16px]">
-              <div className="font-display text-[14px] font-bold text-navy mb-[16px] pb-[10px] border-b border-border">
+            <div className="rounded-[20px] border border-border bg-card p-[24px] mb-[20px]">
+              <div className="font-display text-[15px] font-bold tracking-[-0.2px] text-navy mb-[20px] pb-[12px] border-b border-faint">
                 Medicine Details
               </div>
 
               <div className="grid grid-cols-2 gap-[14px]">
+                {/* MODIFIED: Medicine name field with scan button */}
                 <div className="col-span-2">
                   <label className="mb-[7px] block text-[12px] font-semibold tracking-[0.02em] text-navy">Medicine name *</label>
-                  <input
-                    {...register('name')}
-                    className="w-full rounded-btn border-[1.5px] border-border bg-card px-[15px] py-[11px] text-[14px] text-navy outline-none transition-colors focus:border-mint"
-                    placeholder="e.g. Metformin"
-                  />
+                  <div className="flex gap-2">
+                    <input
+                      {...register('name')}
+                      className="flex-1 rounded-btn border-[1.5px] border-border bg-card px-[15px] py-[11px] text-[14px] text-navy outline-none transition-colors focus:border-mint"
+                      placeholder="e.g. Metformin"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowCamera(true)}
+                      className="bg-green-600 text-white px-4 py-2 rounded-btn hover:bg-green-700 transition-colors flex items-center gap-2 whitespace-nowrap"
+                      style={{ background: '#10b981' }} // Mint green color
+                    >
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                        <circle cx="12" cy="13" r="4" />
+                      </svg>
+                      Scan
+                    </button>
+                  </div>
                   {errors.name ? <div className="mt-[7px] text-[12px] font-semibold text-red">{errors.name.message}</div> : null}
                 </div>
 
@@ -256,8 +286,8 @@ export default function AddMedicinePage() {
               </div>
             </div>
 
-            <div className="rounded-[16px] border border-border bg-card p-[22px] mb-[16px]">
-              <div className="font-display text-[14px] font-bold text-navy mb-[16px] pb-[10px] border-b border-border">
+            <div className="rounded-[20px] border border-border bg-card p-[24px] mb-[20px]">
+              <div className="font-display text-[15px] font-bold tracking-[-0.2px] text-navy mb-[20px] pb-[12px] border-b border-faint">
                 Doctor & Prescription
               </div>
 
@@ -297,7 +327,7 @@ export default function AddMedicinePage() {
               </div>
 
               <div
-                className="mt-[16px] border-[2px] border-dashed border-border rounded-[10px] p-[26px] text-center cursor-pointer transition-all hover:border-mint hover:bg-mint-light"
+                className="mt-[20px] border-[1.5px] border-dashed border-border rounded-[20px] p-[32px] text-center cursor-pointer transition-all hover:border-mint hover:bg-mint-light"
                 onClick={() => document.getElementById('prescription-file')?.click()}
               >
                 <input
@@ -326,10 +356,10 @@ export default function AddMedicinePage() {
                 <div className="text-[11px] text-faint mt-[2px]">JPG, PNG, PDF — max 5MB</div>
 
                 {previewUrl ? (
-                  <div className="mt-[12px] rounded-[10px] overflow-hidden border border-border">
-                    <img src={previewUrl} alt="Preview" className="w-full max-h-[170px] object-contain bg-[#f0f0f0]" />
-                    <div className="flex justify-between px-[12px] py-[7px] bg-[#f8f8f8]">
-                      <div className="text-[11px] text-muted font-body">{file?.name}</div>
+                  <div className="mt-[16px] rounded-[16px] overflow-hidden border border-border">
+                    <img src={previewUrl} alt="Preview" className="w-full max-h-[200px] object-contain bg-[#f0f0f0]" />
+                    <div className="flex justify-between px-[16px] py-[10px] bg-[#f8f8f8]">
+                      <div className="text-[12px] text-muted font-body font-semibold">{file?.name}</div>
                       <button
                         type="button"
                         className="text-[11px] text-red font-body border-none bg-transparent cursor-pointer"
@@ -369,7 +399,24 @@ export default function AddMedicinePage() {
           </form>
         </div>
       </div>
+
+      {/* ADD CAMERA MODAL */}
+      {showCamera && (
+        <SimpleCamera 
+          onCapture={handleCameraCapture}
+          onClose={() => setShowCamera(false)}
+        />
+      )}
+
+      {/* ADD PROCESSING OVERLAY */}
+      {/* {processing && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+          <div className="bg-white rounded-lg p-6">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-mint mx-auto"></div>
+            <p className="mt-4 text-navy font-body">Processing image...</p>
+          </div>
+        </div>
+      )} */}
     </div>
   );
 }
-

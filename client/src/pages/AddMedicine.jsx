@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';  // Added useRef
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -7,6 +7,57 @@ import toast from 'react-hot-toast';
 import Navbar from '../components/Navbar';
 import { getPatient } from '../api/patientApi';
 import { createMedicine, getMedicinesForPatient, updateMedicine } from '../api/medicineApi';
+
+// Simple webcam component inline (for testing)
+const SimpleWebcam = ({ onCapture }) => {
+  const videoRef = useRef(null);
+  const [stream, setStream] = useState(null);
+
+  useEffect(() => {
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then(stream => {
+        setStream(stream);
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+        }
+      })
+      .catch(err => console.error("Camera error:", err));
+
+    return () => {
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+      }
+    };
+  }, []);
+
+  const capture = () => {
+    if (videoRef.current) {
+      const canvas = document.createElement('canvas');
+      canvas.width = videoRef.current.videoWidth;
+      canvas.height = videoRef.current.videoHeight;
+      canvas.getContext('2d').drawImage(videoRef.current, 0, 0);
+      canvas.toBlob(blob => {
+        onCapture(blob);
+      }, 'image/jpeg');
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-lg max-w-2xl w-full p-4">
+        <video ref={videoRef} autoPlay playsInline className="w-full rounded-lg" />
+        <div className="mt-4 flex gap-3">
+          <button onClick={capture} className="flex-1 bg-blue-600 text-white py-2 rounded-lg">
+            Capture
+          </button>
+          <button onClick={() => onCapture(null)} className="flex-1 bg-gray-300 py-2 rounded-lg">
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const schema = z.object({
   name: z.string().min(1, 'Required'),
@@ -33,11 +84,14 @@ export default function AddMedicine() {
   const [patient, setPatient] = useState(null);
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showCamera, setShowCamera] = useState(false);
+  const [processing, setProcessing] = useState(false);
 
   const {
     register,
     handleSubmit,
     reset,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm({
     resolver: zodResolver(schema),
@@ -49,6 +103,27 @@ export default function AddMedicine() {
       currentStock: 30,
     },
   });
+
+  // Function to simulate OCR (for testing)
+  const handleCapture = async (imageBlob) => {
+    if (!imageBlob) {
+      setShowCamera(false);
+      return;
+    }
+    
+    setProcessing(true);
+    
+    // For testing, just prompt for medicine name
+    // Replace this with actual OCR later
+    const medicineName = prompt("Enter medicine name (OCR demo):", "Paracetamol");
+    if (medicineName) {
+      setValue('name', medicineName);
+      toast.success(`Medicine name set to: ${medicineName}`);
+    }
+    
+    setProcessing(false);
+    setShowCamera(false);
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -163,11 +238,31 @@ export default function AddMedicine() {
           {isEdit ? 'Edit medicine' : 'Add medicine'} — {patient.name}
         </h1>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          {/* Medicine name with scan button */}
           <div>
             <label className="mb-1 block text-sm font-medium">Medicine name *</label>
-            <input {...register('name')} className="w-full rounded-lg border border-slate-300 px-3 py-2" />
+            <div className="flex gap-2">
+              <input 
+                {...register('name')} 
+                className="flex-1 rounded-lg border border-slate-300 px-3 py-2" 
+                placeholder="Enter medicine name or scan"
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  console.log("Scan button clicked!"); // Debug log
+                  setShowCamera(true);
+                }}
+                className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700"
+                style={{ minWidth: '80px' }}
+              >
+                📷 Scan
+              </button>
+            </div>
             {errors.name && <p className="text-sm text-red-600">{errors.name.message}</p>}
           </div>
+
+          {/* Rest of your form fields */}
           <div className="grid grid-cols-2 gap-2">
             <div>
               <label className="mb-1 block text-sm font-medium">Strength *</label>
@@ -247,6 +342,21 @@ export default function AddMedicine() {
           </div>
         </form>
       </main>
+
+      {/* Camera modal */}
+      {showCamera && (
+        <SimpleWebcam onCapture={handleCapture} />
+      )}
+      
+      {/* Processing overlay */}
+      {processing && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+          <div className="bg-white rounded-lg p-6">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600 mx-auto"></div>
+            <p className="mt-4">Processing image...</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

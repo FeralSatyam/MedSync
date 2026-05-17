@@ -11,14 +11,22 @@ import { useAppStore } from '../store/appStore';
 
 function SkeletonCard() {
   return (
-    <div className="animate-pulse rounded-card border border-border bg-border p-[20px_18px]">
-      <div className="mb-[13px] flex items-start gap-2">
-        <div className="h-[40px] w-[40px] rounded-[11px] bg-border" />
-        <div className="h-[18px] w-[90px] rounded-full bg-border" />
+    <div className="animate-pulse flex flex-col overflow-hidden rounded-[20px] border border-border bg-card p-[16px]">
+      <div className="flex items-start justify-between mb-[14px]">
+        <div>
+          <div className="h-[14px] w-[100px] rounded bg-border mb-[4px]" />
+          <div className="h-[10px] w-[130px] rounded bg-border" />
+        </div>
+        <div className="h-[34px] w-[34px] rounded-[10px] bg-border shrink-0" />
       </div>
-      <div className="h-[18px] w-[60%] rounded bg-border mb-[8px]" />
-      <div className="h-[12px] w-[80%] rounded bg-border mb-[6px]" />
-      <div className="mt-[10px] h-[42px] rounded bg-border" />
+      <div className="h-[18px] w-[60px] rounded-full bg-border mb-[8px]" />
+      <div className="flex justify-between mb-[4px]">
+        <div className="h-[12px] w-[50px] rounded bg-border" />
+        <div className="h-[12px] w-[20px] rounded bg-border" />
+      </div>
+      <div className="h-[6px] w-full rounded bg-border mb-[12px]" />
+      <div className="h-[10px] w-[40px] rounded bg-border mb-[12px]" />
+      <div className="h-[20px] w-full rounded bg-border mt-auto" />
     </div>
   );
 }
@@ -128,95 +136,108 @@ export default function DashboardPage() {
     <div className="flex min-h-screen flex-col bg-bg">
       <Navbar hasAlerts={hasAnyAlerts} />
 
-      <div className="dash-wrap flex-1 px-[28px] py-[22px] max-w-[1200px] w-full mx-auto">
+      <div className="dash-wrap flex-1 px-[24px] py-[22px] max-w-[1200px] w-full mx-auto">
+        {/* Greeting */}
+        <div className="mb-[24px]">
+          <div className="font-body text-[12px] font-medium text-muted mb-[2px]">Good morning</div>
+          <div className="font-display text-[20px] font-bold tracking-[-0.4px] text-navy">
+            {patients.find((p) => (p._id || p.id) === activePatientId)?.name?.split(' ')[0] || 'User'}
+          </div>
+        </div>
+
+        {/* Patient Profiles / Family */}
+        <div className="mb-[28px]">
+          <div className="font-alt text-[14px] font-semibold text-muted mb-[16px]">Family</div>
+          <div className="flex gap-[20px] overflow-x-auto hide-scrollbar pb-[8px]">
+            {patients.map((p) => {
+              const hasAlert = !!patientAlertMap[p._id || p.id];
+              const active = (p._id || p.id) === activePatientId;
+              const initials = p.name.split(' ').map((n) => n[0]).join('').substring(0, 2).toUpperCase();
+
+              return (
+                <div key={p._id || p.id} className="flex flex-col items-center gap-[8px] shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setActivePatientId(p._id || p.id)}
+                    className={`relative flex items-center justify-center rounded-full p-[4px] bg-card drop-shadow-sm cursor-pointer transition-all ${
+                      active ? 'border-2 border-mint' : 'border border-border opacity-80'
+                    }`}
+                    style={{ width: 56, height: 56 }}
+                  >
+                    <div className="flex items-center justify-center w-full h-full rounded-full bg-mint-light text-mint font-display font-bold text-[18px]">
+                      {initials}
+                    </div>
+                    {hasAlert && (
+                      <span className="absolute top-[0px] right-[0px] h-[14px] w-[14px] rounded-full bg-red border-[2.5px] border-card" />
+                    )}
+                  </button>
+                  <div className={`font-alt text-[12px] ${active ? 'text-primary' : 'text-muted'}`}>
+                    {p.name.split(' ')[0]}
+                  </div>
+                </div>
+              );
+            })}
+
+            <div className="flex flex-col items-center gap-[8px] shrink-0">
+              <button
+                type="button"
+                onClick={() => {
+                  setAddProfileErrors({});
+                  setAddProfileForm({ name: '', dateOfBirth: '', relation: 'self', allergies: '', pharmacyPin: '' });
+                  setAddProfileOpen(true);
+                }}
+                className="flex items-center justify-center rounded-full border border-dashed border-[#cbd5e1] bg-card cursor-pointer transition-all hover:bg-faint"
+                style={{ width: 56, height: 56 }}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7c8fa6" strokeWidth="2.5" strokeLinecap="round">
+                  <line x1="12" y1="5" x2="12" y2="19" />
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
+              </button>
+              <div className="font-alt text-[12px] text-muted">Add</div>
+            </div>
+          </div>
+        </div>
+
         {/* QR Strip */}
         <div
-          className="mb-[22px] overflow-hidden rounded-card bg-navy flex items-stretch shadow-qr"
+          className="mb-[28px] overflow-hidden rounded-[20px] bg-navy flex items-stretch shadow-qr"
           style={{ boxShadow: '0 4px 22px rgba(15,31,61,0.2)' }}
         >
           <div className="w-[5px] bg-mint flex-shrink-0" />
           <div className="flex flex-1 items-center justify-between gap-[16px] p-[18px_22px]">
             <div>
-              <div className="mb-[4px] text-[10px] font-bold tracking-[0.12em] text-white/40 uppercase">Pharmacy QR Code</div>
-              <div className="mb-[2px] font-display text-[17px] font-bold text-white">Show your QR at the pharmacy counter</div>
-              <div className="text-[12px] text-[rgba(255,255,255,0.45)]">
-                Pharmacist scans once — sees full medicine list, exact dosages & doctor's prescription
+              <div className="mb-[4px] text-[10px] font-bold tracking-[0.12em] text-white/40 uppercase font-display">Pharmacy QR</div>
+              <div className="mb-[2px] font-display text-[15px] font-bold text-white tracking-[-0.2px]">Show at pharmacy counter</div>
+              <div className="text-[11px] text-[rgba(255,255,255,0.5)] font-body leading-[1.4]">
+                Pharmacist scans to see your exact dosages & prescription.
               </div>
             </div>
 
             <button
               type="button"
               onClick={() => navigate('/qr')}
-              className="flex shrink-0 items-center gap-[9px] rounded-[10px] border-none bg-mint px-[20px] py-[11px] font-body text-[13px] font-semibold text-white cursor-pointer hover:bg-mint-mid active:scale-[0.97] transition-all whitespace-nowrap"
+              className="flex shrink-0 items-center justify-center rounded-full bg-mint size-[44px] cursor-pointer hover:bg-mint-mid active:scale-[0.97] transition-all text-white shadow-sm"
+              aria-label="Show QR Code"
             >
-              <svg width="17" height="17" viewBox="0 0 21 21" fill="none" aria-hidden="true">
+              <svg width="20" height="20" viewBox="0 0 21 21" fill="none" aria-hidden="true">
                 <rect x="3" y="3" width="7" height="7" rx="1" fill="currentColor" />
                 <rect x="14" y="3" width="7" height="7" rx="1" fill="currentColor" />
                 <rect x="3" y="14" width="7" height="7" rx="1" fill="currentColor" />
                 <rect x="14" y="14" width="3" height="3" fill="currentColor" />
                 <rect x="18" y="18" width="3" height="3" fill="currentColor" />
-                <line x1="14" y1="18" x2="14" y2="21" stroke="currentColor" strokeWidth="2" />
-                <line x1="18" y1="14" x2="21" y2="14" stroke="currentColor" strokeWidth="2" />
               </svg>
-              Show QR Code
-            </button>
-          </div>
-        </div>
-
-        {/* Patient Profiles */}
-        <div className="mb-[18px]">
-          <div className="text-[11px] font-semibold tracking-[0.05em] text-muted mb-[9px] uppercase">Profiles</div>
-          <div className="flex gap-[8px] flex-wrap overflow-x-auto hide-scrollbar items-center">
-            {patients.map((p) => {
-              const hasAlert = !!patientAlertMap[p._id || p.id];
-              const statusDotColor = hasAlert ? '#e84040' : '#27ae60';
-              const active = (p._id || p.id) === activePatientId;
-              return (
-                <button
-                  key={p._id || p.id}
-                  type="button"
-                  onClick={() => setActivePatientId(p._id || p.id)}
-                  className="flex items-center gap-[6px] cursor-pointer rounded-full border-[1.5px] border-border bg-card px-[15px] py-[7px] text-[12px] font-medium text-muted transition-all"
-                  style={
-                    active
-                      ? { background: '#0f1f3d', color: '#ffffff', borderColor: '#0f1f3d' }
-                      : { borderColor: active ? '#0f1f3d' : '#e2e8f4', color: active ? '#ffffff' : '#6b7a99' }
-                  }
-                >
-                  <span style={{ width: 6, height: 6, borderRadius: 999, background: statusDotColor }} />
-                  {p.name}
-                </button>
-              );
-            })}
-
-            <button
-              type="button"
-              className="px-[13px] py-[7px] rounded-full border-[1.5px] border-dashed border-border bg-transparent text-muted cursor-pointer text-[12px] font-medium transition-all"
-              style={{ color: '#6b7a99' }}
-              onClick={() => {
-                setAddProfileErrors({});
-                setAddProfileForm({
-                  name: '',
-                  dateOfBirth: '',
-                  relation: 'self',
-                  allergies: '',
-                  pharmacyPin: '',
-                });
-                setAddProfileOpen(true);
-              }}
-            >
-              + Add profile
             </button>
           </div>
         </div>
 
         {/* Medicine Section Header */}
         <div className="flex items-center justify-between mb-[14px]">
-          <div className="font-display text-[16px] font-bold text-navy">My Medicines</div>
-          <div className="flex gap-[7px]">
+          <div className="font-display text-[15px] font-bold tracking-[-0.2px] text-navy">My Medicines</div>
+          <div className="flex gap-[8px]">
             <button
               type="button"
-              className="rounded-btn border border-border bg-transparent px-[12px] py-[7px] text-[12px] font-medium text-navy hover:bg-[#f7f9ff] transition-all flex items-center gap-[7px]"
+              className="rounded-full bg-primary px-[14px] py-[6px] text-[11px] font-bold tracking-[0.2px] text-white hover:bg-navy-mid transition-all flex items-center gap-[6px] cursor-pointer"
               onClick={async () => {
                 if (!activePatientId) return;
                 try {
@@ -234,23 +255,22 @@ export default function DashboardPage() {
                 }
               }}
             >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <circle cx="12" cy="12" r="10" stroke="#0f1f3d" strokeWidth="2" />
-                <polyline points="12 6 12 12 16 14" stroke="#0f1f3d" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
-              Simulate Day
+              Simulate
             </button>
 
             <button
               type="button"
-              className="rounded-btn bg-mint px-[14px] py-[7px] text-[12px] font-semibold text-white hover:bg-mint-mid transition-all flex items-center gap-[7px]"
+              className="rounded-full bg-primary px-[14px] py-[6px] text-[11px] font-bold tracking-[0.2px] text-white hover:bg-navy-mid transition-all flex items-center gap-[6px] cursor-pointer"
               onClick={() => navigate('/add-medicine')}
             >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <line x1="12" y1="5" x2="12" y2="19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                <line x1="5" y1="12" x2="19" y2="12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <line x1="12" y1="5" x2="12" y2="19" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+                <line x1="5" y1="12" x2="19" y2="12" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
               </svg>
-              Add Medicine
+              Add
             </button>
           </div>
         </div>
