@@ -1,7 +1,35 @@
 import jwt from 'jsonwebtoken';
 import { validationResult } from 'express-validator';
+import dns from 'dns';
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
+const disposableDomains = require('disposable-email-domains');
 import User from '../models/User.js';
 import { isMailerConfigured, sendOtpEmail, sendVerifyOtpEmail } from '../utils/mailer.js';
+
+const isDisposableDomain = (domain) => {
+  if (!domain) return true;
+  return disposableDomains.includes(domain.toLowerCase());
+};
+
+const verifyMxRecord = async (domain) => {
+  return new Promise((resolve) => {
+    dns.resolveMx(domain, (err, addresses) => {
+      if (err) {
+        if (err.code === 'ENOTFOUND' || err.code === 'ENODATA') {
+          resolve(false);
+        } else {
+          // Network error (ECONNREFUSED, timeout), fail-open to not block users
+          resolve(true);
+        }
+      } else if (!addresses || addresses.length === 0) {
+        resolve(false);
+      } else {
+        resolve(true);
+      }
+    });
+  });
+};
 
 const signToken = (id) =>
   jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -22,11 +50,24 @@ export const register = async (req, res, next) => {
       return res.status(400).json({ message: 'Validation failed', errors: errors.array() });
     }
     const { name, email, password } = req.body;
-    const existing = await User.findOne({ email });
+    const normalizedEmail = email.toLowerCase().trim();
+
+    const domain = normalizedEmail.split('@')[1];
+    
+    if (isDisposableDomain(domain)) {
+      return res.status(400).json({ message: 'Disposable email addresses are not allowed' });
+    }
+
+    const hasMx = await verifyMxRecord(domain);
+    if (!hasMx) {
+      return res.status(400).json({ message: 'Invalid email provider' });
+    }
+
+    const existing = await User.findOne({ email: normalizedEmail });
     if (existing) {
       return res.status(400).json({ message: 'Email already registered' });
     }
-    const user = await User.create({ name, email, password });
+    const user = await User.create({ name, email: normalizedEmail, password });
 
     // Auto-send verification OTP right after registration
     const otp = String(Math.floor(100000 + Math.random() * 900000));
@@ -57,9 +98,14 @@ export const login = async (req, res, next) => {
       return res.status(400).json({ message: 'Validation failed', errors: errors.array() });
     }
     const { email, password } = req.body;
-    const user = await User.findOne({ email }).select('+password');
-    if (!user || !(await user.matchPassword(password))) {
-      return res.status(401).json({ message: 'Invalid email or password' });
+    const normalizedEmail = email.toLowerCase().trim();
+
+    const user = await User.findOne({ email: normalizedEmail }).select('+password');
+    if (!user) {
+      return res.status(401).json({ message: 'Email not registered' });
+    }
+    if (!(await user.matchPassword(password))) {
+      return res.status(401).json({ message: 'Incorrect password' });
     }
 
     // Block login if email not verified
@@ -131,7 +177,9 @@ export const requestPasswordOtp = async (req, res, next) => {
       return res.status(400).json({ message: 'Validation failed', errors: errors.array() });
     }
     const { email } = req.body;
-    const user = await User.findOne({ email });
+    const normalizedEmail = email.toLowerCase().trim();
+
+    const user = await User.findOne({ email: normalizedEmail });
     if (!user) return res.json({ success: true, message: 'If the email exists, OTP was sent.' });
 
     const otp = String(Math.floor(100000 + Math.random() * 900000));
@@ -188,9 +236,10 @@ export const resetPasswordWithOtp = async (req, res, next) => {
 export const sendVerifyOtp = async (req, res, next) => {
   try {
     const { email } = req.body;
-    if (!email) return res.status(400).json({ message: 'Email is required' });
+    const normalizedEmail = email.toLowerCase().trim();
+    if (!normalizedEmail) return res.status(400).json({ message: 'Email is required' });
 
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email: normalizedEmail });
     if (!user) return res.status(404).json({ message: 'No account found with this email' });
     if (user.isVerified) return res.status(400).json({ message: 'Email is already verified' });
 
@@ -218,9 +267,10 @@ export const sendVerifyOtp = async (req, res, next) => {
 export const verifyEmail = async (req, res, next) => {
   try {
     const { email, otp } = req.body;
-    if (!email || !otp) return res.status(400).json({ message: 'Email and OTP are required' });
+    const normalizedEmail = email.toLowerCase().trim();
+    if (!normalizedEmail || !otp) return res.status(400).json({ message: 'Email and OTP are required' });
 
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email: normalizedEmail });
     if (!user) return res.status(404).json({ message: 'No account found with this email' });
     if (user.isVerified) return res.status(400).json({ message: 'Email is already verified' });
 

@@ -31,6 +31,30 @@ export const getPublicByQr = async (req, res, next) => {
     if (!patient) {
       return res.status(404).json({ message: 'Invalid QR code' });
     }
+
+    res.json({
+      requiresOtp: true,
+      scanTimestamp: new Date().toISOString(),
+      patient: {
+        name: patient.name,
+      },
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const verifyOtp = async (req, res, next) => {
+  try {
+    const { qrToken } = req.params;
+    const { otp } = req.body;
+    const patient = await Patient.findOne({ qrToken });
+    if (!patient) return res.status(404).json({ message: 'Invalid QR code' });
+    
+    if (!patient.viewOtp || patient.viewOtp !== String(otp) || !patient.viewOtpExpires || patient.viewOtpExpires < new Date()) {
+      return res.status(401).json({ message: 'Invalid or expired OTP' });
+    }
+
     const medicinesRaw = await Medicine.find({ patientId: patient._id, isActive: true });
     const medicines = sortByUrgency(medicinesRaw.map(enrichMedicine));
 
@@ -40,6 +64,7 @@ export const getPublicByQr = async (req, res, next) => {
         name: patient.name,
         dateOfBirth: patient.dateOfBirth,
         allergies: patient.allergies,
+        profilePicUrl: patient.profilePicUrl,
       },
       medicines,
     });

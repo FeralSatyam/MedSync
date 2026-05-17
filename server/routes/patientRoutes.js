@@ -7,8 +7,10 @@ import {
   updatePatient,
   deletePatient,
   getQrData,
+  generateQrOtp,
 } from '../controllers/patientController.js';
 import { protect } from '../middleware/authMiddleware.js';
+import { uploadProfile } from '../middleware/uploadMiddleware.js';
 
 const router = express.Router();
 
@@ -21,6 +23,7 @@ const pinValidation = body('pharmacyPin')
 router.get('/', getPatients);
 router.post(
   '/',
+  uploadProfile.single('profilePic'),
   [
     body('name').trim().notEmpty(),
     body('dateOfBirth').optional().isISO8601(),
@@ -37,6 +40,7 @@ router.post(
 router.get('/:id', getPatient);
 router.put(
   '/:id',
+  uploadProfile.single('profilePic'),
   [
     body('name').optional().trim().notEmpty(),
     body('dateOfBirth').optional().isISO8601(),
@@ -51,5 +55,6 @@ router.put(
 );
 router.delete('/:id', deletePatient);
 router.get('/:id/qr', getQrData);
+router.post('/:id/generate-otp', generateQrOtp);
 
 export default router;

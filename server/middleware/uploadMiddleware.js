@@ -38,3 +38,17 @@ export const uploadPrescription = multer({
   limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter,
 });
+
+const profileStorage = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder: 'medsync/profiles',
+    allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'heic', 'heif', 'avif'],
+  },
+});
+
+export const uploadProfile = multer({
+  storage: profileStorage,
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter,
+});

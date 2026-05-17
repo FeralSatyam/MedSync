@@ -29,6 +29,10 @@ export const createPatient = async (req, res, next) => {
       return res.status(400).json({ message: 'Validation failed', errors: errors.array() });
     }
     const { name, dateOfBirth, relation, allergies, pharmacyPin } = req.body;
+    let profilePicUrl = '';
+    if (req.file && req.file.path) {
+      profilePicUrl = req.file.path;
+    }
     const qrToken = uuidv4();
     const patient = await Patient.create({
       userId: req.user._id,
@@ -37,6 +41,7 @@ export const createPatient = async (req, res, next) => {
       relation,
       allergies: allergies || '',
       qrToken,
+      profilePicUrl,
       pharmacyPin: String(pharmacyPin),
     });
     const out = patient.toObject();
@@ -76,6 +81,9 @@ export const updatePatient = async (req, res, next) => {
     if (name !== undefined) patient.name = name;
     if (dateOfBirth !== undefined) patient.dateOfBirth = dateOfBirth ? new Date(dateOfBirth) : null;
     if (allergies !== undefined) patient.allergies = allergies;
+    if (req.file && req.file.path) {
+      patient.profilePicUrl = req.file.path;
+    }
     await patient.save();
     const out = patient.toObject();
     delete out.pharmacyPin;
@@ -125,6 +133,22 @@ export const getQrData = async (req, res, next) => {
     res.json({ qrToken: patient.qrToken, qrUrl });
   } catch (err) {
     console.error('[getQrData] Error:', err);
+    if (typeof next === 'function') return next(err);
+    return res.status(500).json({ message: err?.message || 'Server error' });
+  }
+};
+
+export const generateQrOtp = async (req, res, next) => {
+  try {
+    const patient = await ensureOwner(req.params.id, req.user._id);
+    if (!patient) return res.status(404).json({ message: 'Patient not found' });
+    const otp = String(Math.floor(100000 + Math.random() * 900000));
+    patient.viewOtp = otp;
+    patient.viewOtpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+    await patient.save();
+    res.json({ otp });
+  } catch (err) {
+    console.error('[generateQrOtp] Error:', err);
     if (typeof next === 'function') return next(err);
     return res.status(500).json({ message: err?.message || 'Server error' });
   }
