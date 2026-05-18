@@ -1,68 +1,70 @@
-import dns from 'node:dns';
-// Or use: const dns = require('node:dns');
-
-dns.setServers(['8.8.8.8', '8.8.4.4']); // Use Google Public DNS
-
-import dotenv from 'dotenv';
-import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
-
-const __dirname = dirname(fileURLToPath(import.meta.url));
-dotenv.config({ path: join(__dirname, '.env') });
-
 import express from 'express';
+import mongoose from 'mongoose';
 import cors from 'cors';
-import helmet from 'helmet';
-import morgan from 'morgan';
-import cookieParser from 'cookie-parser';
-import connectDB from './config/db.js';
-import authRoutes from './routes/authRoutes.js';
-import patientRoutes from './routes/patientRoutes.js';
-import medicineRoutes from './routes/medicineRoutes.js';
-import pharmacistRoutes from './routes/pharmacistRoutes.js';
-import { errorMiddleware } from './middleware/errorMiddleware.js';
+import dotenv from 'dotenv';
 
-connectDB();
+// Load environment variables
+dotenv.config();
 
-import './jobs/stockCron.js';
-
+// Initialize express
 const app = express();
 
-app.set('trust proxy', 1);
-
-const allowedOrigins = (process.env.CLIENT_URL || 'http://localhost:5173')
-  .split(',')
-  .map((o) => o.trim())
-  .filter(Boolean);
-
-app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
-app.use(
-  cors({
-    origin(origin, callback) {
-      if (!origin) return callback(null, true);
-      // Dev convenience: allow any localhost port to avoid CORS issues.
-      if (origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:')) {
-        return callback(null, true);
-      }
-      if (allowedOrigins.includes(origin)) return callback(null, origin);
-      callback(null, false);
-    },
-    credentials: true,
-  })
-);
-app.use(morgan('dev'));
-app.use(cookieParser());
+// Middleware
+app.use(cors({
+  origin: ['http://localhost:5173', 'http://localhost:3000', process.env.CLIENT_URL],
+  credentials: true
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Import routes
+import authRoutes from './routes/authRoutes.js';
+import patientRoutes from './routes/patientRoutes.js';
+import medicineRoutes from './routes/medicineRoutes.js';
+import orderRoutes from './routes/orderRoutes.js';
+
+// Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/patients', patientRoutes);
 app.use('/api/medicines', medicineRoutes);
-app.use('/api/pharmacist', pharmacistRoutes);
+app.use('/api/orders', orderRoutes);
 
-app.use(errorMiddleware);
-
-const port = process.env.PORT || 5000;
-app.listen(port, () => {
-  console.log(`MedSync server running on port ${port}`);
+// Health check
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'OK', message: 'MedSync API is running', timestamp: new Date() });
 });
+
+// Error handler
+app.use((err, req, res, next) => {
+  console.error('Error:', err);
+  res.status(500).json({ message: 'Something went wrong!', error: err.message });
+});
+
+// 404 handler
+app.use((req, res) => {
+  res.status(404).json({ message: `Route ${req.url} not found` });
+});
+
+// Database connection and server start
+const PORT = process.env.PORT || 5000;
+const MONGODB_URI = process.env.MONGODB_URI;
+
+if (!MONGODB_URI) {
+  console.error('❌ MONGODB_URI is not defined in environment variables');
+  process.exit(1);
+}
+
+mongoose.connect(MONGODB_URI)
+  .then(() => {
+    console.log('✅ MongoDB connected successfully');
+    app.listen(PORT, () => {
+      console.log(`🚀 MedSync server running on port ${PORT}`);
+      console.log(`📍 API available at http://localhost:${PORT}/api`);
+    });
+  })
+  .catch((err) => {
+    console.error('❌ MongoDB connection error:', err);
+    process.exit(1);
+  });
+
+export default app;

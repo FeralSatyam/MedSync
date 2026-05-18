@@ -7,9 +7,11 @@ import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import AddMedicinePage from './pages/AddMedicinePage';
 import QRPage from './pages/QRPage';
-import PharmacistPage from './pages/PharmacyPage';  // Keep your original import
+import PharmacistPage from './pages/PharmacyPage';
 import ProfilePage from './pages/ProfilePage';
 import PharmacyPage from './pages/PharmacyPage';
+import OrdersPage from './pages/OrdersPage';
+import OrderTrackingPage from './pages/OrderTrackingPage';
 
 function ProtectedRoute({ children }) {
   const token = useAuthStore((s) => s.token);
@@ -82,12 +84,27 @@ export default function App() {
             </ProtectedRoute>
           }
         />
-        {/* ADD THE PHARMACY ROUTE HERE */}
         <Route
           path="/pharmacy"
           element={
             <ProtectedRoute>
               <PharmacyPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/orders"
+          element={
+            <ProtectedRoute>
+              <OrdersPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/order-tracking/:orderId"
+          element={
+            <ProtectedRoute>
+              <OrderTrackingPage />
             </ProtectedRoute>
           }
         />

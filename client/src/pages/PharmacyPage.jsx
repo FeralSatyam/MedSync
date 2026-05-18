@@ -1,12 +1,15 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import toast from 'react-hot-toast';
 import { getPatients } from '../api/patientApi';
 import { getMedicinesForPatient } from '../api/medicineApi';
+import { createOrder } from '../api/orderApi';
+import { useAuthStore } from '../store/authStore';
+import QRCode from 'qrcode';
 
-// Fix for default marker icons in Leaflet with Vite
+// Fix for default marker icons
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
@@ -42,7 +45,7 @@ const selectedPharmacyIcon = new L.Icon({
   shadowSize: [41, 41]
 });
 
-// Component to center map on location
+// Component to center map
 function MapCenterUpdater({ center }) {
   const map = useMap();
   useEffect(() => {
@@ -87,6 +90,26 @@ const Icons = {
   ArrowLeft: () => (
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
       <path d="M15 18L9 12L15 6"/>
+    </svg>
+  ),
+  Plus: () => (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M12 5v14M5 12h14"/>
+    </svg>
+  ),
+  Minus: () => (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M5 12h14"/>
+    </svg>
+  ),
+  Trash: () => (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <path d="M4 7h16M10 11v6M14 11v6M5 7l1 13a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-13M9 7V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v3"/>
+    </svg>
+  ),
+  Package: () => (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M20 7l-8-4-8 4m16 0v10l-8 4-8-4V7m8-4v18"/>
     </svg>
   ),
 };
@@ -212,39 +235,127 @@ function PharmacyCard({ pharmacy, onSelect, onOrder, isSelected }) {
   );
 }
 
-// Order Modal Component - Fixed z-index
+// Order Success Modal with QR Code
+function OrderSuccessModal({ order, onClose }) {
+  const [qrCodeUrl, setQrCodeUrl] = useState('');
+  const navigate = useNavigate();
+  const orderUrl = `${window.location.origin}/order-tracking/${order.orderId}`;
+
+  useEffect(() => {
+    QRCode.toDataURL(orderUrl, { width: 200, margin: 1 }, (err, url) => {
+      if (!err) {
+        setQrCodeUrl(url);
+      }
+    });
+  }, [orderUrl]);
+
+  return (
+    <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/50" onClick={onClose}>
+      <div className="bg-white rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto shadow-xl" onClick={(e) => e.stopPropagation()}>
+        <div className="sticky top-0 bg-white border-b border-gray-100 p-4 flex justify-between items-center">
+          <h2 className="text-xl font-bold text-gray-800">Order Placed Successfully!</h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+            <Icons.Close />
+          </button>
+        </div>
+        
+        <div className="p-6 text-center">
+          <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg className="w-10 h-10 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          
+          <h3 className="text-lg font-semibold text-gray-800 mb-2">Order #{order.orderId}</h3>
+          <p className="text-sm text-gray-500 mb-4">Your order has been placed successfully!</p>
+          
+          <div className="bg-gray-50 rounded-lg p-4 mb-4">
+            <p className="text-sm font-medium text-gray-700 mb-2">Order QR Code</p>
+            {qrCodeUrl && (
+              <img src={qrCodeUrl} alt="Order QR Code" className="w-48 h-48 mx-auto mb-2" />
+            )}
+            <p className="text-xs text-gray-500">Scan to view order details</p>
+          </div>
+          
+          <div className="flex gap-3">
+            <button
+              onClick={() => {
+                onClose();
+                navigate('/orders');
+              }}
+              className="flex-1 bg-teal-500 text-white py-2.5 rounded-lg font-medium hover:bg-teal-600"
+            >
+              View My Orders
+            </button>
+            <button
+              onClick={onClose}
+              className="flex-1 border border-gray-200 py-2.5 rounded-lg font-medium hover:bg-gray-50"
+            >
+              Continue Shopping
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Order Modal Component
 function OrderModal({ pharmacy, onClose, onSubmit }) {
+  const navigate = useNavigate();
   const [selectedPatient, setSelectedPatient] = useState('');
   const [medicines, setMedicines] = useState([]);
   const [selectedMedicines, setSelectedMedicines] = useState({});
+  const [medicineQuantities, setMedicineQuantities] = useState({});
   const [patients, setPatients] = useState([]);
   const [prescription, setPrescription] = useState(null);
   const [notes, setNotes] = useState('');
   const [loading, setLoading] = useState(false);
+  const [loadingMedicines, setLoadingMedicines] = useState(false);
+  const [customMedicineName, setCustomMedicineName] = useState('');
+  const [customMedicines, setCustomMedicines] = useState([]);
+  
+  // Get current user from auth store
+  const currentUser = useAuthStore((s) => s.user);
+  const userId = currentUser?._id || currentUser?.id;
 
   useEffect(() => {
-    loadPatientsAndMedicines();
+    loadPatients();
   }, []);
 
-  // Prevent body scroll when modal is open
   useEffect(() => {
-    document.body.style.overflow = 'hidden';
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
-  }, []);
+    if (selectedPatient) {
+      loadMedicinesForPatient(selectedPatient);
+    } else {
+      setMedicines([]);
+      setSelectedMedicines({});
+      setMedicineQuantities({});
+    }
+  }, [selectedPatient]);
 
-  const loadPatientsAndMedicines = async () => {
+  const loadPatients = async () => {
     try {
       const patientsData = await getPatients();
       setPatients(patientsData);
-      
-      if (patientsData.length > 0) {
-        const meds = await getMedicinesForPatient(patientsData[0]._id);
-        setMedicines(meds);
-      }
     } catch (error) {
-      console.error('Error loading data:', error);
+      console.error('Error loading patients:', error);
+      toast.error('Failed to load patients');
+    }
+  };
+
+  const loadMedicinesForPatient = async (patientId) => {
+    setLoadingMedicines(true);
+    try {
+      const meds = await getMedicinesForPatient(patientId);
+      setMedicines(meds);
+      setSelectedMedicines({});
+      setMedicineQuantities({});
+    } catch (error) {
+      console.error('Error loading medicines:', error);
+      toast.error('Failed to load medicines for this patient');
+      setMedicines([]);
+    } finally {
+      setLoadingMedicines(false);
     }
   };
 
@@ -253,6 +364,64 @@ function OrderModal({ pharmacy, onClose, onSubmit }) {
       ...prev,
       [medicineId]: !prev[medicineId]
     }));
+    
+    if (!selectedMedicines[medicineId]) {
+      setMedicineQuantities(prev => ({
+        ...prev,
+        [medicineId]: 1
+      }));
+    } else {
+      setMedicineQuantities(prev => {
+        const newQuantities = { ...prev };
+        delete newQuantities[medicineId];
+        return newQuantities;
+      });
+    }
+  };
+
+  const updateQuantity = (medicineId, delta) => {
+    setMedicineQuantities(prev => ({
+      ...prev,
+      [medicineId]: Math.max(1, (prev[medicineId] || 1) + delta)
+    }));
+  };
+
+  const addCustomMedicine = () => {
+    if (!customMedicineName.trim()) {
+      toast.error('Please enter a medicine name');
+      return;
+    }
+    
+    const newId = `custom_${Date.now()}`;
+    setCustomMedicines(prev => [...prev, {
+      id: newId,
+      name: customMedicineName,
+      isCustom: true,
+      quantity: 1
+    }]);
+    setSelectedMedicines(prev => ({ ...prev, [newId]: true }));
+    setMedicineQuantities(prev => ({ ...prev, [newId]: 1 }));
+    setCustomMedicineName('');
+    toast.success('Custom medicine added');
+  };
+
+  const removeCustomMedicine = (id) => {
+    setCustomMedicines(prev => prev.filter(m => m.id !== id));
+    setSelectedMedicines(prev => {
+      const newSelected = { ...prev };
+      delete newSelected[id];
+      return newSelected;
+    });
+    setMedicineQuantities(prev => {
+      const newQuantities = { ...prev };
+      delete newQuantities[id];
+      return newQuantities;
+    });
+  };
+
+  const calculateTotal = () => {
+    const deliveryFeeNum = parseInt(pharmacy.deliveryFee.replace('Rs. ', ''));
+    return `Rs. ${deliveryFeeNum}`;
   };
 
   const handleSubmit = async () => {
@@ -266,32 +435,80 @@ function OrderModal({ pharmacy, onClose, onSubmit }) {
       toast.error('Please select at least one medicine');
       return;
     }
+    
+    if (!userId) {
+      toast.error('Please log in to place an order');
+      return;
+    }
 
     setLoading(true);
     
-    setTimeout(() => {
-      const orderData = {
-        pharmacyId: pharmacy.id,
-        pharmacyName: pharmacy.name,
-        patientId: selectedPatient,
-        medicines: selectedMeds,
-        prescription: prescription,
-        notes: notes,
-        orderDate: new Date().toISOString(),
-        status: 'pending',
-        estimatedDelivery: pharmacy.deliveryTime
-      };
-      
-      const existingOrders = JSON.parse(localStorage.getItem('medsync_orders') || '[]');
-      existingOrders.push({ ...orderData, id: Date.now() });
-      localStorage.setItem('medsync_orders', JSON.stringify(existingOrders));
-      
+    const selectedMedicineDetails = [
+      ...medicines
+        .filter(med => selectedMedicines[med._id])
+        .map(med => ({
+          id: med._id,
+          name: med.name,
+          strength: med.strength || '',
+          unit: med.unit || '',
+          quantity: medicineQuantities[med._id] || 1,
+          type: 'prescribed'
+        })),
+      ...customMedicines
+        .filter(med => selectedMedicines[med.id])
+        .map(med => ({
+          id: med.id,
+          name: med.name,
+          strength: '',
+          unit: '',
+          quantity: medicineQuantities[med.id] || 1,
+          type: 'custom'
+        }))
+    ];
+    
+    const totalItems = selectedMedicineDetails.reduce((sum, item) => sum + item.quantity, 0);
+    const deliveryFeeNum = parseInt(pharmacy.deliveryFee.replace('Rs. ', ''));
+    
+    const orderData = {
+      orderId: `ORD${Date.now()}`,
+      userId: userId,
+      pharmacyId: pharmacy.id,
+      pharmacyName: pharmacy.name,
+      pharmacyAddress: pharmacy.address,
+      patientId: selectedPatient,
+      patientName: patients.find(p => p._id === selectedPatient)?.name,
+      medicines: selectedMedicineDetails,
+      prescription: prescription ? prescription.name : '',
+      notes: notes,
+      orderDate: new Date().toISOString(),
+      status: 'pending',
+      estimatedDelivery: pharmacy.deliveryTime,
+      deliveryFee: pharmacy.deliveryFee,
+      totalItems,
+      totalAmount: `Rs. ${deliveryFeeNum}`
+    };
+    
+    try {
+      const savedOrder = await createOrder(orderData);
       toast.success(`Order placed successfully to ${pharmacy.name}!`);
-      onSubmit(orderData);
-      setLoading(false);
+      onSubmit(savedOrder);
       onClose();
-    }, 1500);
+    } catch (error) {
+      console.error('Error creating order:', error);
+      toast.error(error.response?.data?.message || 'Failed to place order. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
+
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, []);
+
+  const totalSelectedCount = Object.keys(selectedMedicines).filter(key => selectedMedicines[key]).length;
 
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/50" onClick={onClose}>
@@ -320,26 +537,130 @@ function OrderModal({ pharmacy, onClose, onSubmit }) {
 
           {selectedPatient && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Select Medicines *</label>
-              <div className="space-y-2 max-h-60 overflow-y-auto border border-gray-200 rounded-lg p-2">
-                {medicines.map(med => (
-                  <label key={med._id} className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={selectedMedicines[med._id] || false}
-                      onChange={() => handleMedicineToggle(med._id)}
-                      className="w-4 h-4 text-teal-500 rounded focus:ring-teal-500"
-                    />
-                    <div>
-                      <p className="font-medium text-gray-800">{med.name}</p>
-                      <p className="text-xs text-gray-500">{med.strength}{med.unit} - Stock: {med.currentStock}</p>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Select Medicines *
+                {loadingMedicines && <span className="ml-2 text-xs text-gray-400">Loading...</span>}
+              </label>
+              
+              {loadingMedicines ? (
+                <div className="flex justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500"></div>
+                </div>
+              ) : (
+                <>
+                  {medicines.length > 0 && (
+                    <div className="space-y-2 max-h-48 overflow-y-auto border border-gray-200 rounded-lg p-2 mb-3">
+                      <p className="text-xs font-semibold text-gray-500 px-2 pt-1">Prescribed Medicines</p>
+                      {medicines.map(med => (
+                        <div key={med._id} className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg">
+                          <input
+                            type="checkbox"
+                            checked={selectedMedicines[med._id] || false}
+                            onChange={() => handleMedicineToggle(med._id)}
+                            className="w-4 h-4 text-teal-500 rounded focus:ring-teal-500"
+                          />
+                          <div className="flex-1">
+                            <p className="font-medium text-gray-800">{med.name}</p>
+                            <p className="text-xs text-gray-500">
+                              {med.strength}{med.unit} - Stock: {med.currentStock}
+                            </p>
+                          </div>
+                          {selectedMedicines[med._id] && (
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={() => updateQuantity(med._id, -1)}
+                                className="p-1 text-gray-500 hover:text-teal-500"
+                              >
+                                <Icons.Minus />
+                              </button>
+                              <span className="w-8 text-center font-medium">{medicineQuantities[med._id] || 1}</span>
+                              <button
+                                onClick={() => updateQuantity(med._id, 1)}
+                                className="p-1 text-gray-500 hover:text-teal-500"
+                              >
+                                <Icons.Plus />
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      ))}
                     </div>
-                  </label>
-                ))}
-                {medicines.length === 0 && (
-                  <p className="text-center text-gray-500 py-4">No medicines added for this patient</p>
-                )}
-              </div>
+                  )}
+
+                  {customMedicines.length > 0 && (
+                    <div className="space-y-2 max-h-32 overflow-y-auto border border-gray-200 rounded-lg p-2 mb-3">
+                      <p className="text-xs font-semibold text-gray-500 px-2 pt-1">Custom Medicines</p>
+                      {customMedicines.map(med => (
+                        <div key={med.id} className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg">
+                          <input
+                            type="checkbox"
+                            checked={selectedMedicines[med.id] || false}
+                            onChange={() => handleMedicineToggle(med.id)}
+                            className="w-4 h-4 text-teal-500 rounded focus:ring-teal-500"
+                          />
+                          <div className="flex-1">
+                            <p className="font-medium text-gray-800">{med.name}</p>
+                            <p className="text-xs text-gray-500">Custom added</p>
+                          </div>
+                          {selectedMedicines[med.id] && (
+                            <>
+                              <div className="flex items-center gap-2">
+                                <button
+                                  onClick={() => updateQuantity(med.id, -1)}
+                                  className="p-1 text-gray-500 hover:text-teal-500"
+                                >
+                                  <Icons.Minus />
+                                </button>
+                                <span className="w-8 text-center font-medium">{medicineQuantities[med.id] || 1}</span>
+                                <button
+                                  onClick={() => updateQuantity(med.id, 1)}
+                                  className="p-1 text-gray-500 hover:text-teal-500"
+                                >
+                                  <Icons.Plus />
+                                </button>
+                              </div>
+                              <button
+                                onClick={() => removeCustomMedicine(med.id)}
+                                className="p-1 text-red-500 hover:text-red-700"
+                              >
+                                <Icons.Trash />
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <div className="flex gap-2 mt-2">
+                    <input
+                      type="text"
+                      value={customMedicineName}
+                      onChange={(e) => setCustomMedicineName(e.target.value)}
+                      placeholder="Add other medicine name..."
+                      className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    />
+                    <button
+                      onClick={addCustomMedicine}
+                      className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                    >
+                      <Icons.Plus />
+                    </button>
+                  </div>
+
+                  {medicines.length === 0 && customMedicines.length === 0 && (
+                    <div className="text-center py-8 bg-gray-50 rounded-lg">
+                      <p className="text-gray-500">No medicines added</p>
+                      <button
+                        onClick={() => navigate('/add-medicine')}
+                        className="mt-2 text-sm text-teal-500 hover:underline"
+                      >
+                        Add Medicine
+                      </button>
+                    </div>
+                  )}
+                </>
+              )}
             </div>
           )}
 
@@ -351,6 +672,9 @@ function OrderModal({ pharmacy, onClose, onSubmit }) {
               onChange={(e) => setPrescription(e.target.files?.[0])}
               className="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500 text-sm"
             />
+            {prescription && (
+              <p className="text-xs text-green-600 mt-1">✓ {prescription.name} selected</p>
+            )}
           </div>
 
           <div>
@@ -358,7 +682,7 @@ function OrderModal({ pharmacy, onClose, onSubmit }) {
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="Any special instructions..."
+              placeholder="Any special instructions for the pharmacy..."
               rows={3}
               className="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500"
             />
@@ -368,12 +692,16 @@ function OrderModal({ pharmacy, onClose, onSubmit }) {
             <p className="text-sm font-medium text-gray-700 mb-2">Order Summary</p>
             <div className="space-y-1 text-sm">
               <div className="flex justify-between">
+                <span className="text-gray-600">Items:</span>
+                <span className="font-medium">{totalSelectedCount} items</span>
+              </div>
+              <div className="flex justify-between">
                 <span className="text-gray-600">Delivery Fee:</span>
                 <span className="font-medium">{pharmacy.deliveryFee}</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Estimated Delivery:</span>
-                <span className="font-medium">{pharmacy.deliveryTime}</span>
+              <div className="flex justify-between pt-2 border-t">
+                <span className="font-semibold">Total:</span>
+                <span className="font-semibold text-teal-600">{calculateTotal()}</span>
               </div>
             </div>
           </div>
@@ -382,7 +710,11 @@ function OrderModal({ pharmacy, onClose, onSubmit }) {
             <button onClick={onClose} className="flex-1 border border-gray-200 rounded-lg py-2.5 text-gray-700 font-medium hover:bg-gray-50">
               Cancel
             </button>
-            <button onClick={handleSubmit} disabled={loading} className="flex-1 bg-teal-500 text-white rounded-lg py-2.5 font-medium hover:bg-teal-600 disabled:opacity-50">
+            <button 
+              onClick={handleSubmit} 
+              disabled={loading || !selectedPatient || totalSelectedCount === 0} 
+              className="flex-1 bg-teal-500 text-white rounded-lg py-2.5 font-medium hover:bg-teal-600 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
               {loading ? 'Placing Order...' : 'Place Order'}
             </button>
           </div>
@@ -396,12 +728,11 @@ function OrderModal({ pharmacy, onClose, onSubmit }) {
 function useUserLocation() {
   const [location, setLocation] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
 
   useEffect(() => {
     if (!navigator.geolocation) {
-      setError('Geolocation not supported');
       setLoading(false);
+      setLocation({ lat: 27.6866, lng: 85.3374 });
       return;
     }
 
@@ -413,16 +744,14 @@ function useUserLocation() {
         });
         setLoading(false);
       },
-      (err) => {
-        console.error('Geolocation error:', err);
-        setError(err.message);
-        setLoading(false);
+      () => {
         setLocation({ lat: 27.6866, lng: 85.3374 });
+        setLoading(false);
       }
     );
   }, []);
 
-  return { location, loading, error };
+  return { location, loading };
 }
 
 // Search Box Component
@@ -439,14 +768,9 @@ function SearchBox({ onLocationSelect }) {
     try {
       const response = await fetch(
         `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(searchQuery)}&format=json&limit=5&addressdetails=1`,
-        {
-          headers: {
-            'User-Agent': 'MedSync-App/1.0'
-          }
-        }
+        { headers: { 'User-Agent': 'MedSync-App/1.0' } }
       );
-      const data = await response.json();
-      return data;
+      return await response.json();
     } catch (error) {
       console.error('Geocoding error:', error);
       toast.error('Failed to search location');
@@ -459,7 +783,6 @@ function SearchBox({ onLocationSelect }) {
   const handleSearch = async (e) => {
     e.preventDefault();
     if (!query.trim()) return;
-    
     const data = await searchAddress(query);
     setResults(data);
     setShowResults(true);
@@ -484,7 +807,6 @@ function SearchBox({ onLocationSelect }) {
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          onFocus={() => results.length > 0 && setShowResults(true)}
           placeholder="Search for a location..."
           className="w-full pl-10 pr-20 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
         />
@@ -521,7 +843,9 @@ export default function PharmacyPage() {
   const navigate = useNavigate();
   const [selectedPharmacy, setSelectedPharmacy] = useState(null);
   const [showOrderModal, setShowOrderModal] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [orderPharmacy, setOrderPharmacy] = useState(null);
+  const [placedOrder, setPlacedOrder] = useState(null);
   const [searchLocation, setSearchLocation] = useState(null);
   const [filteredPharmacies, setFilteredPharmacies] = useState(MOCK_PHARMACIES);
   const [searchTerm, setSearchTerm] = useState('');
@@ -559,8 +883,10 @@ export default function PharmacyPage() {
     setShowOrderModal(true);
   };
 
-  const handleOrderSubmit = () => {
+  const handleOrderSubmit = (orderData) => {
     setShowOrderModal(false);
+    setPlacedOrder(orderData);
+    setShowSuccessModal(true);
   };
 
   return (
@@ -579,7 +905,7 @@ export default function PharmacyPage() {
         {/* Search Box */}
         <SearchBox onLocationSelect={setSearchLocation} />
 
-        {/* Search input for pharmacy names */}
+        {/* Filter input */}
         <div className="mb-4">
           <input
             type="text"
@@ -590,7 +916,7 @@ export default function PharmacyPage() {
           />
         </div>
 
-        {/* Map Section - with lower z-index */}
+        {/* Map Section */}
         <div className="mb-6 rounded-xl overflow-hidden shadow-sm border border-gray-200 relative" style={{ height: '400px', zIndex: 1 }}>
           {locationLoading ? (
             <div className="w-full h-full flex items-center justify-center bg-gray-100">
@@ -603,55 +929,31 @@ export default function PharmacyPage() {
               zoom={14}
               style={{ height: '100%', width: '100%', zIndex: 1 }}
               scrollWheelZoom={true}
-              zoomControl={true}
             >
               <MapCenterUpdater center={mapCenter} />
-              
               <TileLayer
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
               />
-              
               {userLocation && (
-                <Marker 
-                  position={[userLocation.lat, userLocation.lng]} 
-                  icon={userLocationIcon}
-                >
-                  <Popup>
-                    <div className="text-center">
-                      <p className="font-semibold">Your Location</p>
-                    </div>
-                  </Popup>
+                <Marker position={[userLocation.lat, userLocation.lng]} icon={userLocationIcon}>
+                  <Popup>Your Location</Popup>
                 </Marker>
               )}
-              
               {filteredPharmacies.map((pharmacy) => (
                 <Marker
                   key={pharmacy.id}
                   position={[pharmacy.lat, pharmacy.lng]}
                   icon={selectedPharmacy?.id === pharmacy.id ? selectedPharmacyIcon : pharmacyIcon}
-                  eventHandlers={{
-                    click: () => handleSelectPharmacy(pharmacy),
-                  }}
+                  eventHandlers={{ click: () => handleSelectPharmacy(pharmacy) }}
                 >
                   <Popup>
                     <div className="p-2 min-w-[200px]">
                       <h3 className="font-semibold text-gray-800">{pharmacy.name}</h3>
                       <p className="text-xs text-gray-500 mt-1">{pharmacy.address}</p>
-                      <p className="text-xs text-gray-500">⭐ {pharmacy.rating} ({pharmacy.reviews} reviews)</p>
                       <div className="flex gap-2 mt-3">
-                        <button
-                          onClick={() => handleOrder(pharmacy)}
-                          className="flex-1 px-3 py-1.5 bg-teal-500 text-white rounded-lg text-xs font-medium hover:bg-teal-600"
-                        >
-                          Order Now
-                        </button>
-                        <button
-                          onClick={() => window.open(`https://www.openstreetmap.org/directions?from=&to=${pharmacy.lat},${pharmacy.lng}`, '_blank')}
-                          className="flex-1 px-3 py-1.5 border border-gray-300 rounded-lg text-xs font-medium hover:bg-gray-50"
-                        >
-                          Directions
-                        </button>
+                        <button onClick={() => handleOrder(pharmacy)} className="flex-1 px-3 py-1.5 bg-teal-500 text-white rounded-lg text-xs">Order Now</button>
+                        <button onClick={() => window.open(`https://www.openstreetmap.org/directions?to=${pharmacy.lat},${pharmacy.lng}`)} className="flex-1 px-3 py-1.5 border rounded-lg text-xs">Directions</button>
                       </div>
                     </div>
                   </Popup>
@@ -661,6 +963,27 @@ export default function PharmacyPage() {
           )}
         </div>
 
+        {/* MY ORDERS BUTTON */}
+        <div className="mb-6">
+          <button
+            onClick={() => navigate('/orders')}
+            className="w-full flex items-center justify-between bg-white border border-gray-200 rounded-xl px-5 py-4 shadow-sm hover:shadow-md transition-all hover:border-teal-300 group"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-teal-50 rounded-full flex items-center justify-center group-hover:bg-teal-100 transition-colors">
+                <Icons.Package />
+              </div>
+              <div className="text-left">
+                <p className="font-semibold text-gray-800">My Orders</p>
+                <p className="text-xs text-gray-500">View and track your orders</p>
+              </div>
+            </div>
+            <svg className="w-5 h-5 text-gray-400 group-hover:text-teal-500 group-hover:translate-x-1 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+        </div>
+
         {/* Pharmacies List */}
         <div>
           <div className="flex justify-between items-center mb-4">
@@ -668,6 +991,7 @@ export default function PharmacyPage() {
               Pharmacies Near You
               <span className="text-sm text-gray-500 ml-2">({filteredPharmacies.length} found)</span>
             </h2>
+            <button className="text-sm text-teal-500 font-medium">Sort by distance</button>
           </div>
 
           <div className="space-y-3">
@@ -684,7 +1008,7 @@ export default function PharmacyPage() {
         </div>
       </div>
 
-      {/* Order Modal - High z-index */}
+      {/* Order Modal */}
       {showOrderModal && orderPharmacy && (
         <OrderModal
           pharmacy={orderPharmacy}
@@ -692,6 +1016,14 @@ export default function PharmacyPage() {
           onSubmit={handleOrderSubmit}
         />
       )}
+
+      {/* Success Modal */}
+      {showSuccessModal && placedOrder && (
+        <OrderSuccessModal
+          order={placedOrder}
+          onClose={() => setShowSuccessModal(false)}
+        />
+      )}
     </div>
   );
-} 
+}
