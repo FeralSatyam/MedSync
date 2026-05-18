@@ -1,61 +1,92 @@
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { GoogleMap, LoadScript, Marker, InfoWindow } from '@react-google-maps/api';
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import L from 'leaflet';
 import toast from 'react-hot-toast';
-import { useAuthStore } from '../store/authStore';
 import { getPatients } from '../api/patientApi';
 import { getMedicinesForPatient } from '../api/medicineApi';
+
+// Fix for default marker icons in Leaflet with Vite
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+});
+
+// Custom marker icons
+const userLocationIcon = new L.Icon({
+  iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41]
+});
+
+const pharmacyIcon = new L.Icon({
+  iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41]
+});
+
+const selectedPharmacyIcon = new L.Icon({
+  iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41]
+});
+
+// Component to center map on location
+function MapCenterUpdater({ center }) {
+  const map = useMap();
+  useEffect(() => {
+    if (center) {
+      map.setView(center, 14);
+    }
+  }, [center, map]);
+  return null;
+}
 
 // SVG Icons
 const Icons = {
   Location: () => (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M12 2C8.1 2 5 5.1 5 9c0 5.2 7 13 7 13s7-7.8 7-13c0-3.9-3.1-7-7-7z" stroke="currentColor" strokeWidth="1.5" fill="none"/>
-      <circle cx="12" cy="9" r="3" stroke="currentColor" strokeWidth="1.5" fill="none"/>
-    </svg>
-  ),
-  Phone: () => (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M22 16.9v3c0 .6-.5 1.1-1.1 1.1-9.3 0-16.9-7.6-16.9-16.9 0-.6.5-1.1 1.1-1.1h3c.6 0 1.1.5 1.1 1.1 0 .9.1 1.8.4 2.6.1.4 0 .8-.3 1.1l-1.5 1.5c1.4 2.8 3.5 4.9 6.3 6.3l1.5-1.5c.3-.3.7-.4 1.1-.3.9.2 1.7.3 2.6.3.6 0 1.1.5 1.1 1.1z" stroke="currentColor" strokeWidth="1.5" fill="none"/>
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <path d="M12 2C8.1 2 5 5.1 5 9c0 5.2 7 13 7 13s7-7.8 7-13c0-3.9-3.1-7-7-7z"/>
+      <circle cx="12" cy="9" r="3"/>
     </svg>
   ),
   Clock: () => (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5" fill="none"/>
-      <path d="M12 6v6l4 2" stroke="currentColor" strokeWidth="1.5" fill="none"/>
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <circle cx="12" cy="12" r="10"/>
+      <path d="M12 6v6l4 2"/>
     </svg>
   ),
   Star: ({ filled = false }) => (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill={filled ? "currentColor" : "none"} xmlns="http://www.w3.org/2000/svg">
-      <path d="M12 2l3.1 6.3L22 9.3l-4.5 4.4 1.1 6.3L12 17.2l-6.6 3.5 1.1-6.3L2 9.3l6.9-1L12 2z" stroke="currentColor" strokeWidth="1.5"/>
+    <svg width="14" height="14" viewBox="0 0 24 24" fill={filled ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1.5">
+      <path d="M12 2l3.1 6.3L22 9.3l-4.5 4.4 1.1 6.3L12 17.2l-6.6 3.5 1.1-6.3L2 9.3l6.9-1L12 2z"/>
     </svg>
   ),
   Cart: () => (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="9" cy="20" r="1.5" stroke="currentColor" strokeWidth="1.5" fill="none"/>
-      <circle cx="18" cy="20" r="1.5" stroke="currentColor" strokeWidth="1.5" fill="none"/>
-      <path d="M3 4h3l2 12h12l2-8H7" stroke="currentColor" strokeWidth="1.5" fill="none"/>
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <circle cx="9" cy="20" r="1.5"/>
+      <circle cx="18" cy="20" r="1.5"/>
+      <path d="M3 4h3l2 12h12l2-8H7"/>
     </svg>
   ),
   Close: () => (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M18 6L6 18M6 6L18 18"/>
     </svg>
   ),
   ArrowLeft: () => (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M15 18L9 12L15 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-    </svg>
-  ),
-  Search: () => (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="1.5" fill="none"/>
-      <path d="M16 16L21 21" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-    </svg>
-  ),
-  Navigation: () => (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M12 2L12 22M12 2L5 8L12 2ZM12 2L19 8L12 2Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M15 18L9 12L15 6"/>
     </svg>
   ),
 };
@@ -75,8 +106,6 @@ const MOCK_PHARMACIES = [
     distance: "0.8 km",
     deliveryTime: "20-30 min",
     deliveryFee: "Rs. 50",
-    image: "https://via.placeholder.com/80x80?text=Pharmacy",
-    medicines: ["Paracetamol", "Amoxicillin", "Cetirizine", "Metformin", "Omeprazole"]
   },
   {
     id: 2,
@@ -91,8 +120,6 @@ const MOCK_PHARMACIES = [
     distance: "1.2 km",
     deliveryTime: "25-35 min",
     deliveryFee: "Rs. 60",
-    image: "https://via.placeholder.com/80x80?text=Pharmacy",
-    medicines: ["Paracetamol", "Ibuprofen", "Azithromycin", "Losartan", "Amlodipine"]
   },
   {
     id: 3,
@@ -107,8 +134,6 @@ const MOCK_PHARMACIES = [
     distance: "2.1 km",
     deliveryTime: "35-45 min",
     deliveryFee: "Rs. 80",
-    image: "https://via.placeholder.com/80x80?text=Pharmacy",
-    medicines: ["Paracetamol", "Ciprofloxacin", "Diclofenac", "Pantoprazole", "Gabapentin"]
   },
   {
     id: 4,
@@ -123,8 +148,6 @@ const MOCK_PHARMACIES = [
     distance: "2.5 km",
     deliveryTime: "40-50 min",
     deliveryFee: "Rs. 90",
-    image: "https://via.placeholder.com/80x80?text=Pharmacy",
-    medicines: ["Paracetamol", "Metformin", "Atorvastatin", "Omeprazole", "Cetirizine"]
   },
   {
     id: 5,
@@ -139,8 +162,6 @@ const MOCK_PHARMACIES = [
     distance: "3.0 km",
     deliveryTime: "45-55 min",
     deliveryFee: "Rs. 100",
-    image: "https://via.placeholder.com/80x80?text=Pharmacy",
-    medicines: ["Paracetamol", "Amoxicillin", "Doxycycline", "Losartan", "Amlodipine"]
   },
 ];
 
@@ -154,7 +175,6 @@ function PharmacyCard({ pharmacy, onSelect, onOrder, isSelected }) {
       onClick={() => onSelect(pharmacy)}
     >
       <div className="flex gap-3">
-        <img src={pharmacy.image} alt={pharmacy.name} className="w-16 h-16 rounded-lg object-cover" />
         <div className="flex-1">
           <div className="flex justify-between items-start">
             <div>
@@ -192,7 +212,7 @@ function PharmacyCard({ pharmacy, onSelect, onOrder, isSelected }) {
   );
 }
 
-// Order Modal Component
+// Order Modal Component - Fixed z-index
 function OrderModal({ pharmacy, onClose, onSubmit }) {
   const [selectedPatient, setSelectedPatient] = useState('');
   const [medicines, setMedicines] = useState([]);
@@ -204,6 +224,14 @@ function OrderModal({ pharmacy, onClose, onSubmit }) {
 
   useEffect(() => {
     loadPatientsAndMedicines();
+  }, []);
+
+  // Prevent body scroll when modal is open
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
   }, []);
 
   const loadPatientsAndMedicines = async () => {
@@ -241,7 +269,6 @@ function OrderModal({ pharmacy, onClose, onSubmit }) {
 
     setLoading(true);
     
-    // Simulate order submission
     setTimeout(() => {
       const orderData = {
         pharmacyId: pharmacy.id,
@@ -255,19 +282,20 @@ function OrderModal({ pharmacy, onClose, onSubmit }) {
         estimatedDelivery: pharmacy.deliveryTime
       };
       
-      // Store order in localStorage for demo
       const existingOrders = JSON.parse(localStorage.getItem('medsync_orders') || '[]');
       existingOrders.push({ ...orderData, id: Date.now() });
       localStorage.setItem('medsync_orders', JSON.stringify(existingOrders));
       
       toast.success(`Order placed successfully to ${pharmacy.name}!`);
       onSubmit(orderData);
+      setLoading(false);
+      onClose();
     }, 1500);
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={onClose}>
-      <div className="bg-white rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-xl" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/50" onClick={onClose}>
+      <div className="bg-white rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-xl relative z-[10000]" onClick={(e) => e.stopPropagation()}>
         <div className="sticky top-0 bg-white border-b border-gray-100 p-4 flex justify-between items-center">
           <h2 className="text-xl font-bold text-gray-800">Order from {pharmacy.name}</h2>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
@@ -276,7 +304,6 @@ function OrderModal({ pharmacy, onClose, onSubmit }) {
         </div>
         
         <div className="p-4 space-y-4">
-          {/* Patient Selection */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Select Patient *</label>
             <select
@@ -291,7 +318,6 @@ function OrderModal({ pharmacy, onClose, onSubmit }) {
             </select>
           </div>
 
-          {/* Medicine Selection */}
           {selectedPatient && (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Select Medicines *</label>
@@ -317,7 +343,6 @@ function OrderModal({ pharmacy, onClose, onSubmit }) {
             </div>
           )}
 
-          {/* Prescription Upload */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Upload Prescription (Optional)</label>
             <input
@@ -328,7 +353,6 @@ function OrderModal({ pharmacy, onClose, onSubmit }) {
             />
           </div>
 
-          {/* Additional Notes */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Additional Notes</label>
             <textarea
@@ -340,7 +364,6 @@ function OrderModal({ pharmacy, onClose, onSubmit }) {
             />
           </div>
 
-          {/* Order Summary */}
           <div className="bg-gray-50 rounded-lg p-3">
             <p className="text-sm font-medium text-gray-700 mb-2">Order Summary</p>
             <div className="space-y-1 text-sm">
@@ -369,107 +392,166 @@ function OrderModal({ pharmacy, onClose, onSubmit }) {
   );
 }
 
-// Directions Modal
-function DirectionsModal({ pharmacy, userLocation, onClose }) {
-  const [loading, setLoading] = useState(false);
+// Get user's current location
+function useUserLocation() {
+  const [location, setLocation] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const handleOpenMaps = () => {
-    window.open(`https://www.google.com/maps/dir/?api=1&destination=${pharmacy.lat},${pharmacy.lng}`, '_blank');
+  useEffect(() => {
+    if (!navigator.geolocation) {
+      setError('Geolocation not supported');
+      setLoading(false);
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setLocation({
+          lat: position.coords.latitude,
+          lng: position.coords.longitude
+        });
+        setLoading(false);
+      },
+      (err) => {
+        console.error('Geolocation error:', err);
+        setError(err.message);
+        setLoading(false);
+        setLocation({ lat: 27.6866, lng: 85.3374 });
+      }
+    );
+  }, []);
+
+  return { location, loading, error };
+}
+
+// Search Box Component
+function SearchBox({ onLocationSelect }) {
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [showResults, setShowResults] = useState(false);
+
+  const searchAddress = async (searchQuery) => {
+    if (!searchQuery.trim()) return [];
+    
+    setLoading(true);
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(searchQuery)}&format=json&limit=5&addressdetails=1`,
+        {
+          headers: {
+            'User-Agent': 'MedSync-App/1.0'
+          }
+        }
+      );
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Geocoding error:', error);
+      toast.error('Failed to search location');
+      return [];
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSearch = async (e) => {
+    e.preventDefault();
+    if (!query.trim()) return;
+    
+    const data = await searchAddress(query);
+    setResults(data);
+    setShowResults(true);
+  };
+
+  const selectLocation = (result) => {
+    onLocationSelect({
+      lat: parseFloat(result.lat),
+      lng: parseFloat(result.lon),
+      name: result.display_name
+    });
+    setQuery('');
+    setResults([]);
+    setShowResults(false);
+    toast.success(`📍 Moved to ${result.display_name.split(',')[0]}`);
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={onClose}>
-      <div className="bg-white rounded-2xl max-w-md w-full shadow-xl" onClick={(e) => e.stopPropagation()}>
-        <div className="p-4 border-b border-gray-100 flex justify-between items-center">
-          <h3 className="text-lg font-bold text-gray-800">Directions to {pharmacy.name}</h3>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
-            <Icons.Close />
-          </button>
+    <div className="relative mb-4 z-20">
+      <form onSubmit={handleSearch} className="relative">
+        <input
+          type="text"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          onFocus={() => results.length > 0 && setShowResults(true)}
+          placeholder="Search for a location..."
+          className="w-full pl-10 pr-20 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+        />
+        <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <circle cx="11" cy="11" r="7"/>
+            <path d="M16 16L21 21"/>
+          </svg>
         </div>
-        <div className="p-4">
-          <div className="mb-4 p-3 bg-teal-50 rounded-lg">
-            <p className="text-sm text-gray-700">📍 {pharmacy.address}</p>
-            <p className="text-xs text-gray-500 mt-1">Distance: {pharmacy.distance}</p>
-            <p className="text-xs text-gray-500">Estimated time: {pharmacy.deliveryTime}</p>
-          </div>
-          
-          <div className="text-center py-4">
-            <Icons.Navigation />
-            <p className="text-sm text-gray-600 mt-3">Open Google Maps for turn-by-turn directions</p>
-            <button 
-              onClick={handleOpenMaps}
-              className="mt-4 px-4 py-2 bg-teal-500 text-white rounded-lg text-sm font-medium hover:bg-teal-600 transition-colors"
+        <button type="submit" className="absolute right-2 top-1/2 transform -translate-y-1/2 px-3 py-1 bg-teal-500 text-white rounded-lg text-sm">
+          {loading ? '...' : 'Go'}
+        </button>
+      </form>
+      
+      {showResults && results.length > 0 && (
+        <div className="absolute z-30 w-full mt-1 bg-white rounded-lg shadow-lg border border-gray-200 max-h-60 overflow-y-auto">
+          {results.map((result) => (
+            <button
+              key={result.place_id}
+              onClick={() => selectLocation(result)}
+              className="w-full text-left px-4 py-2 hover:bg-gray-50 border-b border-gray-100 last:border-none"
             >
-              Open in Google Maps
+              <p className="text-sm text-gray-800">{result.display_name}</p>
             </button>
-          </div>
+          ))}
         </div>
-      </div>
+      )}
     </div>
   );
 }
 
-const mapContainerStyle = {
-  width: '100%',
-  height: '400px'
-};
-
-const defaultCenter = {
-  lat: 27.6866,
-  lng: 85.3374
-};
-
+// Main Pharmacy Page Component
 export default function PharmacyPage() {
   const navigate = useNavigate();
-  const [pharmacies, setPharmacies] = useState(MOCK_PHARMACIES);
   const [selectedPharmacy, setSelectedPharmacy] = useState(null);
   const [showOrderModal, setShowOrderModal] = useState(false);
   const [orderPharmacy, setOrderPharmacy] = useState(null);
-  const [showDirections, setShowDirections] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [userLocation, setUserLocation] = useState(defaultCenter);
-  const [map, setMap] = useState(null);
+  const [searchLocation, setSearchLocation] = useState(null);
   const [filteredPharmacies, setFilteredPharmacies] = useState(MOCK_PHARMACIES);
-  const [mapLoaded, setMapLoaded] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  
+  const { location: userLocation, loading: locationLoading } = useUserLocation();
+  const [mapCenter, setMapCenter] = useState({ lat: 27.6866, lng: 85.3374 });
 
-  // Get user's current location
   useEffect(() => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setUserLocation({
-            lat: position.coords.latitude,
-            lng: position.coords.longitude
-          });
-        },
-        (error) => {
-          console.error('Error getting location:', error);
-          toast.error('Unable to get your location. Showing default location.');
-        }
-      );
+    if (searchLocation) {
+      setMapCenter(searchLocation);
+    } else if (userLocation) {
+      setMapCenter(userLocation);
     }
-  }, []);
+  }, [userLocation, searchLocation]);
 
-  // Filter pharmacies based on search
   useEffect(() => {
     if (searchTerm) {
-      const filtered = pharmacies.filter(p => 
+      const filtered = MOCK_PHARMACIES.filter(p => 
         p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         p.address.toLowerCase().includes(searchTerm.toLowerCase())
       );
       setFilteredPharmacies(filtered);
     } else {
-      setFilteredPharmacies(pharmacies);
+      setFilteredPharmacies(MOCK_PHARMACIES);
     }
-  }, [searchTerm, pharmacies]);
+  }, [searchTerm]);
 
   const handleSelectPharmacy = (pharmacy) => {
     setSelectedPharmacy(pharmacy);
-    // Center map on selected pharmacy
-    if (map) {
-      map.panTo({ lat: pharmacy.lat, lng: pharmacy.lng });
-      map.setZoom(15);
-    }
+    setMapCenter({ lat: pharmacy.lat, lng: pharmacy.lng });
   };
 
   const handleOrder = (pharmacy) => {
@@ -477,54 +559,9 @@ export default function PharmacyPage() {
     setShowOrderModal(true);
   };
 
-  const handleOrderSubmit = (orderData) => {
+  const handleOrderSubmit = () => {
     setShowOrderModal(false);
-    setTimeout(() => {
-      toast.success('Order placed successfully! You can track it in your orders.');
-    }, 500);
   };
-
-  const handleDirections = (pharmacy) => {
-    setSelectedPharmacy(pharmacy);
-    setShowDirections(true);
-  };
-
-  // Don't load Google Maps until API key is provided
-  const googleMapsApiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
-  
-  if (!googleMapsApiKey) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <div className="bg-white border-b border-gray-100 sticky top-0 z-40">
-          <div className="flex items-center gap-3 px-4 h-16">
-            <button onClick={() => navigate(-1)} className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
-              <Icons.ArrowLeft />
-            </button>
-            <h1 className="text-xl font-bold text-gray-800">Nearby Pharmacies</h1>
-          </div>
-        </div>
-        <div className="max-w-7xl mx-auto px-4 py-6">
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-center">
-            <p className="text-yellow-800">Google Maps API key is required. Please add VITE_GOOGLE_MAPS_API_KEY to your .env file.</p>
-            <p className="text-sm text-yellow-600 mt-2">For now, showing pharmacy list without map.</p>
-          </div>
-          
-          {/* Show pharmacies list without map */}
-          <div className="mt-6 space-y-3">
-            {filteredPharmacies.map((pharmacy) => (
-              <PharmacyCard
-                key={pharmacy.id}
-                pharmacy={pharmacy}
-                onSelect={handleSelectPharmacy}
-                onOrder={handleOrder}
-                isSelected={selectedPharmacy?.id === pharmacy.id}
-              />
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
@@ -538,91 +575,90 @@ export default function PharmacyPage() {
         </div>
       </div>
 
-      {/* Search Bar */}
-      <div className="sticky top-16 bg-white border-b border-gray-100 px-4 py-3 z-30">
-        <div className="relative">
-          <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-            <Icons.Search />
-          </div>
+      <div className="max-w-7xl mx-auto px-4 py-6">
+        {/* Search Box */}
+        <SearchBox onLocationSelect={setSearchLocation} />
+
+        {/* Search input for pharmacy names */}
+        <div className="mb-4">
           <input
             type="text"
-            placeholder="Search pharmacy by name or location..."
+            placeholder="Filter pharmacies by name..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+            className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
           />
         </div>
-      </div>
 
-      <div className="max-w-7xl mx-auto px-4 py-6">
-        {/* Map Section */}
-        <div className="mb-6 rounded-xl overflow-hidden shadow-sm border border-gray-200">
-          <LoadScript googleMapsApiKey={googleMapsApiKey}>
-            <GoogleMap
-              mapContainerStyle={mapContainerStyle}
-              center={userLocation}
-              zoom={13}
-              onLoad={setMap}
+        {/* Map Section - with lower z-index */}
+        <div className="mb-6 rounded-xl overflow-hidden shadow-sm border border-gray-200 relative" style={{ height: '400px', zIndex: 1 }}>
+          {locationLoading ? (
+            <div className="w-full h-full flex items-center justify-center bg-gray-100">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500"></div>
+              <span className="ml-2 text-gray-500">Getting your location...</span>
+            </div>
+          ) : (
+            <MapContainer
+              center={mapCenter}
+              zoom={14}
+              style={{ height: '100%', width: '100%', zIndex: 1 }}
+              scrollWheelZoom={true}
+              zoomControl={true}
             >
-              {/* User Location Marker */}
-              <Marker
-                position={userLocation}
-                icon={{
-                  path: 'M12 2C8.1 2 5 5.1 5 9c0 5.2 7 13 7 13s7-7.8 7-13c0-3.9-3.1-7-7-7z',
-                  fillColor: '#14B8A6',
-                  fillOpacity: 1,
-                  strokeColor: '#FFFFFF',
-                  strokeWeight: 2,
-                  scale: 1.5,
-                  anchor: { x: 12, y: 12 }
-                }}
+              <MapCenterUpdater center={mapCenter} />
+              
+              <TileLayer
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
               />
               
-              {/* Pharmacy Markers */}
+              {userLocation && (
+                <Marker 
+                  position={[userLocation.lat, userLocation.lng]} 
+                  icon={userLocationIcon}
+                >
+                  <Popup>
+                    <div className="text-center">
+                      <p className="font-semibold">Your Location</p>
+                    </div>
+                  </Popup>
+                </Marker>
+              )}
+              
               {filteredPharmacies.map((pharmacy) => (
                 <Marker
                   key={pharmacy.id}
-                  position={{ lat: pharmacy.lat, lng: pharmacy.lng }}
-                  onClick={() => handleSelectPharmacy(pharmacy)}
-                  icon={{
-                    path: 'M12 2C8.1 2 5 5.1 5 9c0 5.2 7 13 7 13s7-7.8 7-13c0-3.9-3.1-7-7-7z',
-                    fillColor: selectedPharmacy?.id === pharmacy.id ? '#EF4444' : '#3B82F6',
-                    fillOpacity: 0.8,
-                    strokeColor: '#FFFFFF',
-                    strokeWeight: 2,
-                    scale: 1.2,
-                    anchor: { x: 12, y: 12 }
+                  position={[pharmacy.lat, pharmacy.lng]}
+                  icon={selectedPharmacy?.id === pharmacy.id ? selectedPharmacyIcon : pharmacyIcon}
+                  eventHandlers={{
+                    click: () => handleSelectPharmacy(pharmacy),
                   }}
-                />
-              ))}
-
-              {selectedPharmacy && (
-                <InfoWindow
-                  position={{ lat: selectedPharmacy.lat, lng: selectedPharmacy.lng }}
-                  onCloseClick={() => setSelectedPharmacy(null)}
                 >
-                  <div className="p-2 max-w-xs">
-                    <h3 className="font-semibold text-gray-800">{selectedPharmacy.name}</h3>
-                    <p className="text-xs text-gray-500 mt-1">{selectedPharmacy.address}</p>
-                    <div className="flex gap-2 mt-2">
-                      <button
-                        onClick={() => handleOrder(selectedPharmacy)}
-                        className="px-2 py-1 bg-teal-500 text-white rounded text-xs"
-                      >
-                        Order Now
-                      </button>
-                      <button
-                        onClick={() => handleDirections(selectedPharmacy)}
-                        className="px-2 py-1 border border-gray-300 rounded text-xs"
-                      >
-                        Directions
-                      </button>
+                  <Popup>
+                    <div className="p-2 min-w-[200px]">
+                      <h3 className="font-semibold text-gray-800">{pharmacy.name}</h3>
+                      <p className="text-xs text-gray-500 mt-1">{pharmacy.address}</p>
+                      <p className="text-xs text-gray-500">⭐ {pharmacy.rating} ({pharmacy.reviews} reviews)</p>
+                      <div className="flex gap-2 mt-3">
+                        <button
+                          onClick={() => handleOrder(pharmacy)}
+                          className="flex-1 px-3 py-1.5 bg-teal-500 text-white rounded-lg text-xs font-medium hover:bg-teal-600"
+                        >
+                          Order Now
+                        </button>
+                        <button
+                          onClick={() => window.open(`https://www.openstreetmap.org/directions?from=&to=${pharmacy.lat},${pharmacy.lng}`, '_blank')}
+                          className="flex-1 px-3 py-1.5 border border-gray-300 rounded-lg text-xs font-medium hover:bg-gray-50"
+                        >
+                          Directions
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                </InfoWindow>
-              )}
-            </GoogleMap>
-          </LoadScript>
+                  </Popup>
+                </Marker>
+              ))}
+            </MapContainer>
+          )}
         </div>
 
         {/* Pharmacies List */}
@@ -632,7 +668,6 @@ export default function PharmacyPage() {
               Pharmacies Near You
               <span className="text-sm text-gray-500 ml-2">({filteredPharmacies.length} found)</span>
             </h2>
-            <button className="text-sm text-teal-500 font-medium">Sort by distance</button>
           </div>
 
           <div className="space-y-3">
@@ -649,7 +684,7 @@ export default function PharmacyPage() {
         </div>
       </div>
 
-      {/* Order Modal */}
+      {/* Order Modal - High z-index */}
       {showOrderModal && orderPharmacy && (
         <OrderModal
           pharmacy={orderPharmacy}
@@ -657,15 +692,6 @@ export default function PharmacyPage() {
           onSubmit={handleOrderSubmit}
         />
       )}
-
-      {/* Directions Modal */}
-      {showDirections && selectedPharmacy && (
-        <DirectionsModal
-          pharmacy={selectedPharmacy}
-          userLocation={userLocation}
-          onClose={() => setShowDirections(false)}
-        />
-      )}
     </div>
   );
-}
+} 

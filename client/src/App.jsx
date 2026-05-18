@@ -7,12 +7,10 @@ import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import AddMedicinePage from './pages/AddMedicinePage';
 import QRPage from './pages/QRPage';
-import PharmacistPage from './pages/PharmacyPage';
+import PharmacistPage from './pages/PharmacyPage';  // Keep your original import
 import ProfilePage from './pages/ProfilePage';
 import PharmacyPage from './pages/PharmacyPage';
 
-// Add to your routes
-<Route path="/pharmacy" element={<PharmacyPage />} />
 function ProtectedRoute({ children }) {
   const token = useAuthStore((s) => s.token);
   return token ? children : <Navigate to="/login" replace />;
@@ -81,6 +79,15 @@ export default function App() {
           element={
             <ProtectedRoute>
               <ProfilePage />
+            </ProtectedRoute>
+          }
+        />
+        {/* ADD THE PHARMACY ROUTE HERE */}
+        <Route
+          path="/pharmacy"
+          element={
+            <ProtectedRoute>
+              <PharmacyPage />
             </ProtectedRoute>
           }
         />

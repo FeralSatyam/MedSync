@@ -535,8 +535,8 @@ export default function DashboardPage() {
   const userId = authUser?._id || authUser?.id;
   
   // Debug log
-  console.log('Auth User in Dashboard:', authUser);
-  console.log('User ID:', userId);
+  // console.log('Auth User in Dashboard:', authUser);
+  // console.log('User ID:', userId);
 
   const [patientAlertMap, setPatientAlertMap] = useState({});
   const [addProfileOpen, setAddProfileOpen] = useState(false);
