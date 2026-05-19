@@ -1,19 +1,22 @@
 import axios from 'axios';
 
-// Get the base URL - works for both local and Vercel
+// Get the base URL from environment variable
 const getBaseURL = () => {
-  // In production (Vercel), use relative path
+  // Production (Vercel) - use Render backend URL
   if (import.meta.env.PROD) {
-    return '/api';
+    return import.meta.env.VITE_API_BASE_URL || 'https://medsync-api.onrender.com/api';
   }
-  // In development, use the env variable or localhost
-  return import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+  // Development (localhost)
+  return 'http://localhost:5000/api';
 };
 
 const api = axios.create({ 
   baseURL: getBaseURL(),
-  withCredentials: true,
-  timeout: 30000
+  withCredentials: false,
+  timeout: 30000,
+  headers: {
+    'Content-Type': 'application/json',
+  }
 });
 
 api.interceptors.request.use((config) => {

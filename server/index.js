@@ -11,11 +11,11 @@ const app = express();
 
 // Middleware
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://localhost:3000', process.env.CLIENT_URL],
-  credentials: true
+  origin: ['http://localhost:5173', 'https://your-vercel-app.vercel.app'],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 
 // Import routes
 import authRoutes from './routes/authRoutes.js';
