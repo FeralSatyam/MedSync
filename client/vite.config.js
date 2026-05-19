@@ -14,10 +14,14 @@ export default defineConfig({
     }
   },
   build: {
-    sourcemap: false,
-    minify: 'esbuild',
-    target: 'es2020',
     outDir: 'dist',
-    assetsDir: 'assets'
+    sourcemap: false,
+    minify: false, // Temporarily disable minify to avoid esbuild issues
+    target: 'es2020'
+  },
+  optimizeDeps: {
+    esbuildOptions: {
+      target: 'es2020'
+    }
   }
 })
