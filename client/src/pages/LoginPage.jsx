@@ -7,6 +7,7 @@ import toast from 'react-hot-toast';
 
 import { login, register, requestPasswordOtp, resetPasswordWithOtp, sendVerifyOtp, verifyEmail } from '../api/authApi';
 import { useAuthStore } from '../store/authStore';
+import logo from '../assets/logo.png';
 
 const isValidEmailStr = (email) => {
   if (!email) return false;
@@ -228,16 +229,8 @@ export default function LoginPage() {
         <div className="absolute -bottom-[60px] -left-[60px] h-[220px] w-[220px] rounded-full bg-[rgba(0,200,150,0.05)] pointer-events-none" />
 
         <div className="mb-[52px]">
-          <div className="flex items-center gap-[12px]">
-            <div className="flex h-[44px] w-[44px] items-center justify-center">
-              <svg width="44" height="44" viewBox="0 0 100 100" fill="none" aria-hidden="true" className="text-white">
-                <path d="M20 48 V30 C20 15 40 15 40 30 V48 H20 Z" fill="currentColor" />
-                <path d="M20 48 V70 C20 85 40 85 40 70 V48" stroke="currentColor" strokeWidth="5" strokeLinecap="round" />
-                <path d="M40 52 H47 L51 65 L58 35 L64 75 L69 52 H77" stroke="currentColor" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" />
-                <circle cx="82" cy="52" r="4.5" fill="currentColor" />
-              </svg>
-            </div>
-            <div className="font-display text-[22px] font-bold tracking-[-0.3px] text-white">MEDSYNC</div>
+          <div className="flex items-center justify-center bg-white px-[20px] py-[14px] rounded-[18px] shadow-lg w-fit">
+            <img src={logo} alt="MedSync Logo" className="h-[48px] w-auto object-contain" />
           </div>
         </div>
 
@@ -262,16 +255,8 @@ export default function LoginPage() {
         <div className="w-full max-w-[400px]">
 
           {/* Mobile mini logo */}
-          <div className="md:hidden mb-[22px] flex items-center gap-[12px]">
-            <div className="flex h-[38px] w-[38px] items-center justify-center">
-              <svg width="38" height="38" viewBox="0 0 100 100" fill="none" aria-hidden="true" className="text-[#0d816a]">
-                <path d="M20 48 V30 C20 15 40 15 40 30 V48 H20 Z" fill="currentColor" />
-                <path d="M20 48 V70 C20 85 40 85 40 70 V48" stroke="currentColor" strokeWidth="5" strokeLinecap="round" />
-                <path d="M40 52 H47 L51 65 L58 35 L64 75 L69 52 H77" stroke="currentColor" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" />
-                <circle cx="82" cy="52" r="4.5" fill="currentColor" />
-              </svg>
-            </div>
-            <div className="font-display text-[17px] font-bold tracking-[-0.3px] text-navy">MEDSYNC</div>
+          <div className="md:hidden mb-[22px] flex items-center">
+            <img src={logo} alt="MedSync Logo" className="h-[42px] w-auto object-contain" />
           </div>
 
           <h2 className="font-display text-[28px] font-bold tracking-[-0.4px] text-navy mb-[6px]">

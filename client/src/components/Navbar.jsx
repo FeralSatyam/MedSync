@@ -4,6 +4,7 @@ import { useAuthStore } from '../store/authStore';
 import { getPatients } from '../api/patientApi';
 import { getMedicinesForPatient } from '../api/medicineApi';
 import { getStockStatus } from '../utils/stockUtils';
+import logo from '../assets/logo.png';
 
 export default function Navbar({ hasAlerts = false }) {
   const user = useAuthStore((s) => s.user);
@@ -66,15 +67,7 @@ export default function Navbar({ hasAlerts = false }) {
   return (
     <header className="sticky top-0 z-[100] flex h-[64px] items-center justify-between border-b border-border bg-card px-[24px]">
       <div className="flex items-center gap-[12px]">
-        <div className="flex h-[36px] w-[36px] items-center justify-center">
-          <svg width="36" height="36" viewBox="0 0 100 100" fill="none" aria-hidden="true" className="text-[#0d816a]">
-            <path d="M20 48 V30 C20 15 40 15 40 30 V48 H20 Z" fill="currentColor" />
-            <path d="M20 48 V70 C20 85 40 85 40 70 V48" stroke="currentColor" strokeWidth="5" strokeLinecap="round" />
-            <path d="M40 52 H47 L51 65 L58 35 L64 75 L69 52 H77" stroke="currentColor" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" />
-            <circle cx="82" cy="52" r="4.5" fill="currentColor" />
-          </svg>
-        </div>
-        <div className="font-display text-[18px] font-bold tracking-[-0.3px] text-[#0d816a]">MEDSYNC</div>
+        <img src={logo} alt="MedSync Logo" className="h-[46px] w-auto object-contain cursor-pointer" onClick={() => navigate('/dashboard')} />
       </div>
 
       <div className="flex items-center gap-[12px]">

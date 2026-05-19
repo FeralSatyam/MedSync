@@ -7,17 +7,12 @@ import { deleteMedicine, getMedicinesForPatient, restockMedicine, updateMedicine
 import { getStockStatus, sortMedicinesByUrgency } from '../utils/stockUtils';
 import { useAppStore } from '../store/appStore';
 import { useAuthStore } from '../store/authStore';
+import logo from '../assets/logo.png';
 
 // SVG Icons
 const Icons = {
   Logo: () => (
-    <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect width="32" height="32" rx="8" fill="#14B8A6"/>
-      <path d="M16 8L20 12L16 16L12 12L16 8Z" fill="white"/>
-      <path d="M10 14L14 18L10 22L6 18L10 14Z" fill="white" fillOpacity="0.8"/>
-      <path d="M22 14L26 18L22 22L18 18L22 14Z" fill="white" fillOpacity="0.8"/>
-      <circle cx="16" cy="18" r="2" fill="white"/>
-    </svg>
+    <img src={logo} alt="MedSync Logo" className="h-[42px] w-auto object-contain" />
   ),
   
   Home: ({ active = false }) => (
@@ -388,11 +383,8 @@ function DesktopSidebar({ activeTab, onTabChange }) {
   return (
     <aside className="hidden lg:flex lg:flex-col lg:w-64 lg:fixed lg:inset-y-0 lg:border-r lg:border-gray-100 lg:bg-white">
       <div className="flex-1 flex flex-col min-h-0">
-        <div className="flex items-center justify-center h-16 px-4 border-b border-gray-100">
-          <div className="flex items-center gap-2">
-            <Icons.Logo />
-            <span className="font-bold text-gray-800 text-xl tracking-tight">MedSync</span>
-          </div>
+        <div className="flex items-center justify-center h-16 px-4 border-b border-gray-100 cursor-pointer" onClick={() => navigate('/dashboard')}>
+          <Icons.Logo />
         </div>
         
         <nav className="flex-1 px-3 py-6 space-y-1">
@@ -680,9 +672,8 @@ export default function DashboardPage() {
         {/* Header for mobile */}
         <div className="lg:hidden bg-white border-b border-gray-100 sticky top-0 z-40">
           <div className="flex justify-between items-center px-4 h-16">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center cursor-pointer" onClick={() => navigate('/dashboard')}>
               <Icons.Logo />
-              <span className="font-bold text-gray-800 text-xl tracking-tight">MedSync</span>
             </div>
             <div className="relative" ref={notificationRef}>
               <button onClick={() => setShowNotifications(!showNotifications)} className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors relative">
