@@ -7,39 +7,52 @@ const getBaseURL = () => {
   return 'http://localhost:5000/api';
 };
 
-const api = axios.create({ 
+const axiosInstance = axios.create({
   baseURL: getBaseURL(),
-  withCredentials: false, // Change to false for Render
+  withCredentials: false,
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json',
   }
 });
 
-api.interceptors.request.use((config) => {
-  const stored = localStorage.getItem('medsync-auth');
-  if (stored) {
-    try {
-      const { state } = JSON.parse(stored);
-      if (state?.token) {
-        config.headers.Authorization = `Bearer ${state.token}`;
+axiosInstance.interceptors.request.use(
+  (config) => {
+    const stored = localStorage.getItem('medsync-auth');
+    
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored);
+        const token = parsed?.state?.token || parsed?.token;
+        
+        if (token) {
+          config.headers.Authorization = `Bearer ${token}`;
+        }
+      } catch (e) {
+        // Silent fail - remove console.error
       }
-    } catch (e) {
-      console.error('Error parsing auth storage:', e);
     }
-  }
-  return config;
-});
-
-api.interceptors.response.use(
-  (res) => res,
-  (err) => {
-    if (err.response?.status === 401) {
-      localStorage.removeItem('medsync-auth');
-      window.location.href = '/login';
-    }
-    return Promise.reject(err);
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
   }
 );
 
-export default api;
+axiosInstance.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+    
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+      localStorage.removeItem('medsync-auth');
+      window.location.href = '/login';
+      return Promise.reject(error);
+    }
+    
+    return Promise.reject(error);
+  }
+);
+
+export default axiosInstance;

@@ -7,12 +7,18 @@ export const useAuthStore = create(
     (set) => ({
       user: null,
       token: null,
-      login: (user, token) => set({ user, token }),
-      logout: () => set({ user: null, token: null }),
+      login: (user, token) => {
+        // console.log('Login called with token:', token);
+        set({ user, token });
+      },
+      logout: () => {
+        console.log('Logout called');
+        set({ user: null, token: null });
+      },
       setUser: (user) => set({ user }),
     }),
     {
-      name: 'auth-storage',
+      name: 'medsync-auth',
     }
   )
 );

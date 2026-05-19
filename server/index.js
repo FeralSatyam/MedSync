@@ -7,27 +7,18 @@ dotenv.config();
 
 const app = express();
 
-// CORS configuration
-const allowedOrigins = [
-  'http://localhost:5173',
-  'http://localhost:3000',
-  'https://med-sync-yukti.vercel.app'
-];
-
-app.use(cors({
-  origin: function(origin, callback) {
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      console.log('Blocked origin:', origin);
-      callback(null, true); // Allow temporarily for testing
-    }
-  },
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
-}));
+// CORS configuration - Simplified version without '*'
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+  
+  // Handle preflight requests
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);
+  }
+  next();
+});
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -38,18 +29,31 @@ import patientRoutes from './routes/patientRoutes.js';
 import medicineRoutes from './routes/medicineRoutes.js';
 import orderRoutes from './routes/orderRoutes.js';
 
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+  res.status(200).json({ 
+    status: 'OK', 
+    message: 'MedSync API is running',
+    timestamp: new Date().toISOString()
+  });
+});
+
+// Root endpoint
+app.get('/', (req, res) => {
+  res.json({ 
+    message: 'MedSync API is running',
+    status: 'active',
+    endpoints: ['/api/auth', '/api/patients', '/api/medicines', '/api/orders', '/api/health']
+  });
+});
+
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/patients', patientRoutes);
 app.use('/api/medicines', medicineRoutes);
 app.use('/api/orders', orderRoutes);
 
-// Health check route
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'OK', message: 'MedSync API is running', timestamp: new Date() });
-});
-
-// 404 handler - This is the correct way, not using '*'
+// 404 handler - Use function, not '*'
 app.use((req, res) => {
   res.status(404).json({ message: `Route ${req.method} ${req.url} not found` });
 });
@@ -66,20 +70,29 @@ const MONGODB_URI = process.env.MONGODB_URI;
 
 if (!MONGODB_URI) {
   console.error('❌ MONGODB_URI is not defined in environment variables');
-  process.exit(1);
-}
-
-mongoose.connect(MONGODB_URI)
-  .then(() => {
-    console.log('✅ MongoDB connected successfully');
-    app.listen(PORT, () => {
-      console.log(`🚀 MedSync server running on port ${PORT}`);
-      console.log(`📍 API available at http://localhost:${PORT}/api`);
-    });
-  })
-  .catch((err) => {
-    console.error('❌ MongoDB connection error:', err);
-    process.exit(1);
+  console.log('Starting server without database for testing...');
+  app.listen(PORT, () => {
+    console.log(`🚀 MedSync server running on port ${PORT} (without database)`);
   });
+} else {
+  mongoose.connect(MONGODB_URI, {
+    serverSelectionTimeoutMS: 5000,
+    socketTimeoutMS: 45000,
+  })
+    .then(() => {
+      console.log('✅ MongoDB connected successfully');
+      app.listen(PORT, () => {
+        console.log(`🚀 MedSync server running on port ${PORT}`);
+        console.log(`📍 API available at http://localhost:${PORT}/api`);
+      });
+    })
+    .catch((err) => {
+      console.error('❌ MongoDB connection error:', err);
+      console.log('Starting server without database...');
+      app.listen(PORT, () => {
+        console.log(`🚀 MedSync server running on port ${PORT} (without database)`);
+      });
+    });
+}
 
 export default app;

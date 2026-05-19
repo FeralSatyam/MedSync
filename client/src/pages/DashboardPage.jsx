@@ -282,7 +282,6 @@ function DesktopSidebar({ activeTab, onTabChange, navigate }) {
     { id: 'home', label: 'Dashboard', icon: Icons.Home },
     { id: 'ai-health', label: 'AI Health', icon: Icons.AIHealth },
     { id: 'pharmacy', label: 'Pharmacy', icon: Icons.Pharmacy },
-    { id: 'orders', label: 'Orders', icon: Icons.Package },
   ];
 
   return (
@@ -303,8 +302,6 @@ function DesktopSidebar({ activeTab, onTabChange, navigate }) {
               <button key={item.id} onClick={() => {
                 if (item.id === 'pharmacy') {
                   navigate('/pharmacy');
-                } else if (item.id === 'orders') {
-                  navigate('/orders');
                 } else if (item.id === 'ai-health') {
                   navigate('/ai-health');
                 } else {
@@ -362,7 +359,6 @@ function MobileBottomNav({ activeTab, onTabChange, onQRPress, navigate }) {
     { id: 'ai-health', label: 'AI Health', icon: Icons.AIHealth },
     { id: 'qr', label: '', icon: Icons.QR, isQR: true, isSpecial: true },
     { id: 'pharmacy', label: 'Pharmacy', icon: Icons.Pharmacy },
-    { id: 'orders', label: 'Orders', icon: Icons.Package },
     { id: 'profile', label: 'Profile', icon: Icons.Profile },
   ];
 
@@ -391,8 +387,6 @@ function MobileBottomNav({ activeTab, onTabChange, onQRPress, navigate }) {
                 navigate('/profile');
               } else if (tab.id === 'pharmacy') {
                 navigate('/pharmacy');
-              } else if (tab.id === 'orders') {
-                navigate('/orders');
               } else if (tab.id === 'ai-health') {
                 navigate('/ai-health');
               } else {
@@ -469,8 +463,6 @@ export default function DashboardPage() {
       navigate('/profile');
     } else if (tabId === 'pharmacy') {
       navigate('/pharmacy');
-    } else if (tabId === 'orders') {
-      navigate('/orders');
     } else if (tabId === 'ai-health') {
       navigate('/ai-health');
     } else {
@@ -586,8 +578,6 @@ export default function DashboardPage() {
       navigate('/profile');
     } else if (activeTab === 'pharmacy') {
       navigate('/pharmacy');
-    } else if (activeTab === 'orders') {
-      navigate('/orders');
     } else if (activeTab === 'ai-health') {
       navigate('/ai-health');
     }
@@ -879,4 +869,4 @@ export default function DashboardPage() {
       )}
     </div>
   );
-}  
+}

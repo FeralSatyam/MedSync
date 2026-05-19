@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useAppStore } from '../store/appStore';
+import { useAuthStore } from '../store/authStore';
 import { getPatients, updatePatient } from '../api/patientApi';
 
 // SVG Icons
@@ -50,6 +51,12 @@ const Icons = {
   Close: () => (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
       <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+    </svg>
+  ),
+  Logout: () => (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M9 21H5C3.9 21 3 20.1 3 19V5C3 3.9 3.9 3 5 3H9" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+      <path d="M16 17L21 12L16 7M21 12H9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
     </svg>
   ),
 };
@@ -115,6 +122,9 @@ export default function ProfilePage() {
   const [passwordForm, setPasswordForm] = useState({ current: '', new: '', confirm: '' });
   const [memberImages, setMemberImages] = useState({});
 
+  // Get auth store for logout
+  const logout = useAuthStore((s) => s.logout);
+
   // Load patients
   useEffect(() => {
     loadPatients();
@@ -146,24 +156,29 @@ export default function ProfilePage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validate file type
     if (!file.type.startsWith('image/')) {
       toast.error('Please select an image file');
       return;
     }
 
-    // Validate size (max 2MB)
     if (file.size > 2 * 1024 * 1024) {
       toast.error('Image must be less than 2MB');
       return;
     }
 
-    // Create preview URL
     const previewUrl = URL.createObjectURL(file);
     setMemberImages(prev => ({ ...prev, [member._id]: previewUrl }));
-
-    // Here you would upload to your server/Cloudinary
     toast.success('Profile picture updated (demo)');
+  };
+
+  const handleLogout = () => {
+    // Clear all auth data
+    logout();
+    localStorage.removeItem('medsync-auth');
+    localStorage.removeItem('medsync_pro_status');
+    localStorage.removeItem('medsync_biometric');
+    toast.success('Logged out successfully');
+    navigate('/login');
   };
 
   const handleUpgradeToPro = () => {
@@ -196,7 +211,6 @@ export default function ProfilePage() {
 
   const toggleBiometric = () => {
     if (!biometricEnabled) {
-      // Simulate biometric enrollment
       if (window.PublicKeyCredential) {
         toast.success('Biometric authentication enabled (demo)');
         localStorage.setItem('medsync_biometric', 'enabled');
@@ -225,14 +239,12 @@ export default function ProfilePage() {
       return;
     }
     
-    // Simulate API call
     toast.success('Password changed successfully');
     setShowChangePassword(false);
     setPasswordForm({ current: '', new: '', confirm: '' });
   };
 
   const handleResetPassword = () => {
-    // Simulate sending reset email
     toast.success('Password reset link sent to your email');
   };
 
@@ -268,7 +280,15 @@ export default function ProfilePage() {
       <div className="max-w-2xl mx-auto px-4 py-6 space-y-6">
         {/* Family Members Section */}
         <div className="bg-white rounded-xl p-4 shadow-sm">
-          <h2 className="font-semibold text-gray-800 mb-3">Family Members</h2>
+          <div className="flex justify-between items-center mb-3">
+            <h2 className="font-semibold text-gray-800">Family Members</h2>
+            <button 
+              onClick={() => navigate('/patients')}
+              className="text-xs text-teal-500 hover:underline"
+            >
+              Manage
+            </button>
+          </div>
           <div className="space-y-2">
             {patients.map((member) => (
               <FamilyMemberCard
@@ -368,7 +388,6 @@ export default function ProfilePage() {
             )}
           </div>
 
-          {/* Features Comparison */}
           <div className="space-y-3 mb-4">
             <p className="text-sm text-gray-600">Current Plan Features:</p>
             {freeFeatures.map((feature, idx) => (
@@ -396,8 +415,19 @@ export default function ProfilePage() {
           )}
         </div>
 
+        {/* Sign Out Button */}
+        <div className="pt-4">
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center justify-center gap-3 bg-red-50 border border-red-200 rounded-xl px-4 py-4 text-red-600 font-semibold hover:bg-red-100 transition-colors"
+          >
+            <Icons.Logout />
+            Sign Out
+          </button>
+        </div>
+
         {/* Version Info */}
-        <div className="text-center py-4">
+        <div className="text-center py-2">
           <p className="text-xs text-gray-400">MedSync v1.0.0</p>
         </div>
       </div>
