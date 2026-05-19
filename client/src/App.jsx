@@ -12,6 +12,7 @@ import ProfilePage from './pages/ProfilePage';
 import PharmacyPage from './pages/PharmacyPage';
 import OrdersPage from './pages/OrdersPage';
 import OrderTrackingPage from './pages/OrderTrackingPage';
+import AIHealthPage from './pages/AIHealthPage';  // ADD THIS IMPORT
 
 function ProtectedRoute({ children }) {
   const token = useAuthStore((s) => s.token);
@@ -105,6 +106,15 @@ export default function App() {
           element={
             <ProtectedRoute>
               <OrderTrackingPage />
+            </ProtectedRoute>
+          }
+        />
+        {/* ADD AI HEALTH ROUTE HERE */}
+        <Route
+          path="/ai-health"
+          element={
+            <ProtectedRoute>
+              <AIHealthPage />
             </ProtectedRoute>
           }
         />
