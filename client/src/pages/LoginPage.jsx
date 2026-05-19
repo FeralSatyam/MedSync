@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useRef, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -27,10 +27,44 @@ const registerSchema = z.object({
   password: z.string().min(6, 'Password must be at least 6 characters'),
 });
 
+const registerPharmacySchema = z.object({
+  pharmacyName: z.string().trim().min(1, 'Pharmacy name is required'),
+  ownerName: z.string().trim().min(1, 'Owner name is required'),
+  email: z.string().email('Invalid email').trim().refine(isValidEmailStr, { message: 'Invalid or unsupported email provider' }),
+  phone: z.string().trim().min(7, 'Valid phone number is required'),
+  address: z.string().trim().min(1, 'Address is required'),
+  licenseNumber: z.string().trim().min(1, 'License number is required'),
+  password: z.string().min(6, 'Password must be at least 6 characters'),
+  confirmPassword: z.string().min(6, 'Please confirm your password'),
+  legallyRegistered: z.boolean().refine(val => val === true, {
+    message: "You must confirm the pharmacy is legally registered"
+  }),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"],
+});
+
 export default function LoginPage() {
   const [mode, setMode] = useState('login');
+  const [userType, setUserType] = useState('patient'); // 'patient' | 'pharmacist'
+  const [pharmacyLicenseId, setPharmacyLicenseId] = useState('');
   const [formError, setFormError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+
+  const isPharmacist = userType === 'pharmacist';
+
+  // Animated role switch
+  function handleUserTypeSwitch(type) {
+    if (type === userType) return;
+    setIsTransitioning(true);
+    setTimeout(() => {
+      setUserType(type);
+      setFormError('');
+      setPharmacyLicenseId('');
+      setTimeout(() => setIsTransitioning(false), 50);
+    }, 180);
+  }
 
   // Forgot password state
   const [forgotOpen, setForgotOpen] = useState(false);
@@ -57,6 +91,21 @@ export default function LoginPage() {
   const registerForm = useForm({
     resolver: zodResolver(registerSchema),
     defaultValues: { firstName: '', lastName: '', email: '', password: '' },
+  });
+
+  const registerPharmacyForm = useForm({
+    resolver: zodResolver(registerPharmacySchema),
+    defaultValues: {
+      pharmacyName: '',
+      ownerName: '',
+      email: '',
+      phone: '',
+      address: '',
+      licenseNumber: '',
+      password: '',
+      confirmPassword: '',
+      legallyRegistered: false
+    },
   });
 
   const demoHint = useMemo(() => 'Support: contact@medsync.np', []);
@@ -113,6 +162,25 @@ export default function LoginPage() {
       toast.success('Account created! Check your email for the verification code.');
     } catch (err) {
       const message = err?.response?.data?.message || err?.message || 'Registration failed';
+      setFormError(message);
+      toast.error(message);
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  // ── Register Pharmacy ──────────────────────────────────────────────────────
+  async function onSubmitRegisterPharmacy(values) {
+    setFormError('');
+    setSubmitting(true);
+    try {
+      const name = `${values.ownerName} - ${values.pharmacyName}`.trim();
+      const data = await register({ name, email: values.email, password: values.password });
+      setPendingEmail(data.email || values.email);
+      setVerifyStep(true);
+      toast.success('Pharmacy account created! Check your email for the verification code.');
+    } catch (err) {
+      const message = err?.response?.data?.message || err?.message || 'Pharmacy registration failed';
       setFormError(message);
       toast.error(message);
     } finally {
@@ -259,28 +327,88 @@ export default function LoginPage() {
             <img src={logo} alt="MedSync Logo" className="h-[42px] w-auto object-contain" />
           </div>
 
-          <h2 className="font-display text-[28px] font-bold tracking-[-0.4px] text-navy mb-[6px]">
-            {mode === 'login' ? 'Sign In' : 'Register'}
-          </h2>
-          <p className="text-[14px] font-body text-muted mb-[32px]">
-            {mode === 'login' ? 'Welcome back! Enter your details.' : 'Create an account to start tracking medicines.'}
-          </p>
+          {/* ── Role Toggle: Patient / Pharmacist ── */}
+          <div className="flex items-center gap-[6px] mb-[22px]">
+            <button
+              type="button"
+              onClick={() => handleUserTypeSwitch('patient')}
+              className={`relative flex items-center gap-[6px] px-[14px] py-[7px] rounded-full text-[12px] font-semibold cursor-pointer border transition-all duration-300 ${
+                !isPharmacist
+                  ? 'bg-navy text-white border-navy shadow-sm'
+                  : 'bg-transparent text-muted border-border hover:text-navy hover:border-navy/30'
+              }`}
+            >
+              {/* Patient icon */}
+              <svg className="w-[14px] h-[14px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+              Patient
+            </button>
+            <button
+              type="button"
+              onClick={() => handleUserTypeSwitch('pharmacist')}
+              className={`relative flex items-center gap-[6px] px-[14px] py-[7px] rounded-full text-[12px] font-semibold cursor-pointer border transition-all duration-300 ${
+                isPharmacist
+                  ? 'bg-mint text-white border-mint shadow-sm'
+                  : 'bg-transparent text-muted border-border hover:text-mint hover:border-mint/30'
+              }`}
+            >
+              {/* Pharmacy Rx icon */}
+              <svg className="w-[14px] h-[14px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+              </svg>
+              Pharmacist
+              {isPharmacist && (
+                <span className="ml-[2px] px-[6px] py-[1px] rounded-full bg-white/20 text-[9px] font-bold tracking-wide uppercase">
+                  Rx
+                </span>
+              )}
+            </button>
+          </div>
 
-          {/* Tab switcher */}
+          {/* ── Pharmacist badge ── */}
+          <div className={`overflow-hidden transition-all duration-300 ease-out ${
+            isPharmacist ? 'max-h-[48px] opacity-100 mb-[16px]' : 'max-h-0 opacity-0 mb-0'
+          }`}>
+            <div className="flex items-center gap-[8px] px-[14px] py-[9px] rounded-[12px] bg-mint/5 border border-mint/15">
+              <svg className="w-[16px] h-[16px] text-mint flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+              </svg>
+              <span className="text-[11px] font-semibold text-mint">For Licensed Pharmacies</span>
+              <span className="text-[10px] text-muted ml-auto">Verified access only</span>
+            </div>
+          </div>
+
+          {/* ── Header & subtitle with transition ── */}
+          <div className={`transition-all duration-300 ease-out ${isTransitioning ? 'opacity-0 translate-y-[4px]' : 'opacity-100 translate-y-0'}`}>
+            <h2 className="font-display text-[28px] font-bold tracking-[-0.4px] text-navy mb-[6px]">
+              {isPharmacist
+                ? (mode === 'login' ? 'Pharmacist Portal' : 'Register Your Pharmacy')
+                : (mode === 'login' ? 'Sign In' : 'Register')}
+            </h2>
+            <p className="text-[14px] font-body text-muted mb-[32px]">
+              {isPharmacist
+                ? (mode === 'login' ? 'Secure pharmacy access for medicine verification and dispensing.' : 'Create a verified pharmacy account to access MedSync dispensing tools.')
+                : (mode === 'login' ? 'Welcome back! Enter your details.' : 'Create an account to start tracking medicines.')}
+            </p>
+          </div>
+
+          {/* Tab switcher - show for both, change labels based on role */}
           <div className="flex gap-[4px] bg-bg rounded-[14px] p-[5px] mb-[26px]">
             <button type="button" onClick={() => setMode('login')}
               className={`flex-1 px-[8px] py-[10px] rounded-[10px] font-body text-[13px] font-semibold cursor-pointer transition-all ${mode === 'login' ? 'bg-card text-navy shadow-sm' : 'bg-transparent text-muted hover:text-navy'
                 }`}>
-              Sign In
+              {isPharmacist ? 'Login' : 'Sign In'}
             </button>
             <button type="button" onClick={() => setMode('register')}
               className={`flex-1 px-[8px] py-[10px] rounded-[10px] font-body text-[13px] font-semibold cursor-pointer transition-all ${mode === 'register' ? 'bg-card text-navy shadow-sm' : 'bg-transparent text-muted hover:text-navy'
                 }`}>
-              Register
+              {isPharmacist ? 'Register Pharmacy' : 'Register'}
             </button>
           </div>
 
-          {/* ── LOGIN FORM ── */}
+          {/* ── LOGIN / REGISTER FORMS ── */}
+          <div className={`transition-all duration-300 ease-out ${isTransitioning ? 'opacity-0 translate-y-[6px]' : 'opacity-100 translate-y-0'}`}>
           {mode === 'login' ? (
             <form onSubmit={loginForm.handleSubmit(onSubmitLogin)} className="space-y-[18px]">
               <div>
@@ -299,22 +427,165 @@ export default function LoginPage() {
                   <div className="mt-[7px] text-[12px] text-red font-semibold">{loginForm.formState.errors.password.message}</div>
                 )}
               </div>
-              {formError && <div className="text-[12px] text-red font-semibold">{formError}</div>}
-              <button type="submit" disabled={submitting}
-                className="w-full bg-navy text-white rounded-btn border-none py-[12px] text-[14px] font-medium cursor-pointer hover:bg-navy-mid active:scale-[0.98] transition-all disabled:opacity-60">
-                {submitting ? 'Signing in...' : 'Sign In'}
-              </button>
-              <button type="button" className="w-full text-[12px] text-mint-mid underline"
-                onClick={() => { setForgotOpen(true); setOtpSent(false); setForgotEmail(loginForm.getValues('email') || ''); setResetOtp(''); setNewPassword(''); }}>
-                Forgot password?
-              </button>
-              <div className="mt-[10px] text-[12px] text-muted text-center bg-[#f0f2f8] py-[10px] px-[14px] rounded-[10px]">
-                {demoHint}
+
+              {/* ── Pharmacy License ID (pharmacist only) ── */}
+              <div className={`overflow-hidden transition-all duration-300 ease-out ${
+                isPharmacist ? 'max-h-[100px] opacity-100' : 'max-h-0 opacity-0'
+              }`}>
+                <div>
+                  <label className="mb-[7px] flex items-center gap-[6px] text-[12px] font-semibold tracking-[0.02em] text-navy">
+                    <svg className="w-[13px] h-[13px] text-mint" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2" />
+                    </svg>
+                    Pharmacy License ID
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. PH-2024-XXXXX"
+                    value={pharmacyLicenseId}
+                    onChange={(e) => setPharmacyLicenseId(e.target.value)}
+                    className="w-full rounded-btn border-[1.5px] border-border bg-card px-[15px] py-[11px] text-[14px] text-navy outline-none transition-colors focus:border-mint"
+                  />
+                </div>
               </div>
+
+              {formError && <div className="text-[12px] text-red font-semibold">{formError}</div>}
+
+              <button type="submit" disabled={submitting}
+                className={`w-full text-white rounded-btn border-none py-[12px] text-[14px] font-medium cursor-pointer active:scale-[0.98] transition-all disabled:opacity-60 ${
+                  isPharmacist
+                    ? 'bg-mint hover:bg-mint-mid'
+                    : 'bg-navy hover:bg-navy-mid'
+                }`}>
+                {submitting
+                  ? (isPharmacist ? 'Authenticating...' : 'Signing in...')
+                  : (isPharmacist ? 'Login as Pharmacist' : 'Sign In')}
+              </button>
+
+              {/* ── Pharmacist trust/security note ── */}
+              <div className={`overflow-hidden transition-all duration-300 ease-out ${
+                isPharmacist ? 'max-h-[60px] opacity-100' : 'max-h-0 opacity-0'
+              }`}>
+                <div className="flex items-center justify-center gap-[6px] text-[11px] text-muted py-[2px]">
+                  <svg className="w-[12px] h-[12px] text-mint" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
+                  <span>Verified pharmacies only &middot; Secure encrypted access</span>
+                </div>
+              </div>
+
+              {!isPharmacist && (
+                <>
+                  <button type="button" className="w-full text-[12px] text-mint-mid underline"
+                    onClick={() => { setForgotOpen(true); setOtpSent(false); setForgotEmail(loginForm.getValues('email') || ''); setResetOtp(''); setNewPassword(''); }}>
+                    Forgot password?
+                  </button>
+                  <div className="mt-[10px] text-[12px] text-muted text-center bg-[#f0f2f8] py-[10px] px-[14px] rounded-[10px]">
+                    {demoHint}
+                  </div>
+                </>
+              )}
             </form>
 
+          ) : isPharmacist ? (
+            /* ── REGISTER PHARMACY FORM ── */
+            <form onSubmit={registerPharmacyForm.handleSubmit(onSubmitRegisterPharmacy)} className="space-y-[18px]">
+              <div className="grid grid-cols-2 gap-[12px]">
+                <div>
+                  <label className="mb-[7px] block text-[12px] font-semibold tracking-[0.02em] text-navy">Pharmacy Name</label>
+                  <input type="text" {...registerPharmacyForm.register('pharmacyName')}
+                    className="w-full rounded-btn border-[1.5px] border-border bg-card px-[15px] py-[11px] text-[14px] text-navy outline-none transition-colors focus:border-mint" />
+                  {registerPharmacyForm.formState.errors.pharmacyName && <div className="mt-[7px] text-[12px] text-red font-semibold">{registerPharmacyForm.formState.errors.pharmacyName.message}</div>}
+                </div>
+                <div>
+                  <label className="mb-[7px] block text-[12px] font-semibold tracking-[0.02em] text-navy">Owner / Pharmacist Name</label>
+                  <input type="text" {...registerPharmacyForm.register('ownerName')}
+                    className="w-full rounded-btn border-[1.5px] border-border bg-card px-[15px] py-[11px] text-[14px] text-navy outline-none transition-colors focus:border-mint" />
+                  {registerPharmacyForm.formState.errors.ownerName && <div className="mt-[7px] text-[12px] text-red font-semibold">{registerPharmacyForm.formState.errors.ownerName.message}</div>}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-[12px]">
+                <div>
+                  <label className="mb-[7px] block text-[12px] font-semibold tracking-[0.02em] text-navy">Pharmacy Email</label>
+                  <input type="email" {...registerPharmacyForm.register('email')}
+                    className="w-full rounded-btn border-[1.5px] border-border bg-card px-[15px] py-[11px] text-[14px] text-navy outline-none transition-colors focus:border-mint" />
+                  {registerPharmacyForm.formState.errors.email && <div className="mt-[7px] text-[12px] text-red font-semibold">{registerPharmacyForm.formState.errors.email.message}</div>}
+                </div>
+                <div>
+                  <label className="mb-[7px] block text-[12px] font-semibold tracking-[0.02em] text-navy">Phone Number</label>
+                  <input type="text" {...registerPharmacyForm.register('phone')}
+                    className="w-full rounded-btn border-[1.5px] border-border bg-card px-[15px] py-[11px] text-[14px] text-navy outline-none transition-colors focus:border-mint" />
+                  {registerPharmacyForm.formState.errors.phone && <div className="mt-[7px] text-[12px] text-red font-semibold">{registerPharmacyForm.formState.errors.phone.message}</div>}
+                </div>
+              </div>
+
+              <div>
+                <label className="mb-[7px] block text-[12px] font-semibold tracking-[0.02em] text-navy">Pharmacy Address</label>
+                <input type="text" {...registerPharmacyForm.register('address')}
+                  className="w-full rounded-btn border-[1.5px] border-border bg-card px-[15px] py-[11px] text-[14px] text-navy outline-none transition-colors focus:border-mint" />
+                {registerPharmacyForm.formState.errors.address && <div className="mt-[7px] text-[12px] text-red font-semibold">{registerPharmacyForm.formState.errors.address.message}</div>}
+              </div>
+
+              <div>
+                <label className="mb-[7px] block text-[12px] font-semibold tracking-[0.02em] text-navy">Pharmacy License Number</label>
+                <input type="text" {...registerPharmacyForm.register('licenseNumber')}
+                  className="w-full rounded-btn border-[1.5px] border-border bg-card px-[15px] py-[11px] text-[14px] text-navy outline-none transition-colors focus:border-mint" />
+                {registerPharmacyForm.formState.errors.licenseNumber && <div className="mt-[7px] text-[12px] text-red font-semibold">{registerPharmacyForm.formState.errors.licenseNumber.message}</div>}
+              </div>
+
+              <div className="grid grid-cols-2 gap-[12px]">
+                <div>
+                  <label className="mb-[7px] block text-[12px] font-semibold tracking-[0.02em] text-navy">Password</label>
+                  <input type="password" {...registerPharmacyForm.register('password')}
+                    className="w-full rounded-btn border-[1.5px] border-border bg-card px-[15px] py-[11px] text-[14px] text-navy outline-none transition-colors focus:border-mint" />
+                  {registerPharmacyForm.formState.errors.password && <div className="mt-[7px] text-[12px] text-red font-semibold">{registerPharmacyForm.formState.errors.password.message}</div>}
+                </div>
+                <div>
+                  <label className="mb-[7px] block text-[12px] font-semibold tracking-[0.02em] text-navy">Confirm Password</label>
+                  <input type="password" {...registerPharmacyForm.register('confirmPassword')}
+                    className="w-full rounded-btn border-[1.5px] border-border bg-card px-[15px] py-[11px] text-[14px] text-navy outline-none transition-colors focus:border-mint" />
+                  {registerPharmacyForm.formState.errors.confirmPassword && <div className="mt-[7px] text-[12px] text-red font-semibold">{registerPharmacyForm.formState.errors.confirmPassword.message}</div>}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-[12px]">
+                <div>
+                  <label className="mb-[7px] block text-[12px] font-semibold tracking-[0.02em] text-navy">Upload Pharmacy License <span className="text-muted font-normal">(Optional)</span></label>
+                  <input type="file" accept="image/*,.pdf"
+                    className="w-full rounded-btn border-[1.5px] border-border bg-card px-[15px] py-[8px] text-[13px] text-navy outline-none transition-colors focus:border-mint file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-[12px] file:font-semibold file:bg-mint/10 file:text-mint hover:file:bg-mint/20" />
+                </div>
+                <div>
+                  <label className="mb-[7px] block text-[12px] font-semibold tracking-[0.02em] text-navy">Upload Pharmacy Logo <span className="text-muted font-normal">(Optional)</span></label>
+                  <input type="file" accept="image/*"
+                    className="w-full rounded-btn border-[1.5px] border-border bg-card px-[15px] py-[8px] text-[13px] text-navy outline-none transition-colors focus:border-mint file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-[12px] file:font-semibold file:bg-mint/10 file:text-mint hover:file:bg-mint/20" />
+                </div>
+              </div>
+
+              <div className="flex items-start gap-[10px] mt-[8px]">
+                <input type="checkbox" id="legallyRegistered" {...registerPharmacyForm.register('legallyRegistered')}
+                  className="mt-[2px] w-[16px] h-[16px] rounded-[4px] border-border text-mint focus:ring-mint cursor-pointer accent-mint" />
+                <label htmlFor="legallyRegistered" className="text-[13px] text-navy font-medium leading-tight cursor-pointer">
+                  I confirm this pharmacy is legally registered.
+                </label>
+              </div>
+              {registerPharmacyForm.formState.errors.legallyRegistered && <div className="mt-[4px] text-[12px] text-red font-semibold">{registerPharmacyForm.formState.errors.legallyRegistered.message}</div>}
+
+              {formError && <div className="text-[12px] text-red font-semibold">{formError}</div>}
+              
+              <button type="submit" disabled={submitting}
+                className="w-full bg-mint text-white rounded-btn border-none py-[12px] text-[14px] font-medium cursor-pointer hover:bg-mint-mid active:scale-[0.98] transition-all disabled:opacity-60">
+                {submitting ? 'Registering...' : 'Register Pharmacy'}
+              </button>
+              
+              <div className="text-center mt-[16px]">
+                <button type="button" onClick={() => setMode('login')} className="text-[13px] text-muted hover:text-navy transition-colors">
+                  Already registered? <span className="font-semibold text-mint">Login</span>
+                </button>
+              </div>
+            </form>
           ) : (
-            /* ── REGISTER FORM ── */
+            /* ── REGISTER PATIENT FORM ── */
             <form onSubmit={registerForm.handleSubmit(onSubmitRegister)} className="space-y-[18px]">
               <div className="grid grid-cols-2 gap-[12px]">
                 <div>
@@ -357,6 +628,7 @@ export default function LoginPage() {
               </button>
             </form>
           )}
+          </div>
         </div>
       </section>
 

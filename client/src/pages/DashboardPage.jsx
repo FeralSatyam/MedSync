@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useRef } from 'react';
+import { useEffect, useMemo, useState, useRef, useCallback, memo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 
@@ -22,13 +22,12 @@ const Icons = {
     </svg>
   ),
   
-  Calendar: ({ active = false }) => (
+  AIHealth: ({ active = false }) => (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" strokeWidth="1.5" fill={active ? "currentColor" : "none"}/>
-      <path d="M8 2V6M16 2V6M3 10H21" stroke="currentColor" strokeWidth="1.5"/>
-      <circle cx="12" cy="15" r="1" fill="currentColor"/>
-      <circle cx="16" cy="15" r="1" fill="currentColor"/>
-      <circle cx="8" cy="15" r="1" fill="currentColor"/>
+      <path d="M12 2c-3 0-5 2-5 5 0 1.5.5 2.5 1 3.5-1 1-2 2.5-2 4.5 0 3 2 5 5 5s5-2 5-5c0-2-1-3.5-2-4.5.5-1 1-2 1-3.5 0-3-2-5-5-5z" stroke="currentColor" strokeWidth="1.5" fill={active ? "currentColor" : "none"}/>
+      <path d="M12 7v10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+      <path d="M8 9l8 2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+      <path d="M8 13l8-2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
     </svg>
   ),
   
@@ -150,187 +149,19 @@ const Icons = {
     </svg>
   ),
   
-  Morning: () => (
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="12" cy="12" r="5" stroke="currentColor" strokeWidth="1.5"/>
-      <path d="M12 2V4M22 12H20M4 12H2M12 20V22M19.1 4.9L17.7 6.3M6.3 17.7L4.9 19.1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-    </svg>
-  ),
-  
-  Afternoon: () => (
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M12 18C15.3 18 18 15.3 18 12C18 8.7 15.3 6 12 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-      <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.5"/>
-    </svg>
-  ),
-  
-  Night: () => (
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M21 12.8C20.1 15.4 17.6 17.3 14.7 17.3C11 17.3 8 14.3 8 10.6C8 7.7 9.9 5.2 12.5 4.3C11.6 7.1 12.5 10.2 14.7 12.4C16.9 14.6 20 15.5 22.8 14.6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+  Package: () => (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M20 7l-8-4-8 4m16 0v10l-8 4-8-4V7m8-4v18"/>
     </svg>
   ),
 };
 
-// Professional Medicine Card for Mobile
-function MobileMedicineCard({ medicine, onRestock, onEdit, onRemove, onViewRx }) {
-  const { status } = getStockStatus(medicine);
-  const dailyConsumption = medicine.frequencyPerDay * medicine.dosePerIntake;
-  const daysRemaining = Math.floor(medicine.currentStock / dailyConsumption) || 0;
-  const stockPercentage = Math.min(100, (medicine.currentStock / (medicine.refillThreshold * dailyConsumption)) * 100);
+// Memoized Family Avatar Component
+const FamilyAvatar = memo(function FamilyAvatar({ patient, isActive, hasAlert, onClick }) {
+  const initials = useMemo(() => {
+    return patient.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+  }, [patient.name]);
 
-  const getStatusConfig = () => {
-    switch (status) {
-      case 'red': return { label: 'Low Stock', color: '#EF4444', bg: '#FEE2E2' };
-      case 'amber': return { label: 'Refill Soon', color: '#F59E0B', bg: '#FEF3C7' };
-      default: return { label: 'In Stock', color: '#10B981', bg: '#D1FAE5' };
-    }
-  };
-
-  const getTimings = () => {
-    const timings = [];
-    if (medicine.frequencyPerDay >= 1) timings.push({ name: 'Morning', icon: Icons.Morning });
-    if (medicine.frequencyPerDay >= 2) timings.push({ name: 'Afternoon', icon: Icons.Afternoon });
-    if (medicine.frequencyPerDay >= 3) timings.push({ name: 'Night', icon: Icons.Night });
-    return timings;
-  };
-
-  const statusConfig = getStatusConfig();
-  const timings = getTimings();
-
-  return (
-    <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-all duration-200">
-      <div className="flex justify-between items-start mb-3">
-        <div className="flex-1">
-          <h3 className="font-semibold text-gray-800 text-base">{medicine.name}</h3>
-          <p className="text-gray-400 text-xs mt-0.5">{medicine.strength}{medicine.unit}</p>
-        </div>
-        <div className={`px-2.5 py-1 rounded-full text-xs font-medium`} style={{ backgroundColor: statusConfig.bg, color: statusConfig.color }}>
-          {statusConfig.label}
-        </div>
-      </div>
-
-      <div className="mb-3">
-        <div className="flex justify-between text-xs text-gray-500 mb-1.5">
-          <span>Remaining: {medicine.currentStock} tablets</span>
-          <span className="font-medium">{daysRemaining} days left</span>
-        </div>
-        <div className="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
-          <div className="h-full rounded-full transition-all duration-300" style={{ width: `${stockPercentage}%`, backgroundColor: statusConfig.color }} />
-        </div>
-      </div>
-
-      <div className="flex flex-wrap gap-2 mb-3">
-        <span className="text-xs text-gray-500 flex items-center gap-1">
-          <span className="w-1 h-1 rounded-full bg-gray-300" />
-          {medicine.frequencyPerDay}× daily
-        </span>
-        {timings.map((timing, idx) => (
-          <span key={idx} className="text-xs px-2 py-0.5 bg-gray-50 text-gray-600 rounded-md flex items-center gap-1">
-            <timing.icon />
-            {timing.name}
-          </span>
-        ))}
-      </div>
-
-      <div className="flex gap-2 pt-2 border-t border-gray-100">
-        <button onClick={() => onRestock(medicine)} className="flex-1 bg-teal-500 text-white py-2 rounded-lg text-sm font-medium hover:bg-teal-600 transition-colors flex items-center justify-center gap-2">
-          <Icons.Restock />
-          Restock
-        </button>
-        {medicine.prescriptionImgUrl && (
-          <button onClick={() => onViewRx(medicine)} className="px-3 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-colors">
-            <Icons.Prescription />
-          </button>
-        )}
-        <button onClick={() => onEdit(medicine)} className="px-3 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-colors">
-          <Icons.Edit />
-        </button>
-        <button onClick={() => onRemove(medicine)} className="px-3 py-2 bg-gray-100 text-red-500 rounded-lg hover:bg-red-50 transition-colors">
-          <Icons.Delete />
-        </button>
-      </div>
-    </div>
-  );
-}
-
-// Desktop Table Row Component
-function DesktopMedicineRow({ medicine, onRestock, onEdit, onRemove, onViewRx }) {
-  const { status } = getStockStatus(medicine);
-  const dailyConsumption = medicine.frequencyPerDay * medicine.dosePerIntake;
-  const daysRemaining = Math.floor(medicine.currentStock / dailyConsumption) || 0;
-  const stockPercentage = Math.min(100, (medicine.currentStock / (medicine.refillThreshold * dailyConsumption)) * 100);
-
-  const getStatusConfig = () => {
-    switch (status) {
-      case 'red': return { label: 'Low Stock', icon: '🔴', color: '#EF4444' };
-      case 'amber': return { label: 'Refill Soon', icon: '🟡', color: '#F59E0B' };
-      default: return { label: 'In Stock', icon: '🟢', color: '#10B981' };
-    }
-  };
-
-  const getTimings = () => {
-    const timings = [];
-    if (medicine.frequencyPerDay >= 1) timings.push('Morning');
-    if (medicine.frequencyPerDay >= 2) timings.push('Afternoon');
-    if (medicine.frequencyPerDay >= 3) timings.push('Night');
-    return timings.join(', ');
-  };
-
-  const statusConfig = getStatusConfig();
-
-  return (
-    <tr className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-      <td className="py-4 px-3">
-        <div>
-          <div className="font-medium text-gray-800">{medicine.name}</div>
-          <div className="text-xs text-gray-400 mt-0.5">{medicine.strength}{medicine.unit}</div>
-        </div>
-      </td>
-      <td className="py-4 px-3 text-sm text-gray-600">{getTimings() || `${medicine.frequencyPerDay}× daily`}</td>
-      <td className="py-4 px-3">
-        <div className="flex items-center gap-1.5">
-          <span style={{ color: statusConfig.color }}>{statusConfig.icon}</span>
-          <span className="text-sm text-gray-700">{statusConfig.label}</span>
-        </div>
-      </td>
-      <td className="py-4 px-3">
-        <div className="min-w-[140px]">
-          <div className="flex justify-between text-xs text-gray-500 mb-1">
-            <span>{medicine.currentStock} / {medicine.refillThreshold * dailyConsumption} tabs</span>
-            <span className="font-medium">{daysRemaining} days</span>
-          </div>
-          <div className="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
-            <div className="h-full rounded-full transition-all duration-300" style={{ width: `${stockPercentage}%`, backgroundColor: statusConfig.color }} />
-          </div>
-        </div>
-      </td>
-      <td className="py-4 px-3">
-        <div className="flex gap-2">
-          <button onClick={() => onRestock(medicine)} className="px-3 py-1.5 bg-teal-500 text-white rounded-lg text-xs font-medium hover:bg-teal-600 transition-colors flex items-center gap-1.5">
-            <Icons.Restock />
-            Restock
-          </button>
-          {medicine.prescriptionImgUrl && (
-            <button onClick={() => onViewRx(medicine)} className="p-1.5 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-colors">
-              <Icons.Prescription />
-            </button>
-          )}
-          <button onClick={() => onEdit(medicine)} className="p-1.5 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-colors">
-            <Icons.Edit />
-          </button>
-          <button onClick={() => onRemove(medicine)} className="p-1.5 bg-gray-100 text-red-500 rounded-lg hover:bg-red-50 transition-colors">
-            <Icons.Delete />
-          </button>
-        </div>
-      </td>
-    </tr>
-  );
-}
-
-// Family Avatar Component
-function FamilyAvatar({ patient, isActive, hasAlert, onClick }) {
-  const initials = patient.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
-  
   return (
     <button onClick={onClick} className="flex flex-col items-center gap-2 shrink-0 group transition-all duration-200">
       <div className="relative">
@@ -346,11 +177,87 @@ function FamilyAvatar({ patient, isActive, hasAlert, onClick }) {
       </span>
     </button>
   );
-}
+});
+
+// Memoized Mobile Medicine Card Component
+const MobileMedicineCard = memo(function MobileMedicineCard({ medicine, onRestock, onEdit, onRemove, onViewRx }) {
+  const { status } = getStockStatus(medicine);
+  const dailyConsumption = medicine.frequencyPerDay * medicine.dosePerIntake;
+  const daysRemaining = Math.floor(medicine.currentStock / dailyConsumption) || 0;
+  const stockPercentage = Math.min(100, (medicine.currentStock / (medicine.refillThreshold * dailyConsumption)) * 100);
+
+  const getStatusConfig = useCallback(() => {
+    switch (status) {
+      case 'red': return { label: 'Low Stock', color: '#EF4444', bg: '#FEE2E2' };
+      case 'amber': return { label: 'Refill Soon', color: '#F59E0B', bg: '#FEF3C7' };
+      default: return { label: 'In Stock', color: '#10B981', bg: '#D1FAE5' };
+    }
+  }, [status]);
+
+  const getTimings = useCallback(() => {
+    const timings = [];
+    if (medicine.frequencyPerDay >= 1) timings.push('Morning');
+    if (medicine.frequencyPerDay >= 2) timings.push('Afternoon');
+    if (medicine.frequencyPerDay >= 3) timings.push('Night');
+    return timings;
+  }, [medicine.frequencyPerDay]);
+
+  const statusConfig = getStatusConfig();
+  const timings = getTimings();
+
+  return (
+    <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-all duration-200">
+      <div className="flex justify-between items-start mb-3">
+        <div className="flex-1">
+          <h3 className="font-semibold text-gray-800 text-base">{medicine.name}</h3>
+          <p className="text-gray-400 text-xs mt-0.5">{medicine.strength}{medicine.unit}</p>
+        </div>
+        <div className={`px-2.5 py-1 rounded-full text-xs font-medium`} style={{ backgroundColor: statusConfig.bg, color: statusConfig.color }}>
+          {statusConfig.label}
+        </div>
+      </div>
+      <div className="mb-3">
+        <div className="flex justify-between text-xs text-gray-500 mb-1.5">
+          <span>Remaining: {medicine.currentStock} tablets</span>
+          <span className="font-medium">{daysRemaining} days left</span>
+        </div>
+        <div className="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
+          <div className="h-full rounded-full transition-all duration-300" style={{ width: `${stockPercentage}%`, backgroundColor: statusConfig.color }} />
+        </div>
+      </div>
+      <div className="flex flex-wrap gap-2 mb-3">
+        <span className="text-xs text-gray-500 flex items-center gap-1">
+          <span className="w-1 h-1 rounded-full bg-gray-300" />
+          {medicine.frequencyPerDay}× daily
+        </span>
+        {timings.map((time, idx) => (
+          <span key={idx} className="text-xs px-2 py-0.5 bg-gray-50 text-gray-600 rounded-md">
+            {time}
+          </span>
+        ))}
+      </div>
+      <div className="flex gap-2 pt-2 border-t border-gray-100">
+        <button onClick={() => onRestock(medicine)} className="flex-1 bg-teal-500 text-white py-2 rounded-lg text-sm font-medium hover:bg-teal-600 transition-colors flex items-center justify-center gap-2">
+          Restock
+        </button>
+        {medicine.prescriptionImgUrl && (
+          <button onClick={() => onViewRx(medicine)} className="px-3 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200">
+            Rx
+          </button>
+        )}
+        <button onClick={() => onEdit(medicine)} className="px-3 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200">
+          Edit
+        </button>
+        <button onClick={() => onRemove(medicine)} className="px-3 py-2 bg-gray-100 text-red-500 rounded-lg hover:bg-red-50">
+          Delete
+        </button>
+      </div>
+    </div>
+  );
+});
 
 // Desktop Sidebar Navigation
-function DesktopSidebar({ activeTab, onTabChange }) {
-  const navigate = useNavigate();
+function DesktopSidebar({ activeTab, onTabChange, navigate }) {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const menuRef = useRef(null);
   const authUser = useAuthStore((s) => s.user);
@@ -365,19 +272,12 @@ function DesktopSidebar({ activeTab, onTabChange }) {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
-  // Handle tab changes including profile and pharmacy navigation
-  useEffect(() => {
-    if (activeTab === 'profile') {
-      navigate('/profile');
-    } else if (activeTab === 'pharmacy') {
-      navigate('/pharmacy');
-    }
-  }, [activeTab, navigate]);
 
   const menuItems = [
     { id: 'home', label: 'Dashboard', icon: Icons.Home },
-    { id: 'schedule', label: 'Schedule', icon: Icons.Calendar },
+    { id: 'ai-health', label: 'AI Health', icon: Icons.AIHealth },
     { id: 'pharmacy', label: 'Pharmacy', icon: Icons.Pharmacy },
+    { id: 'orders', label: 'Orders', icon: Icons.Package },
   ];
 
   return (
@@ -392,7 +292,17 @@ function DesktopSidebar({ activeTab, onTabChange }) {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
             return (
-              <button key={item.id} onClick={() => onTabChange(item.id)} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all ${isActive ? 'bg-teal-50 text-teal-600' : 'text-gray-600 hover:bg-gray-50'}`}>
+              <button key={item.id} onClick={() => {
+                if (item.id === 'pharmacy') {
+                  navigate('/pharmacy');
+                } else if (item.id === 'orders') {
+                  navigate('/orders');
+                } else if (item.id === 'ai-health') {
+                  navigate('/ai-health');
+                } else {
+                  onTabChange(item.id);
+                }
+              }} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all ${isActive ? 'bg-teal-50 text-teal-600' : 'text-gray-600 hover:bg-gray-50'}`}>
                 <Icon active={isActive} />
                 <span className={`text-sm font-medium ${isActive ? 'text-teal-600' : 'text-gray-700'}`}>{item.label}</span>
               </button>
@@ -438,12 +348,13 @@ function DesktopSidebar({ activeTab, onTabChange }) {
 }
 
 // Mobile Bottom Navigation with Floating QR Button
-function MobileBottomNav({ activeTab, onTabChange, onQRPress }) {
+function MobileBottomNav({ activeTab, onTabChange, onQRPress, navigate }) {
   const tabs = [
     { id: 'home', label: 'Home', icon: Icons.Home },
-    { id: 'schedule', label: 'Schedule', icon: Icons.Calendar },
+    { id: 'ai-health', label: 'AI Health', icon: Icons.AIHealth },
     { id: 'qr', label: '', icon: Icons.QR, isQR: true, isSpecial: true },
     { id: 'pharmacy', label: 'Pharmacy', icon: Icons.Pharmacy },
+    { id: 'orders', label: 'Orders', icon: Icons.Package },
     { id: 'profile', label: 'Profile', icon: Icons.Profile },
   ];
 
@@ -469,7 +380,13 @@ function MobileBottomNav({ activeTab, onTabChange, onQRPress }) {
           return (
             <button key={tab.id} onClick={() => {
               if (tab.id === 'profile') {
-                onTabChange('profile');
+                navigate('/profile');
+              } else if (tab.id === 'pharmacy') {
+                navigate('/pharmacy');
+              } else if (tab.id === 'orders') {
+                navigate('/orders');
+              } else if (tab.id === 'ai-health') {
+                navigate('/ai-health');
               } else {
                 onTabChange(tab.id);
               }
@@ -518,17 +435,10 @@ export default function DashboardPage() {
   const [showNotifications, setShowNotifications] = useState(false);
   
   const notificationRef = useRef(null);
-
   const activePatientId = useAppStore((s) => s.activePatientId);
   const setActivePatientId = useAppStore((s) => s.setActivePatientId);
   const authUser = useAuthStore((s) => s.user);
-  
-  // Get userId from authUser (supports both _id and id)
   const userId = authUser?._id || authUser?.id;
-  
-  // Debug log
-  // console.log('Auth User in Dashboard:', authUser);
-  // console.log('User ID:', userId);
 
   const [patientAlertMap, setPatientAlertMap] = useState({});
   const [addProfileOpen, setAddProfileOpen] = useState(false);
@@ -545,25 +455,53 @@ export default function DashboardPage() {
   const [removeTarget, setRemoveTarget] = useState(null);
   const [lightboxUrl, setLightboxUrl] = useState(null);
 
-  // Handle tab changes including profile navigation
-  useEffect(() => {
-    if (activeTab === 'profile') {
+  // Memoized handlers
+  const handleTabChange = useCallback((tabId) => {
+    if (tabId === 'profile') {
       navigate('/profile');
+    } else if (tabId === 'pharmacy') {
+      navigate('/pharmacy');
+    } else if (tabId === 'orders') {
+      navigate('/orders');
+    } else if (tabId === 'ai-health') {
+      navigate('/ai-health');
+    } else {
+      setActiveTab(tabId);
     }
-  }, [activeTab, navigate]);
+  }, [navigate]);
 
-  // Close notification when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (notificationRef.current && !notificationRef.current.contains(event.target)) {
-        setShowNotifications(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+  const handleAddMember = useCallback(() => {
+    setAddProfileErrors({});
+    setAddProfileForm({ name: '', dateOfBirth: '', relation: 'self', allergies: '', pharmacyPin: '' });
+    setAddProfileOpen(true);
   }, []);
 
-  async function refreshPatients() {
+  const handleRestock = useCallback((med) => {
+    setRestockTarget(med);
+    const qty = Math.max(0, med.frequencyPerDay * med.dosePerIntake * 30);
+    setRestockQty(String(Math.round(qty)));
+  }, []);
+
+  // Memoized values
+  const hasAnyAlerts = useMemo(() => {
+    return Object.values(patientAlertMap).some(Boolean);
+  }, [patientAlertMap]);
+
+  const userName = useMemo(() => {
+    if (!patients || !Array.isArray(patients) || patients.length === 0) return 'User';
+    const currentPatient = patients.find((p) => (p._id || p.id) === activePatientId);
+    return currentPatient?.name?.split(' ')[0] || 'User';
+  }, [patients, activePatientId]);
+
+  const greeting = useMemo(() => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good morning';
+    if (hour < 17) return 'Good afternoon';
+    return 'Good evening';
+  }, []);
+
+  // Refresh functions
+  const refreshPatients = useCallback(async () => {
     try {
       const data = await getPatients();
       const patientsArray = Array.isArray(data) ? data : [];
@@ -576,27 +514,25 @@ export default function DashboardPage() {
         patientsArray.map(async (p) => {
           try {
             const meds = await getMedicinesForPatient(p._id || p.id);
-            const enriched = (meds || []).map((m) => {
+            const hasAlert = (meds || []).some((m) => {
               const { status } = getStockStatus(m);
-              return { ...m, stockStatus: status };
+              return status === 'red' || status === 'amber';
             });
-            const hasAlert = enriched.some((m) => m.stockStatus === 'red' || m.stockStatus === 'amber');
             return [p._id || p.id, hasAlert];
           } catch {
             return [p._id || p.id, false];
           }
         })
       );
-      const map = Object.fromEntries(alertPairs);
-      setPatientAlertMap(map);
+      setPatientAlertMap(Object.fromEntries(alertPairs));
     } catch (error) {
       console.error('Error loading patients:', error);
       setPatients([]);
       toast.error('Could not load profiles');
     }
-  }
+  }, [activePatientId, setActivePatientId]);
 
-  async function refreshMedicines(pid) {
+  const refreshMedicines = useCallback(async (pid) => {
     if (!pid) return;
     setLoadingMedicines(true);
     try {
@@ -614,7 +550,7 @@ export default function DashboardPage() {
     } finally {
       setLoadingMedicines(false);
     }
-  }
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -629,27 +565,36 @@ export default function DashboardPage() {
       }
     })();
     return () => { cancelled = true; };
-  }, []);
+  }, [refreshPatients]);
 
   useEffect(() => {
     if (!activePatientId) return;
     refreshMedicines(activePatientId);
-  }, [activePatientId]);
+  }, [activePatientId, refreshMedicines]);
 
-  const getCurrentPatientName = () => {
-    if (!patients || !Array.isArray(patients) || patients.length === 0) return 'User';
-    const currentPatient = patients.find((p) => (p._id || p.id) === activePatientId);
-    return currentPatient?.name?.split(' ')[0] || 'User';
-  };
+  // Handle tab navigation
+  useEffect(() => {
+    if (activeTab === 'profile') {
+      navigate('/profile');
+    } else if (activeTab === 'pharmacy') {
+      navigate('/pharmacy');
+    } else if (activeTab === 'orders') {
+      navigate('/orders');
+    } else if (activeTab === 'ai-health') {
+      navigate('/ai-health');
+    }
+  }, [activeTab, navigate]);
 
-  const greeting = (() => {
-    const hour = new Date().getHours();
-    if (hour < 12) return 'Good morning';
-    if (hour < 17) return 'Good afternoon';
-    return 'Good evening';
-  })();
-  
-  const userName = getCurrentPatientName();
+  // Close notification when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (notificationRef.current && !notificationRef.current.contains(event.target)) {
+        setShowNotifications(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   if (loadingPatients) {
     return (
@@ -665,7 +610,7 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-gray-50 pb-20 lg:pb-0">
       {/* Desktop Sidebar */}
-      <DesktopSidebar activeTab={activeTab} onTabChange={setActiveTab} />
+      <DesktopSidebar activeTab={activeTab} onTabChange={setActiveTab} navigate={navigate} />
 
       {/* Main Content - with margin for desktop sidebar */}
       <div className="lg:pl-64">
@@ -677,7 +622,7 @@ export default function DashboardPage() {
             </div>
             <div className="relative" ref={notificationRef}>
               <button onClick={() => setShowNotifications(!showNotifications)} className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors relative">
-                <Icons.Notification hasAlert={Object.values(patientAlertMap).some(Boolean)} />
+                <Icons.Notification hasAlert={hasAnyAlerts} />
               </button>
               {showNotifications && (
                 <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-lg border border-gray-100 z-50">
@@ -708,116 +653,73 @@ export default function DashboardPage() {
                 <h2 className="font-semibold text-gray-800 text-lg">Family Members</h2>
                 <p className="text-xs text-gray-400 mt-0.5">Switch between family profiles</p>
               </div>
-              <button onClick={() => { setAddProfileErrors({}); setAddProfileForm({ name: '', dateOfBirth: '', relation: 'self', allergies: '', pharmacyPin: '' }); setAddProfileOpen(true); }} className="flex items-center gap-1.5 text-teal-500 text-sm font-medium hover:text-teal-600 transition-colors">
+              <button onClick={handleAddMember} className="flex items-center gap-1.5 text-teal-500 text-sm font-medium hover:text-teal-600 transition-colors">
                 <Icons.Add />
                 Add Member
               </button>
             </div>
             
-            <div className="flex gap-5 overflow-x-auto pb-3 lg:grid lg:grid-cols-6 lg:gap-4 lg:overflow-visible scrollbar-thin">
+            <div className="flex gap-5 overflow-x-auto pb-3 lg:grid lg:grid-cols-6 lg:gap-4 lg:overflow-visible">
               {patients && Array.isArray(patients) && patients.map((p) => {
                 const hasAlert = !!patientAlertMap[p._id || p.id];
                 const active = (p._id || p.id) === activePatientId;
-                return <FamilyAvatar key={p._id || p.id} patient={p} isActive={active} hasAlert={hasAlert} onClick={() => setActivePatientId(p._id || p.id)} />;
+                return (
+                  <FamilyAvatar
+                    key={p._id || p.id}
+                    patient={p}
+                    isActive={active}
+                    hasAlert={hasAlert}
+                    onClick={() => setActivePatientId(p._id || p.id)}
+                  />
+                );
               })}
             </div>
           </div>
 
           {/* Medicines Section */}
           <div>
-            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-5">
-              <div>
-                <h2 className="font-semibold text-gray-800 text-lg">My Medications</h2>
-                <p className="text-xs text-gray-400 mt-0.5">Track and manage your prescriptions</p>
-              </div>
-              <div className="flex gap-2">
-                <button onClick={() => navigate('/add-medicine')} className="flex items-center gap-2 bg-teal-500 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-teal-600 transition-colors">
-                  <Icons.Plus />
-                  Add Medicine
-                </button>
-              </div>
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="font-semibold text-gray-800 text-lg">My Medications</h2>
+              <button onClick={() => navigate('/add-medicine')} className="bg-teal-500 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-teal-600">
+                + Add Medicine
+              </button>
             </div>
 
-            {/* Mobile View */}
-            <div className="lg:hidden">
-              {loadingMedicines ? (
-                <SkeletonLoader />
-              ) : medicines.length === 0 ? (
-                <div className="text-center py-12 bg-white rounded-xl">
-                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Icons.Prescription />
-                  </div>
-                  <p className="text-gray-500 font-medium">No medications yet</p>
-                  <p className="text-sm text-gray-400 mt-1">Add your first medicine to start tracking</p>
-                  <button onClick={() => navigate('/add-medicine')} className="mt-4 text-teal-500 text-sm font-medium hover:text-teal-600 transition-colors">
-                    + Add Medicine
-                  </button>
+            {medicines.length === 0 && !loadingMedicines ? (
+              <div className="text-center py-12 bg-white rounded-xl">
+                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <span>💊</span>
                 </div>
-              ) : (
-                <div className="space-y-3">
-                  {medicines.map((m) => (
-                    <MobileMedicineCard
-                      key={m._id}
-                      medicine={m}
-                      onRestock={(med) => { setRestockTarget(med); const qty = Math.max(0, med.frequencyPerDay * med.dosePerIntake * 30); setRestockQty(String(Math.round(qty))); }}
-                      onViewRx={(med) => { if (med.prescriptionImgUrl) setLightboxUrl(med.prescriptionImgUrl); }}
-                      onEdit={(med) => navigate(`/add-medicine/${med._id}`)}
-                      onRemove={(med) => setRemoveTarget(med)}
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Desktop View */}
-            <div className="hidden lg:block">
-              {loadingMedicines ? (
-                <SkeletonLoader />
-              ) : medicines.length === 0 ? (
-                <div className="text-center py-16 bg-white rounded-xl">
-                  <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Icons.Prescription />
-                  </div>
-                  <p className="text-gray-500 font-medium">No medications added yet</p>
-                  <p className="text-sm text-gray-400 mt-1">Start tracking your prescriptions</p>
-                  <button onClick={() => navigate('/add-medicine')} className="mt-4 text-teal-500 text-sm font-medium hover:text-teal-600 transition-colors">
-                    Add Your First Medicine
-                  </button>
-                </div>
-              ) : (
-                <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100">
-                  <table className="w-full">
-                    <thead className="bg-gray-50 border-b border-gray-100">
-                      <tr>
-                        <th className="text-left py-4 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Medicine</th>
-                        <th className="text-left py-4 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Schedule</th>
-                        <th className="text-left py-4 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
-                        <th className="text-left py-4 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Stock</th>
-                        <th className="text-left py-4 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {medicines.map((m) => (
-                        <DesktopMedicineRow
-                          key={m._id}
-                          medicine={m}
-                          onRestock={(med) => { setRestockTarget(med); const qty = Math.max(0, med.frequencyPerDay * med.dosePerIntake * 30); setRestockQty(String(Math.round(qty))); }}
-                          onViewRx={(med) => { if (med.prescriptionImgUrl) setLightboxUrl(med.prescriptionImgUrl); }}
-                          onEdit={(med) => navigate(`/add-medicine/${med._id}`)}
-                          onRemove={(med) => setRemoveTarget(med)}
-                        />
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
+                <p className="text-gray-500 font-medium">No medications yet</p>
+                <p className="text-sm text-gray-400 mt-1">Add your first medicine to start tracking</p>
+              </div>
+            ) : loadingMedicines ? (
+              <SkeletonLoader />
+            ) : (
+              <div className="space-y-3">
+                {medicines.map((m) => (
+                  <MobileMedicineCard
+                    key={m._id}
+                    medicine={m}
+                    onRestock={handleRestock}
+                    onViewRx={(med) => { if (med.prescriptionImgUrl) setLightboxUrl(med.prescriptionImgUrl); }}
+                    onEdit={(med) => navigate(`/add-medicine/${med._id}`)}
+                    onRemove={(med) => setRemoveTarget(med)}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>
 
       {/* Mobile Bottom Navigation */}
-      <MobileBottomNav activeTab={activeTab} onTabChange={setActiveTab} onQRPress={() => navigate('/qr')} />
+      <MobileBottomNav 
+        activeTab={activeTab} 
+        onTabChange={setActiveTab} 
+        onQRPress={() => navigate('/qr')}
+        navigate={navigate}
+      />
 
       {/* Add Patient Profile Modal */}
       {addProfileOpen && (
@@ -968,4 +870,4 @@ export default function DashboardPage() {
       )}
     </div>
   );
-}
+}  

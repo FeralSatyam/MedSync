@@ -1,12 +1,32 @@
 import axios from 'axios';
 
-const api = axios.create({ baseURL: import.meta.env.VITE_API_BASE_URL });
+const getBaseURL = () => {
+  if (import.meta.env.PROD) {
+    return 'https://medsync-tle2.onrender.com/api';
+  }
+  return 'http://localhost:5000/api';
+};
+
+const api = axios.create({ 
+  baseURL: getBaseURL(),
+  withCredentials: false, // Change to false for Render
+  timeout: 30000,
+  headers: {
+    'Content-Type': 'application/json',
+  }
+});
 
 api.interceptors.request.use((config) => {
   const stored = localStorage.getItem('medsync-auth');
   if (stored) {
-    const { state } = JSON.parse(stored);
-    if (state?.token) config.headers.Authorization = `Bearer ${state.token}`;
+    try {
+      const { state } = JSON.parse(stored);
+      if (state?.token) {
+        config.headers.Authorization = `Bearer ${state.token}`;
+      }
+    } catch (e) {
+      console.error('Error parsing auth storage:', e);
+    }
   }
   return config;
 });
