@@ -10,7 +10,7 @@ import { useAuthStore } from '../store/authStore';
 
 const isValidEmailStr = (email) => {
   if (!email) return false;
-  const emailRegex = /^[^\s@]+@gmail\.com$/i;
+  const emailRegex = /^[a-zA-Z0-9._%+-]+(?<![._%+-])@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
   return emailRegex.test(email.trim());
 };
 
