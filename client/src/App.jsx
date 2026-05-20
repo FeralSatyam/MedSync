@@ -1,4 +1,4 @@
-//Production Push
+// Production Push
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { useAuthStore } from './store/authStore';
@@ -7,9 +7,9 @@ import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import AddMedicinePage from './pages/AddMedicinePage';
 import QRPage from './pages/QRPage';
-import PharmacistPage from './pages/PharmacistPage';  // ✅ Pharmacist view for QR scanning
+import PharmacistPage from './pages/PharmacistPage';  // Pharmacist view (public)
 import ProfilePage from './pages/ProfilePage';
-import PharmacyPage from './pages/PharmacyPage';       // ✅ Pharmacy ordering page
+import PharmacyPage from './pages/PharmacyPage';
 import OrdersPage from './pages/OrdersPage';
 import OrderTrackingPage from './pages/OrderTrackingPage';
 import AIHealthPage from './pages/AIHealthPage';
@@ -43,11 +43,11 @@ export default function App() {
         }}
       />
       <Routes>
-        {/* Public Routes - No authentication required */}
+        {/* ===== PUBLIC ROUTES (No authentication required) ===== */}
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/pharma/:qrToken" element={<PharmacistPage />} />  {/* ✅ QR code opens this page */}
+        <Route path="/pharma/:qrToken" element={<PharmacistPage />} />  {/* ✅ This is PUBLIC - no login needed */}
         
-        {/* Protected Routes - Require authentication */}
+        {/* ===== PROTECTED ROUTES (Authentication required) ===== */}
         <Route
           path="/dashboard"
           element={

@@ -24,7 +24,7 @@ router.get('/qr/:qrToken', async (req, res) => {
       return res.status(404).json({ message: 'Patient not found' });
     }
     
-    // Return only necessary fields for pharmacist view
+    // Return only necessary fields for pharmacist view (exclude sensitive data)
     res.json({
       _id: patient._id,
       name: patient.name,
@@ -40,8 +40,10 @@ router.get('/qr/:qrToken', async (req, res) => {
 });
 
 // ==================== PROTECTED ROUTES (Authentication required) ====================
+// All routes below this line require authentication
 router.use(protect);
 
+// Validation for pharmacy PIN
 const pinValidation = body('pharmacyPin')
   .matches(/^\d{4}$/)
   .withMessage('Pharmacy PIN must be exactly 4 digits');
@@ -88,7 +90,7 @@ router.put(
 // Delete a patient
 router.delete('/:id', deletePatient);
 
-// Get QR data for a patient
+// Get QR data for a patient (requires authentication)
 router.get('/:id/qr', getQrData);
 
 export default router;
