@@ -11,19 +11,19 @@ import logo from '../assets/logo.png';
 
 const isValidEmailStr = (email) => {
   if (!email) return false;
-  const emailRegex = /^[^\s@]+@gmail\.com$/i;
+  const emailRegex = /^[a-zA-Z0-9._%+-]+(?<![._%+-])@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
   return emailRegex.test(email.trim());
 };
 
 const loginSchema = z.object({
-  email: z.string().email('Invalid email').trim().refine(isValidEmailStr, { message: 'Invalid or unsupported email provider' }),
+  email: z.string().email('Invalid email').trim().refine(isValidEmailStr, { message: 'Only Gmail accounts are supported' }),
   password: z.string().min(6, 'Password must be at least 6 characters'),
 });
 
 const registerSchema = z.object({
   firstName: z.string().trim().min(1, 'First name is required'),
   lastName: z.string().trim().min(1, 'Last name is required'),
-  email: z.string().email('Invalid email').trim().refine(isValidEmailStr, { message: 'Invalid or unsupported email provider' }),
+  email: z.string().email('Invalid email').trim().refine(isValidEmailStr, { message: 'Only Gmail accounts are supported' }),
   password: z.string().min(6, 'Password must be at least 6 characters'),
 });
 
@@ -73,8 +73,8 @@ export default function LoginPage() {
   const [resetOtp, setResetOtp] = useState('');
   const [newPassword, setNewPassword] = useState('');
 
-  // ── NEW: Email verification state ─────────────────────────────────────────
-  const [verifyStep, setVerifyStep] = useState(false); // show OTP screen?
+  // Email verification state
+  const [verifyStep, setVerifyStep] = useState(false);
   const [pendingEmail, setPendingEmail] = useState('');
   const [verifyOtp, setVerifyOtp] = useState('');
   const [verifying, setVerifying] = useState(false);
@@ -110,69 +110,110 @@ export default function LoginPage() {
 
   const demoHint = useMemo(() => 'Support: contact@medsync.np', []);
 
-  // ── Login ──────────────────────────────────────────────────────────────────
-  async function onSubmitLogin(values) {
+  // Login function - Fixed to prevent page refresh
+  const handleLoginSubmit = async (e) => {
+    // Prevent default form submission
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    
+    // Validate form
+    const isValid = await loginForm.trigger();
+    if (!isValid) return;
+    
+    const values = loginForm.getValues();
+    
     setFormError('');
     setSubmitting(true);
+    
     try {
+      console.log('Attempting login with:', values.email);
       const data = await login(values);
+<<<<<<< HEAD
       loginFn(data.user, data.token);
       if (data.user.role === 'pharmacist') {
         navigate('/pharmacist/dashboard');
       } else {
         navigate('/dashboard');
+=======
+      console.log('Login response:', data);
+      
+      if (data && data.user && data.token) {
+        loginFn(data.user, data.token);
+        toast.success('Login successful! Redirecting...');
+        navigate('/dashboard');
+      } else {
+        setFormError('Invalid response from server');
+        toast.error('Login failed. Please try again.');
+>>>>>>> e0e7fd7da9caae30b92ac7475f1dd6865281a128
       }
     } catch (err) {
-      const res = err?.response?.data;
-      // Account exists but email not verified
-      if (res?.needsVerification) {
-        const emailToVerify = res.email || values.email;
-        if (!isValidEmailStr(emailToVerify)) {
-          toast.error("Invalid email format. Cannot send OTP.");
-          setMode('login');
-          return;
-        }
-
+      console.error('Login error details:', err);
+      
+      // Check if it's a network error
+      if (err.message === 'Network Error') {
+        setFormError('Network error. Please check your internet connection.');
+        toast.error('Network error. Please check your connection.');
+      } 
+      // Check for specific error from backend
+      else if (err.response?.data?.message) {
+        const errorMessage = err.response.data.message;
+        setFormError(errorMessage);
+        toast.error(errorMessage);
+      } 
+      // Check for needsVerification flag
+      else if (err.response?.data?.needsVerification) {
+        const emailToVerify = err.response.data.email || values.email;
         setPendingEmail(emailToVerify);
         try {
           await sendVerifyOtp(emailToVerify);
-          toast('Please verify your email first. A code has been sent.', { icon: '📧' });
+          toast.success('Verification code sent to your email!');
           setVerifyStep(true);
         } catch (verifyErr) {
-          toast.error(verifyErr?.response?.data?.message || "Error sending OTP. Email might be incorrect.");
-          setVerifyStep(false);
-          setMode('register');
+          toast.error(verifyErr?.response?.data?.message || "Error sending verification code");
         }
-      } else {
-        const message = res?.message || err?.message || 'Login failed';
-        setFormError(message);
-        toast.error(message);
+      }
+      else {
+        setFormError('Login failed. Please check your credentials.');
+        toast.error('Invalid email or password');
       }
     } finally {
       setSubmitting(false);
     }
-  }
+  };
 
-  // ── Register ───────────────────────────────────────────────────────────────
-  async function onSubmitRegister(values) {
+  // Register function
+  const handleRegisterSubmit = async (e) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    
+    const isValid = await registerForm.trigger();
+    if (!isValid) return;
+    
+    const values = registerForm.getValues();
+    
     setFormError('');
     setSubmitting(true);
     try {
       const name = `${values.firstName} ${values.lastName}`.trim();
-      // Server now returns { message, email } instead of token
       const data = await register({ name, email: values.email, password: values.password });
       setPendingEmail(data.email || values.email);
       setVerifyStep(true);
       toast.success('Account created! Check your email for the verification code.');
     } catch (err) {
+      console.error('Registration error:', err);
       const message = err?.response?.data?.message || err?.message || 'Registration failed';
       setFormError(message);
       toast.error(message);
     } finally {
       setSubmitting(false);
     }
-  }
+  };
 
+<<<<<<< HEAD
   // ── Register Pharmacy ──────────────────────────────────────────────────────
   async function onSubmitRegisterPharmacy(values) {
     setFormError('');
@@ -199,8 +240,12 @@ export default function LoginPage() {
   }
 
   // ── Verify OTP submit ──────────────────────────────────────────────────────
+=======
+  // Verify OTP submit
+>>>>>>> e0e7fd7da9caae30b92ac7475f1dd6865281a128
   async function handleVerify(e) {
     e.preventDefault();
+    e.stopPropagation();
     if (verifyOtp.length !== 6) {
       toast.error('Please enter the 6-digit code');
       return;
@@ -208,21 +253,31 @@ export default function LoginPage() {
     setVerifying(true);
     try {
       const data = await verifyEmail(pendingEmail, verifyOtp);
+<<<<<<< HEAD
       loginFn(data.user, data.token);
       toast.success(data.message);
       if (data.user.role === 'pharmacist') {
         navigate('/pharmacist/dashboard');
       } else {
         navigate('/dashboard');
+=======
+      if (data && data.user && data.token) {
+        loginFn(data.user, data.token);
+        toast.success(data.message || 'Email verified successfully!');
+        navigate('/dashboard');
+      } else {
+        toast.error('Verification failed. Please try again.');
+>>>>>>> e0e7fd7da9caae30b92ac7475f1dd6865281a128
       }
     } catch (err) {
+      console.error('Verification error:', err);
       toast.error(err?.response?.data?.message || 'Verification failed');
     } finally {
       setVerifying(false);
     }
   }
 
-  // ── Resend OTP ─────────────────────────────────────────────────────────────
+  // Resend OTP
   async function handleResend() {
     setResending(true);
     try {
@@ -230,18 +285,18 @@ export default function LoginPage() {
       toast.success('New code sent! Check your email.');
       setVerifyOtp('');
     } catch (err) {
+      console.error('Resend error:', err);
       toast.error(err?.response?.data?.message || 'Could not resend code');
     } finally {
       setResending(false);
     }
   }
 
-  // ── OTP Verification screen ────────────────────────────────────────────────
+  // OTP Verification screen
   if (verifyStep) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-bg px-[24px]">
         <div className="w-full max-w-[400px] rounded-[20px] bg-card p-[40px] shadow-modal text-center">
-          {/* Icon */}
           <div className="mx-auto mb-[20px] flex h-[56px] w-[56px] items-center justify-center rounded-full bg-mint/10">
             <svg className="h-[28px] w-[28px] text-mint" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -302,7 +357,6 @@ export default function LoginPage() {
     );
   }
 
-  // ── Main login/register screen (completely unchanged visually) ─────────────
   return (
     <div className="min-h-screen flex">
       {/* LEFT PANEL */}
@@ -409,6 +463,7 @@ export default function LoginPage() {
 
           {/* Tab switcher - show for both, change labels based on role */}
           <div className="flex gap-[4px] bg-bg rounded-[14px] p-[5px] mb-[26px]">
+<<<<<<< HEAD
             <button type="button" onClick={() => setMode('login')}
               className={`flex-1 px-[8px] py-[10px] rounded-[10px] font-body text-[13px] font-semibold cursor-pointer transition-all ${mode === 'login' ? 'bg-card text-navy shadow-sm' : 'bg-transparent text-muted hover:text-navy'
                 }`}>
@@ -423,16 +478,75 @@ export default function LoginPage() {
 
           {/* ── LOGIN / REGISTER FORMS ── */}
           <div className={`transition-all duration-300 ease-out ${isTransitioning ? 'opacity-0 translate-y-[6px]' : 'opacity-100 translate-y-0'}`}>
+=======
+            <button 
+              type="button" 
+              onClick={() => { setMode('login'); setFormError(''); }} 
+              className={`flex-1 px-[8px] py-[10px] rounded-[10px] font-body text-[13px] font-semibold cursor-pointer transition-all ${mode === 'login' ? 'bg-card text-navy shadow-sm' : 'bg-transparent text-muted hover:text-navy'}`}
+            >
+              Sign In
+            </button>
+            <button 
+              type="button" 
+              onClick={() => { setMode('register'); setFormError(''); }} 
+              className={`flex-1 px-[8px] py-[10px] rounded-[10px] font-body text-[13px] font-semibold cursor-pointer transition-all ${mode === 'register' ? 'bg-card text-navy shadow-sm' : 'bg-transparent text-muted hover:text-navy'}`}
+            >
+              Register
+            </button>
+          </div>
+
+          {/* LOGIN FORM - Using div instead of form to prevent page refresh */}
+>>>>>>> e0e7fd7da9caae30b92ac7475f1dd6865281a128
           {mode === 'login' ? (
-            <form onSubmit={loginForm.handleSubmit(onSubmitLogin)} className="space-y-[18px]">
-              <div>
-                <label className="mb-[7px] block text-[12px] font-semibold tracking-[0.02em] text-navy">Email</label>
-                <input type="email" {...loginForm.register('email')}
-                  className="w-full rounded-btn border-[1.5px] border-border bg-card px-[15px] py-[11px] text-[14px] text-navy outline-none transition-colors focus:border-mint" />
-                {loginForm.formState.errors.email && (
-                  <div className="mt-[7px] text-[12px] text-red font-semibold">{loginForm.formState.errors.email.message}</div>
+            <div>
+              <div className="space-y-[18px]">
+                <div>
+                  <label className="mb-[7px] block text-[12px] font-semibold tracking-[0.02em] text-navy">Email</label>
+                  <input 
+                    type="email" 
+                    {...loginForm.register('email')}
+                    className="w-full rounded-btn border-[1.5px] border-border bg-card px-[15px] py-[11px] text-[14px] text-navy outline-none transition-colors focus:border-mint" 
+                  />
+                  {loginForm.formState.errors.email && (
+                    <div className="mt-[7px] text-[12px] text-red font-semibold">{loginForm.formState.errors.email.message}</div>
+                  )}
+                </div>
+                <div>
+                  <label className="mb-[7px] block text-[12px] font-semibold tracking-[0.02em] text-navy">Password</label>
+                  <input 
+                    type="password" 
+                    {...loginForm.register('password')}
+                    className="w-full rounded-btn border-[1.5px] border-border bg-card px-[15px] py-[11px] text-[14px] text-navy outline-none transition-colors focus:border-mint" 
+                  />
+                  {loginForm.formState.errors.password && (
+                    <div className="mt-[7px] text-[12px] text-red font-semibold">{loginForm.formState.errors.password.message}</div>
+                  )}
+                </div>
+                {formError && (
+                  <div className="text-[12px] text-red font-semibold bg-red-50 p-3 rounded-lg border border-red-200">
+                    {formError}
+                  </div>
                 )}
+                <button 
+                  type="button"
+                  onClick={handleLoginSubmit}
+                  disabled={submitting}
+                  className="w-full bg-navy text-white rounded-btn border-none py-[12px] text-[14px] font-medium cursor-pointer hover:bg-navy-mid active:scale-[0.98] transition-all disabled:opacity-60"
+                >
+                  {submitting ? 'Signing in...' : 'Sign In'}
+                </button>
+                <button 
+                  type="button" 
+                  className="w-full text-[12px] text-mint-mid underline"
+                  onClick={() => { setForgotOpen(true); setOtpSent(false); setForgotEmail(loginForm.getValues('email') || ''); setResetOtp(''); setNewPassword(''); }}
+                >
+                  Forgot password?
+                </button>
+                <div className="mt-[10px] text-[12px] text-muted text-center bg-[#f0f2f8] py-[10px] px-[14px] rounded-[10px]">
+                  {demoHint}
+                </div>
               </div>
+<<<<<<< HEAD
               <div>
                 <label className="mb-[7px] block text-[12px] font-semibold tracking-[0.02em] text-navy">Password</label>
                 <input type="password" {...loginForm.register('password')}
@@ -500,6 +614,9 @@ export default function LoginPage() {
                 </>
               )}
             </form>
+=======
+            </div>
+>>>>>>> e0e7fd7da9caae30b92ac7475f1dd6865281a128
 
           ) : isPharmacist ? (
             /* ── REGISTER PHARMACY FORM ── */
@@ -599,54 +716,82 @@ export default function LoginPage() {
               </div>
             </form>
           ) : (
+<<<<<<< HEAD
             /* ── REGISTER PATIENT FORM ── */
             <form onSubmit={registerForm.handleSubmit(onSubmitRegister)} className="space-y-[18px]">
               <div className="grid grid-cols-2 gap-[12px]">
+=======
+            /* REGISTER FORM */
+            <div>
+              <div className="space-y-[18px]">
+                <div className="grid grid-cols-2 gap-[12px]">
+                  <div>
+                    <label className="mb-[7px] block text-[12px] font-semibold tracking-[0.02em] text-navy">First name</label>
+                    <input 
+                      type="text" 
+                      {...registerForm.register('firstName')}
+                      className="w-full rounded-btn border-[1.5px] border-border bg-card px-[15px] py-[11px] text-[14px] text-navy outline-none transition-colors focus:border-mint" 
+                    />
+                    {registerForm.formState.errors.firstName && (
+                      <div className="mt-[7px] text-[12px] text-red font-semibold">{registerForm.formState.errors.firstName.message}</div>
+                    )}
+                  </div>
+                  <div>
+                    <label className="mb-[7px] block text-[12px] font-semibold tracking-[0.02em] text-navy">Last name</label>
+                    <input 
+                      type="text" 
+                      {...registerForm.register('lastName')}
+                      className="w-full rounded-btn border-[1.5px] border-border bg-card px-[15px] py-[11px] text-[14px] text-navy outline-none transition-colors focus:border-mint" 
+                    />
+                    {registerForm.formState.errors.lastName && (
+                      <div className="mt-[7px] text-[12px] text-red font-semibold">{registerForm.formState.errors.lastName.message}</div>
+                    )}
+                  </div>
+                </div>
+>>>>>>> e0e7fd7da9caae30b92ac7475f1dd6865281a128
                 <div>
-                  <label className="mb-[7px] block text-[12px] font-semibold tracking-[0.02em] text-navy">First name</label>
-                  <input type="text" {...registerForm.register('firstName')}
-                    className="w-full rounded-btn border-[1.5px] border-border bg-card px-[15px] py-[11px] text-[14px] text-navy outline-none transition-colors focus:border-mint" />
-                  {registerForm.formState.errors.firstName && (
-                    <div className="mt-[7px] text-[12px] text-red font-semibold">{registerForm.formState.errors.firstName.message}</div>
+                  <label className="mb-[7px] block text-[12px] font-semibold tracking-[0.02em] text-navy">Email</label>
+                  <input 
+                    type="email" 
+                    {...registerForm.register('email')}
+                    className="w-full rounded-btn border-[1.5px] border-border bg-card px-[15px] py-[11px] text-[14px] text-navy outline-none transition-colors focus:border-mint" 
+                  />
+                  {registerForm.formState.errors.email && (
+                    <div className="mt-[7px] text-[12px] text-red font-semibold">{registerForm.formState.errors.email.message}</div>
                   )}
                 </div>
                 <div>
-                  <label className="mb-[7px] block text-[12px] font-semibold tracking-[0.02em] text-navy">Last name</label>
-                  <input type="text" {...registerForm.register('lastName')}
-                    className="w-full rounded-btn border-[1.5px] border-border bg-card px-[15px] py-[11px] text-[14px] text-navy outline-none transition-colors focus:border-mint" />
-                  {registerForm.formState.errors.lastName && (
-                    <div className="mt-[7px] text-[12px] text-red font-semibold">{registerForm.formState.errors.lastName.message}</div>
+                  <label className="mb-[7px] block text-[12px] font-semibold tracking-[0.02em] text-navy">Password</label>
+                  <input 
+                    type="password" 
+                    {...registerForm.register('password')}
+                    className="w-full rounded-btn border-[1.5px] border-border bg-card px-[15px] py-[11px] text-[14px] text-navy outline-none transition-colors focus:border-mint" 
+                  />
+                  {registerForm.formState.errors.password && (
+                    <div className="mt-[7px] text-[12px] text-red font-semibold">{registerForm.formState.errors.password.message}</div>
                   )}
                 </div>
-              </div>
-              <div>
-                <label className="mb-[7px] block text-[12px] font-semibold tracking-[0.02em] text-navy">Email</label>
-                <input type="email" {...registerForm.register('email')}
-                  className="w-full rounded-btn border-[1.5px] border-border bg-card px-[15px] py-[11px] text-[14px] text-navy outline-none transition-colors focus:border-mint" />
-                {registerForm.formState.errors.email && (
-                  <div className="mt-[7px] text-[12px] text-red font-semibold">{registerForm.formState.errors.email.message}</div>
+                {formError && (
+                  <div className="text-[12px] text-red font-semibold bg-red-50 p-3 rounded-lg border border-red-200">
+                    {formError}
+                  </div>
                 )}
+                <button 
+                  type="button"
+                  onClick={handleRegisterSubmit}
+                  disabled={submitting}
+                  className="w-full bg-navy text-white rounded-btn border-none py-[12px] text-[14px] font-medium cursor-pointer hover:bg-navy-mid active:scale-[0.98] transition-all disabled:opacity-60"
+                >
+                  {submitting ? 'Creating account...' : 'Register'}
+                </button>
               </div>
-              <div>
-                <label className="mb-[7px] block text-[12px] font-semibold tracking-[0.02em] text-navy">Password</label>
-                <input type="password" {...registerForm.register('password')}
-                  className="w-full rounded-btn border-[1.5px] border-border bg-card px-[15px] py-[11px] text-[14px] text-navy outline-none transition-colors focus:border-mint" />
-                {registerForm.formState.errors.password && (
-                  <div className="mt-[7px] text-[12px] text-red font-semibold">{registerForm.formState.errors.password.message}</div>
-                )}
-              </div>
-              {formError && <div className="text-[12px] text-red font-semibold">{formError}</div>}
-              <button type="submit" disabled={submitting}
-                className="w-full bg-navy text-white rounded-btn border-none py-[12px] text-[14px] font-medium cursor-pointer hover:bg-navy-mid active:scale-[0.98] transition-all disabled:opacity-60">
-                {submitting ? 'Creating account...' : 'Register'}
-              </button>
-            </form>
+            </div>
           )}
           </div>
         </div>
       </section>
 
-      {/* ── FORGOT PASSWORD MODAL (completely unchanged) ── */}
+      {/* FORGOT PASSWORD MODAL */}
       {forgotOpen && (
         <div className="fixed inset-0 z-[1000] flex items-center justify-center p-[20px] bg-[rgba(15,31,61,0.45)] backdrop-blur"
           onMouseDown={(e) => { if (e.target === e.currentTarget) setForgotOpen(false); }}
@@ -656,33 +801,46 @@ export default function LoginPage() {
             <div className="text-[13px] text-muted mb-[18px]">Get OTP on your email and reset password.</div>
 
             <label className="mb-[7px] block text-[12px] font-semibold tracking-[0.02em] text-navy">Email</label>
-            <input type="email" value={forgotEmail} onChange={(e) => setForgotEmail(e.target.value)}
-              className="w-full rounded-btn border-[1.5px] border-border bg-card px-[15px] py-[11px] text-[14px] text-navy outline-none transition-colors focus:border-mint" />
+            <input 
+              type="email" 
+              value={forgotEmail} 
+              onChange={(e) => setForgotEmail(e.target.value)}
+              className="w-full rounded-btn border-[1.5px] border-border bg-card px-[15px] py-[11px] text-[14px] text-navy outline-none transition-colors focus:border-mint" 
+            />
 
             {otpSent && (
               <>
                 <label className="mt-[12px] mb-[7px] block text-[12px] font-semibold tracking-[0.02em] text-navy">OTP</label>
-                <input value={resetOtp} onChange={(e) => setResetOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                  className="w-full rounded-btn border-[1.5px] border-border bg-card px-[15px] py-[11px] text-[14px] text-navy outline-none transition-colors focus:border-mint" />
+                <input 
+                  value={resetOtp} 
+                  onChange={(e) => setResetOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  className="w-full rounded-btn border-[1.5px] border-border bg-card px-[15px] py-[11px] text-[14px] text-navy outline-none transition-colors focus:border-mint" 
+                />
                 <label className="mt-[12px] mb-[7px] block text-[12px] font-semibold tracking-[0.02em] text-navy">New Password</label>
-                <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)}
-                  className="w-full rounded-btn border-[1.5px] border-border bg-card px-[15px] py-[11px] text-[14px] text-navy outline-none transition-colors focus:border-mint" />
+                <input 
+                  type="password" 
+                  value={newPassword} 
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  className="w-full rounded-btn border-[1.5px] border-border bg-card px-[15px] py-[11px] text-[14px] text-navy outline-none transition-colors focus:border-mint" 
+                />
               </>
             )}
 
             <div className="mt-[16px] flex gap-[8px]">
-              <button type="button" onClick={() => setForgotOpen(false)}
-                className="flex-1 rounded-btn border-[1.5px] border-border bg-card py-[9px] text-[13px] font-body font-semibold text-navy cursor-pointer">
+              <button 
+                type="button" 
+                onClick={() => setForgotOpen(false)}
+                className="flex-1 rounded-btn border-[1.5px] border-border bg-card py-[9px] text-[13px] font-body font-semibold text-navy cursor-pointer"
+              >
                 Cancel
               </button>
               {!otpSent ? (
-                <button type="button"
+                <button 
+                  type="button"
                   className="flex-1 rounded-btn bg-navy text-white py-[10px] text-[13px] font-semibold"
                   onClick={async () => {
                     if (!isValidEmailStr(forgotEmail)) {
                       toast.error('Invalid email format. Please check and try again.');
-                      setForgotOpen(false);
-                      setMode('login');
                       return;
                     }
                     try {
@@ -690,25 +848,36 @@ export default function LoginPage() {
                       setOtpSent(true);
                       toast.success('OTP sent to email');
                     } catch (err) {
+                      console.error('Forgot password error:', err);
                       toast.error(err?.response?.data?.message || 'Could not send OTP');
-                      setForgotOpen(false);
-                      setMode('register');
                     }
-                  }}>
+                  }}
+                >
                   Send OTP
                 </button>
               ) : (
-                <button type="button"
+                <button 
+                  type="button"
                   className="flex-1 rounded-btn bg-mint text-white py-[10px] text-[13px] font-semibold"
                   onClick={async () => {
+                    if (!resetOtp || resetOtp.length !== 6) {
+                      toast.error('Please enter the 6-digit OTP');
+                      return;
+                    }
+                    if (!newPassword || newPassword.length < 6) {
+                      toast.error('Password must be at least 6 characters');
+                      return;
+                    }
                     try {
                       await resetPasswordWithOtp({ email: forgotEmail, otp: resetOtp, newPassword });
                       toast.success('Password reset successful');
                       setForgotOpen(false);
                     } catch (err) {
+                      console.error('Reset password error:', err);
                       toast.error(err?.response?.data?.message || 'Reset failed');
                     }
-                  }}>
+                  }}
+                >
                   Reset Password
                 </button>
               )}
