@@ -10,6 +10,7 @@ export default function PharmacistPage() {
   const [medicines, setMedicines] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [debugInfo, setDebugInfo] = useState(null);
 
   useEffect(() => {
     if (!qrToken) {
@@ -23,17 +24,29 @@ export default function PharmacistPage() {
   const loadPatientData = async () => {
     try {
       setLoading(true);
-      console.log('Loading patient with token:', qrToken);
+      setError(null);
+      
+      console.log('1. Fetching patient with token:', qrToken);
+      
+      // Test the API call directly
       const patientData = await getPatientByQrToken(qrToken);
-      console.log('Patient data:', patientData);
+      console.log('2. Patient data received:', patientData);
+      setDebugInfo(patientData);
+      
+      if (!patientData || !patientData._id) {
+        throw new Error('Invalid patient data received');
+      }
+      
       setPatient(patientData);
       
+      console.log('3. Fetching medicines for patient:', patientData._id);
       const medicinesData = await getMedicinesForPatient(patientData._id);
-      console.log('Medicines:', medicinesData);
-      setMedicines(medicinesData);
+      console.log('4. Medicines received:', medicinesData);
+      setMedicines(medicinesData || []);
+      
     } catch (err) {
-      console.error('Error loading patient data:', err);
-      setError('Unable to load patient information. The QR code may be invalid.');
+      console.error('Error in loadPatientData:', err);
+      setError(err.message || 'Unable to load patient information');
     } finally {
       setLoading(false);
     }
@@ -58,12 +71,29 @@ export default function PharmacistPage() {
             <span className="text-3xl">⚠️</span>
           </div>
           <h2 className="text-xl font-semibold text-gray-800 mb-2">Unable to Load Information</h2>
-          <p className="text-gray-500 mb-4">{error || 'Invalid QR code. Please try again.'}</p>
-          <p className="text-xs text-gray-400">Token: {qrToken}</p>
+          <p className="text-gray-500 mb-4">{error || 'Patient not found'}</p>
+          <p className="text-xs text-gray-400 break-all">Token: {qrToken}</p>
+          {debugInfo && (
+            <pre className="mt-4 text-left text-xs bg-gray-100 p-2 rounded overflow-auto max-h-40">
+              {JSON.stringify(debugInfo, null, 2)}
+            </pre>
+          )}
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-4 bg-teal-500 text-white px-6 py-2 rounded-lg hover:bg-teal-600"
+          >
+            Try Again
+          </button>
         </div>
       </div>
     );
   }
+
+  const totalMedicines = medicines.length;
+  const lowStockMeds = medicines.filter(m => {
+    const { status } = getStockStatus(m);
+    return status === 'red' || status === 'amber';
+  }).length;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -85,6 +115,22 @@ export default function PharmacistPage() {
             <div>
               <h2 className="text-xl font-bold text-gray-800">{patient.name}</h2>
               <p className="text-gray-500 capitalize">{patient.relation}</p>
+              {patient.dateOfBirth && (
+                <p className="text-xs text-gray-400">DOB: {new Date(patient.dateOfBirth).toLocaleDateString()}</p>
+              )}
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-3 pt-4 border-t">
+            <div className="text-center">
+              <p className="text-2xl font-bold text-teal-600">{totalMedicines}</p>
+              <p className="text-xs text-gray-500">Medicines</p>
+            </div>
+            <div className="text-center">
+              <p className={`text-2xl font-bold ${lowStockMeds > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                {lowStockMeds}
+              </p>
+              <p className="text-xs text-gray-500">Low Stock Alerts</p>
             </div>
           </div>
           
@@ -96,11 +142,11 @@ export default function PharmacistPage() {
         </div>
         
         {/* Medicines List */}
-        <h3 className="font-semibold text-gray-800 text-lg mb-3">Prescribed Medicines ({medicines.length})</h3>
+        <h3 className="font-semibold text-gray-800 text-lg mb-3">Prescribed Medicines ({totalMedicines})</h3>
         
         {medicines.length === 0 ? (
           <div className="text-center py-12 bg-white rounded-xl">
-            <p className="text-gray-500">No medicines prescribed</p>
+            <p className="text-gray-500">No medicines prescribed for this patient</p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -108,6 +154,7 @@ export default function PharmacistPage() {
               const { status } = getStockStatus(medicine);
               const dailyConsumption = medicine.frequencyPerDay * medicine.dosePerIntake;
               const daysRemaining = Math.floor(medicine.currentStock / dailyConsumption) || 0;
+              const stockPercentage = Math.min(100, (medicine.currentStock / (medicine.refillThreshold * dailyConsumption)) * 100);
               
               return (
                 <div key={idx} className="bg-white rounded-xl p-4 shadow-sm border">
@@ -133,7 +180,7 @@ export default function PharmacistPage() {
                     <div className="w-full bg-gray-200 rounded-full h-2">
                       <div 
                         className={`h-2 rounded-full ${status === 'red' ? 'bg-red-500' : status === 'amber' ? 'bg-yellow-500' : 'bg-green-500'}`}
-                        style={{ width: `${Math.min(100, (medicine.currentStock / (medicine.refillThreshold * dailyConsumption)) * 100)}%` }}
+                        style={{ width: `${stockPercentage}%` }}
                       />
                     </div>
                     <p className="text-xs text-gray-500 mt-1">{daysRemaining} days remaining</p>
