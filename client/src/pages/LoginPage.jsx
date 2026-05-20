@@ -117,7 +117,11 @@ export default function LoginPage() {
     try {
       const data = await login(values);
       loginFn(data.user, data.token);
-      navigate('/dashboard');
+      if (data.user.role === 'pharmacist') {
+        navigate('/pharmacist/dashboard');
+      } else {
+        navigate('/dashboard');
+      }
     } catch (err) {
       const res = err?.response?.data;
       // Account exists but email not verified
@@ -175,7 +179,13 @@ export default function LoginPage() {
     setSubmitting(true);
     try {
       const name = `${values.ownerName} - ${values.pharmacyName}`.trim();
-      const data = await register({ name, email: values.email, password: values.password });
+      const data = await register({ 
+        name, 
+        email: values.email, 
+        password: values.password,
+        role: 'pharmacist',
+        pharmacyLicense: values.licenseNumber
+      });
       setPendingEmail(data.email || values.email);
       setVerifyStep(true);
       toast.success('Pharmacy account created! Check your email for the verification code.');
@@ -200,7 +210,11 @@ export default function LoginPage() {
       const data = await verifyEmail(pendingEmail, verifyOtp);
       loginFn(data.user, data.token);
       toast.success(data.message);
-      navigate('/dashboard');
+      if (data.user.role === 'pharmacist') {
+        navigate('/pharmacist/dashboard');
+      } else {
+        navigate('/dashboard');
+      }
     } catch (err) {
       toast.error(err?.response?.data?.message || 'Verification failed');
     } finally {

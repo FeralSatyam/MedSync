@@ -15,6 +15,10 @@ const UserSchema = new mongoose.Schema(
     isVerified: { type: Boolean, default: false },
     verifyOtp: { type: String, default: '' },
     verifyOtpExpires: { type: Date },
+
+    // Role-based auth
+    role: { type: String, enum: ['patient', 'pharmacist'], default: 'patient' },
+    pharmacyLicense: { type: String },
   },
   { timestamps: true }
 );

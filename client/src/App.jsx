@@ -13,6 +13,8 @@ import PharmacyPage from './pages/PharmacyPage';
 import OrdersPage from './pages/OrdersPage';
 import OrderTrackingPage from './pages/OrderTrackingPage';
 import AIHealthPage from './pages/AIHealthPage';  // ADD THIS IMPORT
+import PharmacistDashboardPage from './pages/PharmacistDashboardPage'; // NEW IMPORT
+import RoleProtectedRoute from './components/RoleProtectedRoute'; // NEW IMPORT
 
 function ProtectedRoute({ children }) {
   const token = useAuthStore((s) => s.token);
@@ -48,9 +50,17 @@ export default function App() {
         <Route
           path="/dashboard"
           element={
-            <ProtectedRoute>
+            <RoleProtectedRoute allowedRoles={['patient']}>
               <DashboardPage />
-            </ProtectedRoute>
+            </RoleProtectedRoute>
+          }
+        />
+        <Route
+          path="/pharmacist/dashboard"
+          element={
+            <RoleProtectedRoute allowedRoles={['pharmacist']}>
+              <PharmacistDashboardPage />
+            </RoleProtectedRoute>
           }
         />
         <Route

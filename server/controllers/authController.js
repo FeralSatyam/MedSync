@@ -21,12 +21,12 @@ export const register = async (req, res, next) => {
     if (!errors.isEmpty()) {
       return res.status(400).json({ message: 'Validation failed', errors: errors.array() });
     }
-    const { name, email, password } = req.body;
+    const { name, email, password, role, pharmacyLicense } = req.body;
     const existing = await User.findOne({ email });
     if (existing) {
       return res.status(400).json({ message: 'Email already registered' });
     }
-    const user = await User.create({ name, email, password });
+    const user = await User.create({ name, email, password, role, pharmacyLicense });
 
     // Auto-send verification OTP right after registration
     const otp = String(Math.floor(100000 + Math.random() * 900000));
@@ -74,7 +74,7 @@ export const login = async (req, res, next) => {
     const token = signToken(user._id);
     res.cookie('token', token, cookieOptions);
     res.json({
-      user: { id: user._id, name: user.name, email: user.email },
+      user: { id: user._id, name: user.name, email: user.email, role: user.role },
       token,
     });
   } catch (err) {
@@ -90,7 +90,7 @@ export const logout = (req, res) => {
 export const getMe = async (req, res, next) => {
   try {
     res.json({
-      user: { id: req.user._id, name: req.user.name, email: req.user.email },
+      user: { id: req.user._id, name: req.user.name, email: req.user.email, role: req.user.role },
     });
   } catch (err) {
     next(err);
@@ -109,7 +109,7 @@ export const updateMe = async (req, res, next) => {
     }
     if (name) user.name = name;
     await user.save();
-    res.json({ user: { id: user._id, name: user.name, email: user.email } });
+    res.json({ user: { id: user._id, name: user.name, email: user.email, role: user.role } });
   } catch (err) {
     next(err);
   }
@@ -242,7 +242,7 @@ export const verifyEmail = async (req, res, next) => {
     res.json({
       success: true,
       message: 'Email verified! Welcome to MedSync.',
-      user: { id: user._id, name: user.name, email: user.email },
+      user: { id: user._id, name: user.name, email: user.email, role: user.role },
       token,
     });
   } catch (err) {
