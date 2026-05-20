@@ -7,12 +7,12 @@ import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import AddMedicinePage from './pages/AddMedicinePage';
 import QRPage from './pages/QRPage';
-import PharmacistPage from './pages/PharmacyPage';
+import PharmacistPage from './pages/PharmacistPage';  // ✅ Pharmacist view for QR scanning
 import ProfilePage from './pages/ProfilePage';
-import PharmacyPage from './pages/PharmacyPage';
+import PharmacyPage from './pages/PharmacyPage';       // ✅ Pharmacy ordering page
 import OrdersPage from './pages/OrdersPage';
 import OrderTrackingPage from './pages/OrderTrackingPage';
-import AIHealthPage from './pages/AIHealthPage';  // ADD THIS IMPORT
+import AIHealthPage from './pages/AIHealthPage';
 
 function ProtectedRoute({ children }) {
   const token = useAuthStore((s) => s.token);
@@ -43,8 +43,11 @@ export default function App() {
         }}
       />
       <Routes>
+        {/* Public Routes - No authentication required */}
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/pharma/:qrToken" element={<PharmacistPage />} />
+        <Route path="/pharma/:qrToken" element={<PharmacistPage />} />  {/* ✅ QR code opens this page */}
+        
+        {/* Protected Routes - Require authentication */}
         <Route
           path="/dashboard"
           element={
@@ -109,7 +112,6 @@ export default function App() {
             </ProtectedRoute>
           }
         />
-        {/* ADD AI HEALTH ROUTE HERE */}
         <Route
           path="/ai-health"
           element={
@@ -118,6 +120,8 @@ export default function App() {
             </ProtectedRoute>
           }
         />
+        
+        {/* Fallback Route */}
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
     </BrowserRouter>

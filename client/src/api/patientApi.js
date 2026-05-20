@@ -7,6 +7,10 @@ export const createPatient = (payload) =>
 
 export const getPatient = (id) => axiosInstance.get(`/patients/${id}`).then((r) => r.data);
 
+// Get patient by QR token (for pharmacist view)
+export const getPatientByQrToken = (qrToken) => 
+  axiosInstance.get(`/patients/qr/${qrToken}`).then((r) => r.data);
+
 export const updatePatient = (id, payload) =>
   axiosInstance.put(`/patients/${id}`, payload).then((r) => r.data);
 

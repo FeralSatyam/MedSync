@@ -12,18 +12,49 @@ import { protect } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
+// ==================== PUBLIC ROUTES (No authentication required) ====================
+// Get patient by QR token - for pharmacist view (no login required)
+router.get('/qr/:qrToken', async (req, res) => {
+  try {
+    // Import Patient model dynamically to avoid circular dependencies
+    const Patient = await import('../models/Patient.js').then(m => m.default);
+    const patient = await Patient.findOne({ qrToken: req.params.qrToken });
+    
+    if (!patient) {
+      return res.status(404).json({ message: 'Patient not found' });
+    }
+    
+    // Return only necessary fields for pharmacist view
+    res.json({
+      _id: patient._id,
+      name: patient.name,
+      relation: patient.relation,
+      allergies: patient.allergies,
+      dateOfBirth: patient.dateOfBirth,
+      qrToken: patient.qrToken
+    });
+  } catch (error) {
+    console.error('Error fetching patient by QR token:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// ==================== PROTECTED ROUTES (Authentication required) ====================
 router.use(protect);
 
 const pinValidation = body('pharmacyPin')
   .matches(/^\d{4}$/)
   .withMessage('Pharmacy PIN must be exactly 4 digits');
 
+// Get all patients for the authenticated user
 router.get('/', getPatients);
+
+// Create a new patient
 router.post(
   '/',
   [
-    body('name').trim().notEmpty(),
-    body('dateOfBirth').optional().isISO8601(),
+    body('name').trim().notEmpty().withMessage('Name is required'),
+    body('dateOfBirth').optional().isISO8601().withMessage('Invalid date format'),
     body('relation')
       .trim()
       .notEmpty()
@@ -34,7 +65,11 @@ router.post(
   ],
   createPatient
 );
+
+// Get a single patient by ID
 router.get('/:id', getPatient);
+
+// Update a patient
 router.put(
   '/:id',
   [
@@ -49,7 +84,11 @@ router.put(
   ],
   updatePatient
 );
+
+// Delete a patient
 router.delete('/:id', deletePatient);
+
+// Get QR data for a patient
 router.get('/:id/qr', getQrData);
 
 export default router;

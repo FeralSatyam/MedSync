@@ -17,6 +17,9 @@ export default function QRPage() {
   const [patient, setPatient] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // Use production domain for QR code (change this to your actual Vercel URL)
+  const PRODUCTION_URL = 'https://med-sync-yukti.vercel.app';
+
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -41,7 +44,8 @@ export default function QRPage() {
 
   const qrValue = useMemo(() => {
     if (!patient?.qrToken) return '';
-    return `${window.location.origin}/pharma/${patient.qrToken}`;
+    // Always use production domain for QR code
+    return `${PRODUCTION_URL}/pharma/${patient.qrToken}`;
   }, [patient]);
 
   if (loading || !patient) {
