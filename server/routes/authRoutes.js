@@ -31,13 +31,17 @@ const otpLimiter = rateLimit({
 
 const registerValidation = [
   body('name').trim().notEmpty().withMessage('Name is required'),
-  body('email').isEmail().normalizeEmail(),
+  body('email').isEmail().normalizeEmail().withMessage('Please provide a valid email'),
   body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
+  body('contactNumber')
+    .trim()
+    .matches(/^\+977\d{10}$/)
+    .withMessage('Contact number must be a valid Nepal mobile number (+977 followed by 10 digits)'),
 ];
 
 const loginValidation = [
-  body('email').isEmail().normalizeEmail(),
-  body('password').notEmpty(),
+  body('email').trim().notEmpty().withMessage('Email or contact number is required'),
+  body('password').notEmpty().withMessage('Password is required'),
 ];
 
 router.post('/register', authLimiter, registerValidation, register);
@@ -55,7 +59,20 @@ router.post(
   resetPasswordWithOtp
 );
 router.get('/me', protect, getMe);
-router.put('/me', protect, [body('name').optional().trim().notEmpty(), body('email').optional().isEmail().normalizeEmail()], updateMe);
+router.put(
+  '/me',
+  protect,
+  [
+    body('name').optional().trim().notEmpty(),
+    body('email').optional().isEmail().normalizeEmail(),
+    body('contactNumber')
+      .optional()
+      .trim()
+      .matches(/^\+977\d{10}$/)
+      .withMessage('Contact number must be a valid Nepal mobile number (+977 followed by 10 digits)')
+  ],
+  updateMe
+);
 router.delete('/me', protect, deleteMe);
 
 // NEW

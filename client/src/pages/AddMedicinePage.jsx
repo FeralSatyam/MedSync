@@ -7,8 +7,9 @@ import toast from 'react-hot-toast';
 
 import { useAppStore } from '../store/appStore';
 import { createMedicine, getMedicinesForPatient, updateMedicine } from '../api/medicineApi';
-import SimpleCamera from '../components/SimpleCamera'; // ADD THIS IMPORT
+import SimpleCamera from '../components/SimpleCamera';
 
+// Form validation schema
 const schema = z.object({
   name: z.string().trim().min(1, 'Medicine name is required'),
   strengthNumber: z.coerce.number().min(0, 'Strength is required'),
@@ -22,6 +23,8 @@ const schema = z.object({
   hospitalName: z.string().trim().optional().default(''),
   prescriptionDate: z.string().optional(),
   prescriptionValid: z.string().optional(),
+  firstDoseTime: z.string().optional(),
+  remindersEnabled: z.boolean().default(true),
 });
 
 export default function AddMedicinePage() {
@@ -30,15 +33,19 @@ export default function AddMedicinePage() {
   const isEdit = Boolean(medicineId);
   const activePatientId = useAppStore((s) => s.activePatientId);
 
-  const [file, setFile] = useState(null);
-  const [previewUrl, setPreviewUrl] = useState('');
-  const [showCamera, setShowCamera] = useState(false); // ADD THIS STATE
-  // const [processing, setProcessing] = useState(false); // ADD THIS STATE
+  // UI state
+  const [currentStep, setCurrentStep] = useState(1);
+  const [prescriptionFile, setPrescriptionFile] = useState(null);
+  const [prescriptionPreviewUrl, setPrescriptionPreviewUrl] = useState('');
+  const [showCamera, setShowCamera] = useState(false);
+  const [medicinePhoto, setMedicinePhoto] = useState(null);
+  const [medicinePhotoPreview, setMedicinePhotoPreview] = useState('');
 
   const {
     register,
     handleSubmit,
     setValue,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm({
     resolver: zodResolver(schema),
@@ -46,28 +53,64 @@ export default function AddMedicinePage() {
       unit: 'mg',
       frequencyPerDay: 2,
       dosePerIntake: 1,
-      currentStock: 60,
+      currentStock: 50,
       refillThreshold: 7,
       instructions: '',
       doctorName: '',
       hospitalName: '',
       prescriptionDate: '',
       prescriptionValid: '',
+      firstDoseTime: '08:00',
+      remindersEnabled: true,
     },
   });
 
-  // ADD THIS FUNCTION - Handles camera capture
-  const handleCameraCapture = (medicineName) => {
-  if (medicineName && medicineName.trim()) {
-    setValue('name', medicineName.trim());
-    toast.success(`Medicine name set to: ${medicineName}`);
-  } else {
-    toast.error('No medicine name captured');
-  }
-  setShowCamera(false);
-  // Remove any setProcessing calls - we don't need it
-};
+  // Watch values for live updates
+  const frequencyPerDay = watch('frequencyPerDay');
+  const firstDoseTime = watch('firstDoseTime');
+  const remindersEnabled = watch('remindersEnabled');
 
+  // Handle camera capture for medicine name
+  const handleCameraCapture = (medicineName) => {
+    if (medicineName && medicineName.trim()) {
+      setValue('name', medicineName.trim());
+      toast.success(`Medicine name set to: ${medicineName}`);
+    } else {
+      toast.error('No medicine name captured');
+    }
+    setShowCamera(false);
+  };
+
+  // Handle medicine photo upload
+  const handleMedicinePhotoUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setMedicinePhoto(file);
+      setMedicinePhotoPreview(URL.createObjectURL(file));
+    }
+  };
+
+  // Navigate between steps
+  const nextStep = () => {
+    // Validate step 1 fields
+    if (currentStep === 1) {
+      const name = watch('name');
+      const strength = watch('strengthNumber');
+      if (!name || !strength) {
+        toast.error('Please fill in Medicine Name and Strength');
+        return;
+      }
+      setCurrentStep(2);
+    } else if (currentStep === 2) {
+      setCurrentStep(3);
+    }
+  };
+
+  const prevStep = () => {
+    setCurrentStep(currentStep - 1);
+  };
+
+  // Redirect if no active patient
   useEffect(() => {
     if (!activePatientId) {
       toast.error('Select a patient first');
@@ -75,6 +118,7 @@ export default function AddMedicinePage() {
     }
   }, [activePatientId, navigate]);
 
+  // Load medicine data for editing
   useEffect(() => {
     if (!isEdit || !activePatientId) return;
     (async () => {
@@ -98,325 +142,496 @@ export default function AddMedicinePage() {
         setValue('hospitalName', med.hospitalName || '');
         setValue('prescriptionDate', med.prescriptionDate ? String(med.prescriptionDate).slice(0, 10) : '');
         setValue('prescriptionValid', med.prescriptionValid ? String(med.prescriptionValid).slice(0, 10) : '');
+        setValue('firstDoseTime', med.firstDoseTime || '08:00');
+        setValue('remindersEnabled', med.remindersEnabled !== undefined ? med.remindersEnabled : true);
       } catch {
         toast.error('Could not load medicine');
       }
     })();
   }, [isEdit, activePatientId, medicineId, setValue, navigate]);
 
+  // Form submission handler - FIXED: Only send fields that backend expects
   async function onSubmit(values) {
     if (!activePatientId) return;
-    const fd = new FormData();
-    fd.append('patientId', activePatientId);
-    fd.append('name', values.name);
-    fd.append('strength', String(values.strengthNumber));
-    fd.append('unit', values.unit);
-    fd.append('frequencyPerDay', String(values.frequencyPerDay));
-    fd.append('dosePerIntake', String(values.dosePerIntake));
-    fd.append('currentStock', String(values.currentStock));
-    fd.append('refillThreshold', String(values.refillThreshold));
-    fd.append('instructions', values.instructions || '');
-    fd.append('doctorName', values.doctorName || '');
-    fd.append('hospitalName', values.hospitalName || '');
-    if (values.prescriptionDate) fd.append('prescriptionDate', values.prescriptionDate);
-    if (values.prescriptionValid) fd.append('prescriptionValid', values.prescriptionValid);
-    if (file) fd.append('prescriptionImage', file);
 
     try {
+      let response;
+
       if (isEdit && medicineId) {
-        const payload = new FormData();
-        payload.append('name', values.name);
-        payload.append('strength', String(values.strengthNumber));
-        payload.append('unit', values.unit);
-        payload.append('frequencyPerDay', String(values.frequencyPerDay));
-        payload.append('dosePerIntake', String(values.dosePerIntake));
-        payload.append('currentStock', String(values.currentStock));
-        payload.append('refillThreshold', String(values.refillThreshold));
-        payload.append('instructions', values.instructions || '');
-        payload.append('doctorName', values.doctorName || '');
-        payload.append('hospitalName', values.hospitalName || '');
-        if (values.prescriptionDate) payload.append('prescriptionDate', values.prescriptionDate);
-        if (values.prescriptionValid) payload.append('prescriptionValid', values.prescriptionValid);
-        if (file) payload.append('prescriptionImage', file);
-        const updated = await updateMedicine(medicineId, payload);
-        toast.success(`${updated.name} updated!`);
+        // For update - send as JSON or FormData based on whether files are present
+        if (prescriptionFile || medicinePhoto) {
+          const fd = new FormData();
+          fd.append('name', values.name);
+          fd.append('strength', String(values.strengthNumber));
+          fd.append('unit', values.unit);
+          fd.append('frequencyPerDay', String(values.frequencyPerDay));
+          fd.append('dosePerIntake', String(values.dosePerIntake));
+          fd.append('currentStock', String(values.currentStock));
+          fd.append('refillThreshold', String(values.refillThreshold));
+          fd.append('instructions', values.instructions || '');
+          fd.append('doctorName', values.doctorName || '');
+          fd.append('hospitalName', values.hospitalName || '');
+          if (values.prescriptionDate) fd.append('prescriptionDate', values.prescriptionDate);
+          if (values.prescriptionValid) fd.append('prescriptionValid', values.prescriptionValid);
+          if (prescriptionFile) fd.append('prescriptionImage', prescriptionFile);
+          if (medicinePhoto) fd.append('medicinePhoto', medicinePhoto);
+          response = await updateMedicine(medicineId, fd);
+        } else {
+          // Send as JSON if no files
+          const payload = {
+            name: values.name,
+            strength: String(values.strengthNumber),
+            unit: values.unit,
+            frequencyPerDay: Number(values.frequencyPerDay),
+            dosePerIntake: Number(values.dosePerIntake),
+            currentStock: Number(values.currentStock),
+            refillThreshold: Number(values.refillThreshold),
+            instructions: values.instructions || '',
+            doctorName: values.doctorName || '',
+            hospitalName: values.hospitalName || '',
+            prescriptionDate: values.prescriptionDate || null,
+            prescriptionValid: values.prescriptionValid || null,
+          };
+          response = await updateMedicine(medicineId, payload);
+        }
+        toast.success(`${response.name} updated!`);
       } else {
-        const created = await createMedicine(fd);
-        toast.success(`${created.name} ${created.strength}${created.unit} added!`);
+        // For create - use FormData
+        const fd = new FormData();
+        fd.append('patientId', activePatientId);
+        fd.append('name', values.name);
+        fd.append('strength', String(values.strengthNumber));
+        fd.append('unit', values.unit);
+        fd.append('frequencyPerDay', String(values.frequencyPerDay));
+        fd.append('dosePerIntake', String(values.dosePerIntake));
+        fd.append('currentStock', String(values.currentStock));
+        fd.append('refillThreshold', String(values.refillThreshold));
+        fd.append('instructions', values.instructions || '');
+        fd.append('doctorName', values.doctorName || '');
+        fd.append('hospitalName', values.hospitalName || '');
+        if (values.prescriptionDate) fd.append('prescriptionDate', values.prescriptionDate);
+        if (values.prescriptionValid) fd.append('prescriptionValid', values.prescriptionValid);
+        if (prescriptionFile) fd.append('prescriptionImage', prescriptionFile);
+        if (medicinePhoto) fd.append('medicinePhoto', medicinePhoto);
+
+        response = await createMedicine(fd);
+        toast.success(`${response.name} ${response.strength}${response.unit} added!`);
       }
       navigate('/dashboard');
     } catch (err) {
-      toast.error(err?.response?.data?.message || 'Save failed');
+      console.error('Save error:', err);
+      const errorMessage = err?.response?.data?.message || err?.message || 'Save failed';
+      toast.error(errorMessage);
     }
   }
 
-  return (
-    <div className="flex min-h-screen flex-col bg-bg">
-      {/* Header not using navbar spec here to keep file short */}
-      <div className="flex flex-1 px-[24px] py-[26px] max-w-[680px] w-full mx-auto">
-        <div className="w-full">
-          <div className="mb-[24px]">
-            <div className="font-display text-[24px] font-bold tracking-[-0.6px] text-navy">{isEdit ? 'Edit Medicine' : 'Add New Medicine'}</div>
-            <div className="text-[13px] text-muted mt-[4px] font-body">Fill in details from your doctor's prescription</div>
+  // Helper to render step indicator
+  const renderStepIndicator = () => {
+    const steps = [
+      { number: 1, title: 'Basic Information', percent: 33 },
+      { number: 2, title: 'Inventory Details', percent: 66 },
+      { number: 3, title: 'Dosage & Schedule', percent: 100 },
+    ];
+
+    return (
+      <div className="mb-8">
+        <div className="flex justify-between items-center mb-2">
+          <div className="font-display text-sm font-semibold text-navy">
+            STEP {currentStep} OF {steps.length}
+          </div>
+          <div className="text-xs text-muted">{steps[currentStep - 1].percent}% Complete</div>
+        </div>
+        <div className="w-full bg-gray-200 rounded-full h-2">
+          <div
+            className="bg-mint h-2 rounded-full transition-all duration-300"
+            style={{ width: `${steps[currentStep - 1].percent}%` }}
+          ></div>
+        </div>
+        <div className="font-display text-lg font-bold text-navy mt-3">
+          {steps[currentStep - 1].title}
+        </div>
+      </div>
+    );
+  };
+
+  // Step 1: Basic Information
+  const renderStep1 = () => (
+    <div className="space-y-5">
+      {/* Medicine Photo Section */}
+      <div>
+        <label className="mb-2 block text-xs font-semibold tracking-wide text-navy">Medicine Photo</label>
+        <div
+          className="border-2 border-dashed border-border rounded-2xl p-6 text-center cursor-pointer transition-all hover:border-mint hover:bg-mint-light"
+          onClick={() => document.getElementById('medicine-photo-input')?.click()}
+        >
+          <input
+            id="medicine-photo-input"
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handleMedicinePhotoUpload}
+          />
+          {medicinePhotoPreview ? (
+            <div className="space-y-3">
+              <img src={medicinePhotoPreview} alt="Medicine preview" className="w-32 h-32 object-cover rounded-lg mx-auto" />
+              <div className="text-xs text-muted">Click to change photo</div>
+            </div>
+          ) : (
+            <>
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" className="mx-auto mb-2 text-muted">
+                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" stroke="currentColor" strokeWidth="1.5" fill="none" />
+                <circle cx="12" cy="13" r="4" stroke="currentColor" strokeWidth="1.5" fill="none" />
+              </svg>
+              <div className="text-sm text-muted">Add medicine photo</div>
+              <div className="text-xs text-faint">Optional, but helps with identification</div>
+            </>
+          )}
+        </div>
+        <div className="text-xs text-muted mt-2 text-center">Safe storage in a cool, dry place is key to medication efficiency.</div>
+      </div>
+
+      {/* Medicine Name */}
+      <div>
+        <label className="mb-2 block text-xs font-semibold tracking-wide text-navy">
+          Medicine Name <span className="text-red">*</span>
+        </label>
+        <div className="flex gap-2">
+          <input
+            {...register('name')}
+            className="flex-1 rounded-xl border border-border bg-card px-4 py-3 text-sm text-navy outline-none transition-colors focus:border-mint"
+            placeholder="e.g. Lisinopril"
+          />
+          <button
+            type="button"
+            onClick={() => setShowCamera(true)}
+            className="bg-mint text-white px-4 py-2 rounded-xl hover:bg-mint-dark transition-colors flex items-center gap-2 whitespace-nowrap text-sm"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+              <circle cx="12" cy="13" r="4" />
+            </svg>
+            Scan
+          </button>
+        </div>
+        <div className="text-xs text-muted mt-1">The name printed on your prescription or package.</div>
+        {errors.name && <div className="mt-1 text-xs font-semibold text-red">{errors.name.message}</div>}
+      </div>
+
+      {/* Strength */}
+      <div>
+        <label className="mb-2 block text-xs font-semibold tracking-wide text-navy">
+          Strength <span className="text-red">*</span>
+        </label>
+        <div className="flex gap-2">
+          <input
+            type="number"
+            step="any"
+            {...register('strengthNumber')}
+            className="flex-1 rounded-xl border border-border bg-card px-4 py-3 text-sm text-navy outline-none transition-colors focus:border-mint"
+            placeholder="e.g. 10"
+          />
+          <select
+            {...register('unit')}
+            className="w-24 rounded-xl border border-border bg-card px-4 py-3 text-sm text-navy outline-none transition-colors focus:border-mint"
+          >
+            <option value="mg">mg</option>
+            <option value="ml">ml</option>
+            <option value="IU">IU</option>
+            <option value="mcg">mcg</option>
+          </select>
+        </div>
+        <div className="text-xs text-muted mt-1">Amount of active ingredient per dose.</div>
+        {errors.strengthNumber && <div className="mt-1 text-xs font-semibold text-red">{errors.strengthNumber.message}</div>}
+      </div>
+    </div>
+  );
+
+  // Step 2: Inventory Details
+  const renderStep2 = () => (
+    <div className="space-y-5">
+      <div>
+        <label className="mb-2 block text-xs font-semibold tracking-wide text-navy">
+          Total Tablets / Pills <span className="text-red">*</span>
+        </label>
+        <input
+          type="number"
+          min={0}
+          {...register('currentStock')}
+          className="w-full rounded-xl border border-border bg-card px-4 py-3 text-sm text-navy outline-none transition-colors focus:border-mint"
+          placeholder="50"
+        />
+        <div className="text-xs text-muted mt-1">Enter the total count of individual units you have remaining.</div>
+        {errors.currentStock && <div className="mt-1 text-xs font-semibold text-red">{errors.currentStock.message}</div>}
+      </div>
+
+      <div>
+        <label className="mb-2 block text-xs font-semibold tracking-wide text-navy">
+          Alert Threshold (days)
+        </label>
+        <input
+          type="number"
+          min={1}
+          {...register('refillThreshold')}
+          className="w-full rounded-xl border border-border bg-card px-4 py-3 text-sm text-navy outline-none transition-colors focus:border-mint"
+          placeholder="7"
+        />
+        <div className="text-xs text-muted mt-1">Get notified when stock is low based on daily consumption.</div>
+        {errors.refillThreshold && <div className="mt-1 text-xs font-semibold text-red">{errors.refillThreshold.message}</div>}
+      </div>
+
+      <div className="bg-mint-light rounded-xl p-4 border border-mint/20">
+        <div className="flex items-start gap-3">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="text-mint shrink-0 mt-0.5">
+            <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5" />
+            <path d="M12 8v4M12 16h.01" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+          </svg>
+          <div>
+            <div className="text-xs font-semibold text-navy">Why do we need this?</div>
+            <div className="text-xs text-muted mt-1">Accurate inventory tracking helps us remind you when it's time to refill your prescription, ensuring you never miss a dose.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  // Step 3: Dosage & Schedule
+  const renderStep3 = () => (
+    <div className="space-y-6">
+      <div>
+        <label className="mb-2 block text-xs font-semibold tracking-wide text-navy">
+          Number of Doses per Day <span className="text-red">*</span>
+        </label>
+        <div className="flex items-center gap-4">
+          <button
+            type="button"
+            onClick={() => {
+              const current = watch('frequencyPerDay');
+              if (current > 1) setValue('frequencyPerDay', current - 1);
+            }}
+            className="w-10 h-10 rounded-full bg-gray-100 text-navy text-xl font-semibold hover:bg-gray-200 transition-colors"
+          >
+            -
+          </button>
+          <span className="text-2xl font-bold text-navy w-8 text-center">{frequencyPerDay}</span>
+          <button
+            type="button"
+            onClick={() => {
+              const current = watch('frequencyPerDay');
+              if (current < 8) setValue('frequencyPerDay', current + 1);
+            }}
+            className="w-10 h-10 rounded-full bg-gray-100 text-navy text-xl font-semibold hover:bg-gray-200 transition-colors"
+          >
+            +
+          </button>
+        </div>
+        {errors.frequencyPerDay && <div className="mt-1 text-xs font-semibold text-red">{errors.frequencyPerDay.message}</div>}
+      </div>
+
+      <div>
+        <label className="mb-2 block text-xs font-semibold tracking-wide text-navy">
+          Tablets per Dose <span className="text-red">*</span>
+        </label>
+        <input
+          type="number"
+          step="0.5"
+          min={0.5}
+          {...register('dosePerIntake')}
+          className="w-full rounded-xl border border-border bg-card px-4 py-3 text-sm text-navy outline-none transition-colors focus:border-mint"
+          placeholder="1"
+        />
+        {errors.dosePerIntake && <div className="mt-1 text-xs font-semibold text-red">{errors.dosePerIntake.message}</div>}
+      </div>
+
+      <div>
+        <label className="mb-2 block text-xs font-semibold tracking-wide text-navy">
+          First Dose Time
+        </label>
+        <input
+          type="time"
+          {...register('firstDoseTime')}
+          className="w-full rounded-xl border border-border bg-card px-4 py-3 text-sm text-navy outline-none transition-colors focus:border-mint"
+        />
+        <div className="text-xs text-muted mt-1">Tap to adjust medication time</div>
+      </div>
+
+      <div>
+        <label className="flex items-center gap-3 cursor-pointer">
+          <input
+            type="checkbox"
+            {...register('remindersEnabled')}
+            className="w-4 h-4 rounded border-border text-mint focus:ring-mint"
+          />
+          <span className="text-xs font-semibold text-navy">Push notifications</span>
+        </label>
+        {remindersEnabled && firstDoseTime && (
+          <div className="mt-2 text-xs text-mint bg-mint-light p-2 rounded-lg inline-block">
+            🔔 Alarm set for {firstDoseTime}
+          </div>
+        )}
+      </div>
+
+      {/* Instructions */}
+      <div>
+        <label className="mb-2 block text-xs font-semibold tracking-wide text-navy">Instructions (Optional)</label>
+        <textarea
+          {...register('instructions')}
+          rows={3}
+          className="w-full rounded-xl border border-border bg-card px-4 py-3 text-sm text-navy outline-none transition-colors focus:border-mint resize-none"
+          placeholder="e.g., Take after meals, avoid alcohol, etc."
+        />
+      </div>
+
+      {/* Doctor & Prescription Section */}
+      <div className="border-t border-border pt-4 mt-2">
+        <div className="font-display text-sm font-bold text-navy mb-4">Prescription Details</div>
+        <div className="space-y-4">
+          <div>
+            <label className="mb-2 block text-xs font-semibold tracking-wide text-navy">Doctor's Name</label>
+            <input
+              {...register('doctorName')}
+              className="w-full rounded-xl border border-border bg-card px-4 py-3 text-sm text-navy outline-none transition-colors focus:border-mint"
+              placeholder="Dr. Sarah Johnson"
+            />
+          </div>
+          <div>
+            <label className="mb-2 block text-xs font-semibold tracking-wide text-navy">Hospital / Clinic</label>
+            <input
+              {...register('hospitalName')}
+              className="w-full rounded-xl border border-border bg-card px-4 py-3 text-sm text-navy outline-none transition-colors focus:border-mint"
+              placeholder="City General Hospital"
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="mb-2 block text-xs font-semibold tracking-wide text-navy">Prescription Date</label>
+              <input
+                type="date"
+                {...register('prescriptionDate')}
+                className="w-full rounded-xl border border-border bg-card px-4 py-3 text-sm text-navy outline-none transition-colors"
+              />
+            </div>
+            <div>
+              <label className="mb-2 block text-xs font-semibold tracking-wide text-navy">Valid Until</label>
+              <input
+                type="date"
+                {...register('prescriptionValid')}
+                className="w-full rounded-xl border border-border bg-card px-4 py-3 text-sm text-navy outline-none transition-colors"
+              />
+            </div>
           </div>
 
-          <form onSubmit={handleSubmit(onSubmit)} className="w-full">
-            <div className="rounded-[20px] border border-border bg-card p-[24px] mb-[20px]">
-              <div className="font-display text-[15px] font-bold tracking-[-0.2px] text-navy mb-[20px] pb-[12px] border-b border-faint">
-                Medicine Details
-              </div>
-
-              <div className="grid grid-cols-2 gap-[14px]">
-                {/* MODIFIED: Medicine name field with scan button */}
-                <div className="col-span-2">
-                  <label className="mb-[7px] block text-[12px] font-semibold tracking-[0.02em] text-navy">Medicine name *</label>
-                  <div className="flex gap-2">
-                    <input
-                      {...register('name')}
-                      className="flex-1 rounded-btn border-[1.5px] border-border bg-card px-[15px] py-[11px] text-[14px] text-navy outline-none transition-colors focus:border-mint"
-                      placeholder="e.g. Metformin"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowCamera(true)}
-                      className="bg-green-600 text-white px-4 py-2 rounded-btn hover:bg-green-700 transition-colors flex items-center gap-2 whitespace-nowrap"
-                      style={{ background: '#10b981' }} // Mint green color
-                    >
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
-                        <circle cx="12" cy="13" r="4" />
-                      </svg>
-                      Scan
-                    </button>
-                  </div>
-                  {errors.name ? <div className="mt-[7px] text-[12px] font-semibold text-red">{errors.name.message}</div> : null}
+          {/* Prescription Image Upload */}
+          <div>
+            <label className="mb-2 block text-xs font-semibold tracking-wide text-navy">Prescription Image (Optional)</label>
+            <div
+              className="border-2 border-dashed border-border rounded-xl p-4 text-center cursor-pointer transition-all hover:border-mint hover:bg-mint-light"
+              onClick={() => document.getElementById('prescription-file')?.click()}
+            >
+              <input
+                id="prescription-file"
+                type="file"
+                accept="image/*,application/pdf"
+                className="hidden"
+                onChange={(e) => {
+                  const f = e.target.files?.[0] || null;
+                  setPrescriptionFile(f);
+                  if (f && f.type.startsWith('image/')) {
+                    setPrescriptionPreviewUrl(URL.createObjectURL(f));
+                  } else {
+                    setPrescriptionPreviewUrl('');
+                  }
+                }}
+              />
+              <svg width="30" height="30" viewBox="0 0 24 24" fill="none" className="mx-auto mb-2 text-muted">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="currentColor" strokeWidth="1.5" />
+                <polyline points="17 8 12 3 7 8" stroke="currentColor" strokeWidth="1.5" />
+                <line x1="12" y1="3" x2="12" y2="15" stroke="currentColor" strokeWidth="1.5" />
+              </svg>
+              <div className="text-xs text-muted">Click to upload or drag & drop</div>
+              <div className="text-xs text-faint mt-1">JPG, PNG, PDF — max 5MB</div>
+              {prescriptionPreviewUrl && (
+                <div className="mt-3">
+                  <img src={prescriptionPreviewUrl} alt="Preview" className="max-h-32 mx-auto rounded-lg" />
+                  <button
+                    type="button"
+                    className="text-xs text-red mt-2"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setPrescriptionFile(null);
+                      setPrescriptionPreviewUrl('');
+                    }}
+                  >
+                    Remove
+                  </button>
                 </div>
-
-                <div className="col-span-1">
-                  <label className="mb-[7px] block text-[12px] font-semibold tracking-[0.02em] text-navy">Strength *</label>
-                  <div className="flex gap-[10px]">
-                    <input
-                      type="number"
-                      step="any"
-                      {...register('strengthNumber')}
-                      className="flex-1 rounded-btn border-[1.5px] border-border bg-card px-[15px] py-[11px] text-[14px] text-navy outline-none transition-colors focus:border-mint"
-                    />
-                    <select
-                      {...register('unit')}
-                      className="w-[72px] rounded-btn border-[1.5px] border-border bg-card px-[15px] py-[11px] text-[14px] text-navy outline-none transition-colors focus:border-mint"
-                    >
-                      <option value="mg">mg</option>
-                      <option value="ml">ml</option>
-                      <option value="IU">IU</option>
-                      <option value="mcg">mcg</option>
-                    </select>
-                  </div>
-                  {errors.strengthNumber ? (
-                    <div className="mt-[7px] text-[12px] font-semibold text-red">{errors.strengthNumber.message}</div>
-                  ) : null}
-                </div>
-
-                <div className="col-span-1">
-                  <label className="mb-[7px] block text-[12px] font-semibold tracking-[0.02em] text-navy">Times per day *</label>
-                  <input
-                    type="number"
-                    min={1}
-                    max={8}
-                    step="1"
-                    {...register('frequencyPerDay')}
-                    className="w-full rounded-btn border-[1.5px] border-border bg-card px-[15px] py-[11px] text-[14px] text-navy outline-none transition-colors focus:border-mint"
-                    placeholder="2"
-                  />
-                  {errors.frequencyPerDay ? (
-                    <div className="mt-[7px] text-[12px] font-semibold text-red">{errors.frequencyPerDay.message}</div>
-                  ) : null}
-                </div>
-
-                <div className="col-span-1">
-                  <label className="mb-[7px] block text-[12px] font-semibold tracking-[0.02em] text-navy">Tablets per dose *</label>
-                  <input
-                    type="number"
-                    step="0.5"
-                    min={0.5}
-                    {...register('dosePerIntake')}
-                    className="w-full rounded-btn border-[1.5px] border-border bg-card px-[15px] py-[11px] text-[14px] text-navy outline-none transition-colors focus:border-mint"
-                    placeholder="1"
-                  />
-                  {errors.dosePerIntake ? (
-                    <div className="mt-[7px] text-[12px] font-semibold text-red">{errors.dosePerIntake.message}</div>
-                  ) : null}
-                </div>
-
-                <div className="col-span-1">
-                  <label className="mb-[7px] block text-[12px] font-semibold tracking-[0.02em] text-navy">Current stock (tablets) *</label>
-                  <input
-                    type="number"
-                    min={0}
-                    {...register('currentStock')}
-                    className="w-full rounded-btn border-[1.5px] border-border bg-card px-[15px] py-[11px] text-[14px] text-navy outline-none transition-colors focus:border-mint"
-                    placeholder="60"
-                  />
-                  {errors.currentStock ? (
-                    <div className="mt-[7px] text-[12px] font-semibold text-red">{errors.currentStock.message}</div>
-                  ) : null}
-                </div>
-
-                <div className="col-span-1">
-                  <label className="mb-[7px] block text-[12px] font-semibold tracking-[0.02em] text-navy">Alert threshold (days)</label>
-                  <input
-                    type="number"
-                    min={1}
-                    {...register('refillThreshold')}
-                    className="w-full rounded-btn border-[1.5px] border-border bg-card px-[15px] py-[11px] text-[14px] text-navy outline-none transition-colors focus:border-mint"
-                    placeholder="7"
-                  />
-                  {errors.refillThreshold ? (
-                    <div className="mt-[7px] text-[12px] font-semibold text-red">{errors.refillThreshold.message}</div>
-                  ) : null}
-                </div>
-              </div>
-
-              <div className="mt-[16px]">
-                <label className="mb-[7px] block text-[12px] font-semibold tracking-[0.02em] text-navy">Instructions</label>
-                <input
-                  {...register('instructions')}
-                  className="w-full rounded-btn border-[1.5px] border-border bg-card px-[15px] py-[11px] text-[14px] text-navy outline-none transition-colors focus:border-mint"
-                  placeholder="e.g. After meals"
-                />
-              </div>
+              )}
             </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 
-            <div className="rounded-[20px] border border-border bg-card p-[24px] mb-[20px]">
-              <div className="font-display text-[15px] font-bold tracking-[-0.2px] text-navy mb-[20px] pb-[12px] border-b border-faint">
-                Doctor & Prescription
-              </div>
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-lg mx-auto px-5 py-6">
+        {renderStepIndicator()}
 
-              <div className="grid grid-cols-2 gap-[14px]">
-                <div>
-                  <label className="mb-[7px] block text-[12px] font-semibold tracking-[0.02em] text-navy">Doctor's name</label>
-                  <input
-                    {...register('doctorName')}
-                    className="w-full rounded-btn border-[1.5px] border-border bg-card px-[15px] py-[11px] text-[14px] text-navy outline-none transition-colors focus:border-mint"
-                    placeholder="Dr. Rajesh Poudel"
-                  />
-                </div>
-                <div>
-                  <label className="mb-[7px] block text-[12px] font-semibold tracking-[0.02em] text-navy">Hospital / Clinic</label>
-                  <input
-                    {...register('hospitalName')}
-                    className="w-full rounded-btn border-[1.5px] border-border bg-card px-[15px] py-[11px] text-[14px] text-navy outline-none transition-colors focus:border-mint"
-                    placeholder="Norvic Hospital"
-                  />
-                </div>
-                <div>
-                  <label className="mb-[7px] block text-[12px] font-semibold tracking-[0.02em] text-navy">Prescription date</label>
-                  <input
-                    type="date"
-                    {...register('prescriptionDate')}
-                    className="w-full rounded-btn border-[1.5px] border-border bg-card px-[15px] py-[11px] text-[14px] text-navy outline-none transition-colors"
-                  />
-                </div>
-                <div>
-                  <label className="mb-[7px] block text-[12px] font-semibold tracking-[0.02em] text-navy">Valid until</label>
-                  <input
-                    type="date"
-                    {...register('prescriptionValid')}
-                    className="w-full rounded-btn border-[1.5px] border-border bg-card px-[15px] py-[11px] text-[14px] text-navy outline-none transition-colors"
-                  />
-                </div>
-              </div>
+        <form onSubmit={handleSubmit(onSubmit)}>
+          {currentStep === 1 && renderStep1()}
+          {currentStep === 2 && renderStep2()}
+          {currentStep === 3 && renderStep3()}
 
-              <div
-                className="mt-[20px] border-[1.5px] border-dashed border-border rounded-[20px] p-[32px] text-center cursor-pointer transition-all hover:border-mint hover:bg-mint-light"
-                onClick={() => document.getElementById('prescription-file')?.click()}
-              >
-                <input
-                  id="prescription-file"
-                  type="file"
-                  accept="image/*,application/pdf"
-                  className="hidden"
-                  onChange={(e) => {
-                    const f = e.target.files?.[0] || null;
-                    setFile(f);
-                    if (f && f.type.startsWith('image/')) {
-                      setPreviewUrl(URL.createObjectURL(f));
-                    } else {
-                      setPreviewUrl('');
-                    }
-                  }}
-                />
-
-                <svg width="30" height="30" viewBox="0 0 24 24" fill="none" aria-hidden="true" style={{ color: '#9aa5bf', margin: '0 auto 9px', display: 'block' }}>
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                  <polyline points="17 8 12 3 7 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                  <line x1="12" y1="3" x2="12" y2="15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-
-                <div className="text-[13px] text-muted">Click to upload or drag & drop</div>
-                <div className="text-[11px] text-faint mt-[2px]">JPG, PNG, PDF — max 5MB</div>
-
-                {previewUrl ? (
-                  <div className="mt-[16px] rounded-[16px] overflow-hidden border border-border">
-                    <img src={previewUrl} alt="Preview" className="w-full max-h-[200px] object-contain bg-[#f0f0f0]" />
-                    <div className="flex justify-between px-[16px] py-[10px] bg-[#f8f8f8]">
-                      <div className="text-[12px] text-muted font-body font-semibold">{file?.name}</div>
-                      <button
-                        type="button"
-                        className="text-[11px] text-red font-body border-none bg-transparent cursor-pointer"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setFile(null);
-                          setPreviewUrl('');
-                        }}
-                      >
-                        Remove
-                      </button>
-                    </div>
-                  </div>
-                ) : null}
-              </div>
-            </div>
-
-            <div className="flex gap-[9px] justify-end">
+          <div className="flex gap-3 justify-between mt-8">
+            {currentStep > 1 ? (
               <button
                 type="button"
-                className="rounded-btn border-[1.5px] border-border bg-transparent px-[18px] py-[9px] text-[13px] font-body font-semibold text-navy cursor-pointer"
+                onClick={prevStep}
+                className="rounded-xl border border-border bg-white px-5 py-2.5 text-sm font-semibold text-navy hover:bg-gray-50 transition-colors"
+              >
+                Back
+              </button>
+            ) : (
+              <button
+                type="button"
                 onClick={() => navigate('/dashboard')}
+                className="rounded-xl border border-border bg-white px-5 py-2.5 text-sm font-semibold text-navy hover:bg-gray-50 transition-colors"
               >
                 Cancel
               </button>
+            )}
+
+            {currentStep < 3 ? (
+              <button
+                type="button"
+                onClick={nextStep}
+                className="rounded-xl bg-mint text-white px-6 py-2.5 text-sm font-semibold hover:bg-mint-dark transition-colors"
+              >
+                Next →
+              </button>
+            ) : (
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="rounded-btn bg-mint text-white px-[18px] py-[9px] text-[13px] font-body font-semibold cursor-pointer active:scale-[0.98] flex items-center gap-[7px]"
+                className="rounded-xl bg-mint text-white px-6 py-2.5 text-sm font-semibold hover:bg-mint-dark transition-colors disabled:opacity-50 flex items-center gap-2"
               >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                  <polyline points="20 6 9 17 4 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <polyline points="20 6 9 17 4 12" />
                 </svg>
-                Save Medicine
+                {isEdit ? 'Update Medicine' : 'Save Medication'}
               </button>
-            </div>
-          </form>
-        </div>
+            )}
+          </div>
+        </form>
       </div>
 
-      {/* ADD CAMERA MODAL */}
+      {/* Camera Modal */}
       {showCamera && (
-        <SimpleCamera 
+        <SimpleCamera
           onCapture={handleCameraCapture}
           onClose={() => setShowCamera(false)}
         />
       )}
-
-      {/* ADD PROCESSING OVERLAY */}
-      {/* {processing && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
-          <div className="bg-white rounded-lg p-6">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-mint mx-auto"></div>
-            <p className="mt-4 text-navy font-body">Processing image...</p>
-          </div>
-        </div>
-      )} */}
     </div>
   );
 }

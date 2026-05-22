@@ -8,3 +8,7 @@ export function getPharmacistData(qrToken) {
 export function dispense(qrToken, body) {
   return axiosInstance.post(`/pharmacist/${qrToken}/dispense`, body).then((r) => r.data);
 }
+
+export function verifyPharmacistOtp(qrToken, otp) {
+  return axiosInstance.post(`/pharmacist/${qrToken}/verify-otp`, { otp }).then((r) => r.data);
+}

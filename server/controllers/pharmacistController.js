@@ -31,6 +31,47 @@ export const getPublicByQr = async (req, res, next) => {
     if (!patient) {
       return res.status(404).json({ message: 'Invalid QR code' });
     }
+
+    // Check if there is an active, unexpired OTP session
+    const hasActiveOtp = patient.tempOtp && patient.tempOtpExpires && new Date(patient.tempOtpExpires) > new Date();
+
+    res.json({
+      otpRequired: true,
+      expired: !hasActiveOtp,
+      name: patient.name,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const verifyOtp = async (req, res, next) => {
+  try {
+    const { qrToken } = req.params;
+    const { otp } = req.body;
+
+    if (!otp) {
+      return res.status(400).json({ message: 'OTP is required' });
+    }
+
+    const patient = await Patient.findOne({ qrToken });
+    if (!patient) {
+      return res.status(404).json({ message: 'Invalid QR code' });
+    }
+
+    if (!patient.tempOtp || !patient.tempOtpExpires) {
+      return res.status(401).json({ message: 'No active OTP session found. Please request patient to click QR code.' });
+    }
+
+    if (new Date(patient.tempOtpExpires) < new Date()) {
+      return res.status(401).json({ message: 'OTP has expired. Please generate a new one on patient dashboard.' });
+    }
+
+    if (patient.tempOtp !== String(otp).trim()) {
+      return res.status(401).json({ message: 'Invalid OTP code. Please try again.' });
+    }
+
+    // OTP verified successfully! Return the full patient record and medicines.
     const medicinesRaw = await Medicine.find({ patientId: patient._id, isActive: true });
     const medicines = sortByUrgency(medicinesRaw.map(enrichMedicine));
 

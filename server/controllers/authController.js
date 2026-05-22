@@ -21,12 +21,18 @@ export const register = async (req, res, next) => {
     if (!errors.isEmpty()) {
       return res.status(400).json({ message: 'Validation failed', errors: errors.array() });
     }
-    const { name, email, password } = req.body;
+    const { name, email, password, contactNumber } = req.body;
     const existing = await User.findOne({ email });
     if (existing) {
       return res.status(400).json({ message: 'Email already registered' });
     }
-    const user = await User.create({ name, email, password });
+    if (contactNumber) {
+      const existingPhone = await User.findOne({ contactNumber });
+      if (existingPhone) {
+        return res.status(400).json({ message: 'Contact number already registered' });
+      }
+    }
+    const user = await User.create({ name, email, password, contactNumber });
 
     // Auto-send verification OTP right after registration
     const otp = String(Math.floor(100000 + Math.random() * 900000));
@@ -57,7 +63,17 @@ export const login = async (req, res, next) => {
       return res.status(400).json({ message: 'Validation failed', errors: errors.array() });
     }
     const { email, password } = req.body;
-    const user = await User.findOne({ email }).select('+password');
+    
+    // Check if it's an email to lowercase/normalize it, otherwise keep as is
+    const loginIdentifier = email.includes('@') ? email.toLowerCase().trim() : email.trim();
+    
+    const user = await User.findOne({
+      $or: [
+        { email: loginIdentifier },
+        { contactNumber: loginIdentifier }
+      ]
+    }).select('+password');
+    
     if (!user || !(await user.matchPassword(password))) {
       return res.status(401).json({ message: 'Invalid email or password' });
     }
@@ -74,7 +90,7 @@ export const login = async (req, res, next) => {
     const token = signToken(user._id);
     res.cookie('token', token, cookieOptions);
     res.json({
-      user: { id: user._id, name: user.name, email: user.email },
+      user: { id: user._id, name: user.name, email: user.email, contactNumber: user.contactNumber },
       token,
     });
   } catch (err) {
@@ -90,7 +106,12 @@ export const logout = (req, res) => {
 export const getMe = async (req, res, next) => {
   try {
     res.json({
-      user: { id: req.user._id, name: req.user.name, email: req.user.email },
+      user: { 
+        id: req.user._id, 
+        name: req.user.name, 
+        email: req.user.email,
+        contactNumber: req.user.contactNumber
+      },
     });
   } catch (err) {
     next(err);
@@ -99,7 +120,7 @@ export const getMe = async (req, res, next) => {
 
 export const updateMe = async (req, res, next) => {
   try {
-    const { name, email } = req.body;
+    const { name, email, contactNumber } = req.body;
     const user = await User.findById(req.user._id).select('+password');
     if (!user) return res.status(404).json({ message: 'User not found' });
     if (email && email !== user.email) {
@@ -107,9 +128,21 @@ export const updateMe = async (req, res, next) => {
       if (exists) return res.status(400).json({ message: 'Email already in use' });
       user.email = email;
     }
+    if (contactNumber && contactNumber !== user.contactNumber) {
+      const exists = await User.findOne({ contactNumber });
+      if (exists) return res.status(400).json({ message: 'Contact number already in use' });
+      user.contactNumber = contactNumber;
+    }
     if (name) user.name = name;
     await user.save();
-    res.json({ user: { id: user._id, name: user.name, email: user.email } });
+    res.json({ 
+      user: { 
+        id: user._id, 
+        name: user.name, 
+        email: user.email,
+        contactNumber: user.contactNumber
+      } 
+    });
   } catch (err) {
     next(err);
   }
@@ -242,7 +275,7 @@ export const verifyEmail = async (req, res, next) => {
     res.json({
       success: true,
       message: 'Email verified! Welcome to MedSync.',
-      user: { id: user._id, name: user.name, email: user.email },
+      user: { id: user._id, name: user.name, email: user.email, contactNumber: user.contactNumber },
       token,
     });
   } catch (err) {

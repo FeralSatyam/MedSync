@@ -14,8 +14,31 @@ const isValidEmailStr = (email) => {
   return emailRegex.test(email.trim());
 };
 
+const normalizeLoginIdentifier = (val) => {
+  const trimmed = val.trim();
+  if (trimmed.includes('@')) {
+    return trimmed;
+  }
+  const digits = trimmed.replace(/\D/g, '');
+  if (digits.length === 10 && digits.startsWith('9')) {
+    return `+977${digits}`;
+  }
+  if (digits.length === 13 && digits.startsWith('977')) {
+    return `+${digits}`;
+  }
+  return trimmed;
+};
+
 const loginSchema = z.object({
-  email: z.string().email('Invalid email').trim().refine(isValidEmailStr, { message: 'Only Gmail accounts are supported' }),
+  email: z.string().trim().min(1, 'Email or mobile number is required').refine((val) => {
+    if (val.includes('@')) {
+      return isValidEmailStr(val);
+    }
+    const numericOnly = val.replace(/\D/g, '');
+    return /^[9]\d{9}$/.test(numericOnly) || /^\+977[9]\d{9}$/.test(val) || /^977[9]\d{9}$/.test(val);
+  }, {
+    message: 'Enter a valid Gmail address or 10-digit mobile number'
+  }),
   password: z.string().min(6, 'Password must be at least 6 characters'),
 });
 
@@ -24,6 +47,7 @@ const registerSchema = z.object({
   lastName: z.string().trim().min(1, 'Last name is required'),
   email: z.string().email('Invalid email').trim().refine(isValidEmailStr, { message: 'Only Gmail accounts are supported' }),
   password: z.string().min(6, 'Password must be at least 6 characters'),
+  contactNumber: z.string().trim().regex(/^9\d{9}$/, 'Must be a valid 10-digit Nepal mobile number starting with 9'),
 });
 
 export default function LoginPage() {
@@ -55,7 +79,7 @@ export default function LoginPage() {
 
   const registerForm = useForm({
     resolver: zodResolver(registerSchema),
-    defaultValues: { firstName: '', lastName: '', email: '', password: '' },
+    defaultValues: { firstName: '', lastName: '', email: '', password: '', contactNumber: '' },
   });
 
   const demoHint = useMemo(() => 'Support: contact@medsync.np', []);
@@ -78,8 +102,9 @@ export default function LoginPage() {
     setSubmitting(true);
     
     try {
-      console.log('Attempting login with:', values.email);
-      const data = await login(values);
+      const loginVal = normalizeLoginIdentifier(values.email);
+      console.log('Attempting login with:', loginVal);
+      const data = await login({ email: loginVal, password: values.password });
       console.log('Login response:', data);
       
       if (data && data.user && data.token) {
@@ -141,7 +166,8 @@ export default function LoginPage() {
     setSubmitting(true);
     try {
       const name = `${values.firstName} ${values.lastName}`.trim();
-      const data = await register({ name, email: values.email, password: values.password });
+      const contactNumber = `+977${values.contactNumber.trim()}`;
+      const data = await register({ name, email: values.email, password: values.password, contactNumber });
       setPendingEmail(data.email || values.email);
       setVerifyStep(true);
       toast.success('Account created! Check your email for the verification code.');
@@ -345,9 +371,10 @@ export default function LoginPage() {
             <div>
               <div className="space-y-[18px]">
                 <div>
-                  <label className="mb-[7px] block text-[12px] font-semibold tracking-[0.02em] text-navy">Email</label>
+                  <label className="mb-[7px] block text-[12px] font-semibold tracking-[0.02em] text-navy">Email or Mobile Number</label>
                   <input 
-                    type="email" 
+                    type="text" 
+                    placeholder="e.g. email@gmail.com or 98XXXXXXXX"
                     {...loginForm.register('email')}
                     className="w-full rounded-btn border-[1.5px] border-border bg-card px-[15px] py-[11px] text-[14px] text-navy outline-none transition-colors focus:border-mint" 
                   />
@@ -429,6 +456,28 @@ export default function LoginPage() {
                   />
                   {registerForm.formState.errors.email && (
                     <div className="mt-[7px] text-[12px] text-red font-semibold">{registerForm.formState.errors.email.message}</div>
+                  )}
+                </div>
+                <div>
+                  <label className="mb-[7px] block text-[12px] font-semibold tracking-[0.02em] text-navy">Contact Number</label>
+                  <div className="flex items-center rounded-btn border-[1.5px] border-border bg-card overflow-hidden focus-within:border-mint transition-colors">
+                    <span className="inline-flex items-center px-3 py-[11px] bg-gray-50 border-r border-border text-gray-500 text-[14px] font-semibold select-none">
+                      +977
+                    </span>
+                    <input 
+                      type="text"
+                      placeholder="98XXXXXXXX"
+                      maxLength={10}
+                      {...registerForm.register('contactNumber')}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/\D/g, '');
+                        registerForm.setValue('contactNumber', val);
+                      }}
+                      className="flex-1 bg-transparent px-[15px] py-[11px] text-[14px] text-navy outline-none" 
+                    />
+                  </div>
+                  {registerForm.formState.errors.contactNumber && (
+                    <div className="mt-[7px] text-[12px] text-red font-semibold">{registerForm.formState.errors.contactNumber.message}</div>
                   )}
                 </div>
                 <div>

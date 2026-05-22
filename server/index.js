@@ -28,6 +28,7 @@ import authRoutes from './routes/authRoutes.js';
 import patientRoutes from './routes/patientRoutes.js';
 import medicineRoutes from './routes/medicineRoutes.js';
 import orderRoutes from './routes/orderRoutes.js';
+import pharmacistRoutes from './routes/pharmacistRoutes.js';
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -43,7 +44,7 @@ app.get('/', (req, res) => {
   res.json({ 
     message: 'MedSync API is running',
     status: 'active',
-    endpoints: ['/api/auth', '/api/patients', '/api/medicines', '/api/orders', '/api/health']
+    endpoints: ['/api/auth', '/api/patients', '/api/medicines', '/api/orders', '/api/pharmacist', '/api/health']
   });
 });
 
@@ -52,6 +53,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/patients', patientRoutes);
 app.use('/api/medicines', medicineRoutes);
 app.use('/api/orders', orderRoutes);
+app.use('/api/pharmacist', pharmacistRoutes);
 
 // 404 handler - Use function, not '*'
 app.use((req, res) => {

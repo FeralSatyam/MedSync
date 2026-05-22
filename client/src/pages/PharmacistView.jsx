@@ -1,10 +1,10 @@
-import { useEffect, useMemo, useState } from 'react';
+ import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { getPharmacistData, dispense } from '../api/pharmacistApi';
+import { getPharmacistData, dispense, verifyPharmacistOtp } from '../api/pharmacistApi';
 import PrescriptionViewer from '../components/PrescriptionViewer';
 import StockBadge from '../components/StockBadge';
-import { getPharmacistStockStatus, getRefillQuantity } from '../utils/stockUtils';
+import { getStockStatus, getRefillQuantity } from '../utils/stockUtils';
 
 const border = {
   red: 'border-l-4 border-red-500',
@@ -13,6 +13,7 @@ const border = {
 };
 
 export default function PharmacistView() {
+  
   const { qrToken } = useParams();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -21,16 +22,21 @@ export default function PharmacistView() {
   const [quantities, setQuantities] = useState({});
   const [submitting, setSubmitting] = useState(false);
 
+  const [otpInput, setOtpInput] = useState('');
+  const [verifyingOtp, setVerifyingOtp] = useState(false);
+
   async function load() {
     setLoading(true);
     try {
       const res = await getPharmacistData(qrToken);
       setData(res);
-      const init = {};
-      (res.medicines || []).forEach((m) => {
-        init[m._id] = '';
-      });
-      setQuantities(init);
+      if (res.medicines) {
+        const init = {};
+        res.medicines.forEach((m) => {
+          init[m._id] = '';
+        });
+        setQuantities(init);
+      }
     } catch {
       toast.error('Invalid QR or network error');
       setData(null);
@@ -53,14 +59,37 @@ export default function PharmacistView() {
     return parts.join(' · ');
   }, [patient]);
 
+  async function handleOtpSubmit(e) {
+    e.preventDefault();
+    if (!/^\d{6}$/.test(otpInput)) {
+      toast.error('Please enter a 6-digit OTP');
+      return;
+    }
+    setVerifyingOtp(true);
+    try {
+      const res = await verifyPharmacistOtp(qrToken, otpInput);
+      setData(res);
+      const init = {};
+      (res.medicines || []).forEach((m) => {
+        init[m._id] = '';
+      });
+      setQuantities(init);
+      toast.success('Patient prescription unlocked successfully!');
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Invalid or expired OTP code');
+    } finally {
+      setVerifyingOtp(false);
+    }
+  }
+
   async function handleDispense(e) {
     e.preventDefault();
     const items = Object.entries(quantities)
       .map(([medicineId, v]) => ({
         medicineId,
-        quantityAdded: Number(v) || 0,
+        quantity: Number(v) || 0,
       }))
-      .filter((x) => x.quantityAdded > 0);
+      .filter((x) => x.quantity > 0);
 
     if (items.length === 0) {
       toast.error('Enter at least one quantity to add');
@@ -73,7 +102,7 @@ export default function PharmacistView() {
 
     setSubmitting(true);
     try {
-      const res = await dispense(qrToken, { pin, medicines: items });
+      const res = await dispense(qrToken, { pin, items });
       setData((prev) => ({ ...prev, medicines: res.medicines }));
       const init = {};
       res.medicines.forEach((m) => {
@@ -93,15 +122,123 @@ export default function PharmacistView() {
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-100">
-        <p className="text-slate-600">Loading patient record…</p>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-teal-600 mx-auto mb-4" />
+          <p className="text-slate-600">Loading patient record…</p>
+        </div>
       </div>
     );
   }
 
-  if (!data || !patient) {
+  if (!data) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-100 px-4">
-        <p className="text-center text-slate-700">This QR code could not be loaded.</p>
+        <div className="bg-white rounded-2xl max-w-sm w-full p-6 text-center shadow-md">
+          <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center text-red-500 mx-auto mb-4">
+            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          </div>
+          <h3 className="text-lg font-bold text-gray-800">Invalid QR Code</h3>
+          <p className="mt-2 text-sm text-slate-500">This QR code could not be loaded or is invalid.</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!patient) {
+    return (
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4 relative overflow-hidden">
+        {/* Aesthetic background mesh gradients */}
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-teal-500/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl" />
+
+        <div className="bg-white/5 backdrop-blur-2xl border border-white/10 rounded-3xl max-w-md w-full p-8 shadow-2xl relative z-10 text-center">
+          <div className="w-16 h-16 bg-gradient-to-tr from-teal-500 to-emerald-400 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-teal-500/20">
+            <svg className="w-8 h-8 text-white animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+          </div>
+
+          <h2 className="text-2xl font-bold text-white tracking-tight mb-2">Prescription Portal</h2>
+          <p className="text-sm text-slate-400 mb-6 font-medium">
+            Enter the 6-digit OTP code displayed on the patient's screen to unlock medications.
+          </p>
+
+          {/* Patient Identification Card */}
+          <div className="bg-white/5 border border-white/5 rounded-2xl p-4 mb-6 text-left">
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Patient Profile</span>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-teal-500/20 text-teal-400 flex items-center justify-center font-bold text-base">
+                {data.name?.charAt(0).toUpperCase()}
+              </div>
+              <div>
+                <h4 className="font-bold text-white text-base">{data.name}</h4>
+                <div className="flex items-center gap-1.5 text-xs text-slate-400">
+                  <span className={`w-2 h-2 rounded-full ${data.expired ? 'bg-red-500' : 'bg-emerald-500'}`} />
+                  {data.expired ? 'OTP Session Expired / Inactive' : 'OTP Session Active'}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {data.expired ? (
+            <div className="bg-red-500/10 border border-red-500/20 rounded-2xl p-4 mb-2 text-center animate-shake">
+              <p className="text-sm text-red-400 font-semibold">Verification Code Expired</p>
+              <p className="text-xs text-red-400/80 mt-1">
+                The OTP has expired or has not been generated yet. Please ask the patient to press the <strong>Show Pharmacy QR</strong> button on their device.
+              </p>
+              <button
+                onClick={load}
+                className="mt-4 px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-2 mx-auto cursor-pointer border border-white/10"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 4.75M9 9h1.586M9 9l1.586-1.586" />
+                </svg>
+                Retry / Check Status
+              </button>
+            </div>
+          ) : (
+            <form onSubmit={handleOtpSubmit} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 text-left">
+                  Verification OTP
+                </label>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  pattern="\d*"
+                  maxLength={6}
+                  value={otpInput}
+                  onChange={(e) => setOtpInput(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  placeholder="000000"
+                  className="w-full bg-white/10 border border-white/15 focus:border-teal-500 rounded-2xl px-4 py-3.5 text-center text-3xl font-bold tracking-[0.5em] text-white focus:outline-none focus:ring-2 focus:ring-teal-500/50 transition-all font-mono placeholder:text-white/10"
+                  autoComplete="one-time-code"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={verifyingOtp || otpInput.length < 6}
+                className="w-full bg-teal-500 hover:bg-teal-600 text-white rounded-2xl py-3.5 font-bold text-sm transition-all shadow-lg shadow-teal-500/20 disabled:opacity-50 disabled:shadow-none cursor-pointer flex items-center justify-center gap-2"
+              >
+                {verifyingOtp ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
+                    Unlocking...
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
+                    </svg>
+                    Decrypt & Access Records
+                  </>
+                )}
+              </button>
+            </form>
+          )}
+        </div>
       </div>
     );
   }
@@ -154,8 +291,8 @@ export default function PharmacistView() {
           <h2 className="mb-3 text-lg font-semibold text-slate-900">Medicines (urgency order)</h2>
           <ul className="space-y-3">
             {medicines.map((m) => {
-              const status = m.stockStatus || getPharmacistStockStatus(m).status;
-              const days = m.daysLeft ?? getPharmacistStockStatus(m).daysLeft;
+              const status = m.stockStatus || getStockStatus(m).status;
+              const days = m.daysLeft ?? getStockStatus(m).daysLeft;
               const refillQty = m.refillQuantity ?? getRefillQuantity(m);
               return (
                 <li

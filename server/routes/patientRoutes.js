@@ -7,6 +7,7 @@ import {
   updatePatient,
   deletePatient,
   getQrData,
+  generateOtp,
 } from '../controllers/patientController.js';
 import { protect } from '../middleware/authMiddleware.js';
 
@@ -51,5 +52,6 @@ router.put(
 );
 router.delete('/:id', deletePatient);
 router.get('/:id/qr', getQrData);
+router.post('/:id/generate-otp', generateOtp);
 
 export default router;

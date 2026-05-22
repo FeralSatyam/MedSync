@@ -15,6 +15,9 @@ const UserSchema = new mongoose.Schema(
     isVerified: { type: Boolean, default: false },
     verifyOtp: { type: String, default: '' },
     verifyOtpExpires: { type: Date },
+
+    // NEW — contact number
+    contactNumber: { type: String, unique: true, sparse: true, trim: true },
   },
   { timestamps: true }
 );

@@ -7,7 +7,7 @@ import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import AddMedicinePage from './pages/AddMedicinePage';
 import QRPage from './pages/QRPage';
-import PharmacistPage from './pages/PharmacyPage';
+import PharmacistPage from './pages/PharmacistView';
 import ProfilePage from './pages/ProfilePage';
 import PharmacyPage from './pages/PharmacyPage';
 import OrdersPage from './pages/OrdersPage';

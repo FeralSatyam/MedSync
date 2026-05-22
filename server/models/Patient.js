@@ -14,6 +14,8 @@ const PatientSchema = new mongoose.Schema(
     allergies: { type: String, default: '' },
     pharmacyPin: { type: String, required: true }, // stored as bcrypt hash
     qrToken: { type: String, unique: true, index: true }, // UUID v4
+    tempOtp: { type: String, default: null },
+    tempOtpExpires: { type: Date, default: null },
   },
   { timestamps: true }
 );

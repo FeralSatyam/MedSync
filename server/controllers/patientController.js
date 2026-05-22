@@ -129,3 +129,27 @@ export const getQrData = async (req, res, next) => {
     return res.status(500).json({ message: err?.message || 'Server error' });
   }
 };
+
+export const generateOtp = async (req, res, next) => {
+  try {
+    const patient = await ensureOwner(req.params.id, req.user._id);
+    if (!patient) return res.status(404).json({ message: 'Patient not found' });
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+    patient.tempOtp = otp;
+    patient.tempOtpExpires = new Date(Date.now() + 5 * 60 * 1000);
+    await patient.save();
+
+    res.json({
+      success: true,
+      otp,
+      expiresAt: patient.tempOtpExpires.toISOString(),
+      qrToken: patient.qrToken,
+    });
+  } catch (err) {
+    console.error('[generateOtp] Error:', err);
+    if (typeof next === 'function') return next(err);
+    return res.status(500).json({ message: err?.message || 'Server error' });
+  }
+};
