@@ -1,21 +1,15 @@
-import jwt from 'jsonwebtoken';
-import { validationResult } from 'express-validator';
 import User from '../models/User.js';
-import { isMailerConfigured, sendOtpEmail, sendVerifyOtpEmail } from '../utils/mailer.js';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
 
-const signToken = (id) =>
-  jwt.sign({ id }, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRES_IN || '7d',
+const generateToken = (id) => {
+  return jwt.sign({ id }, process.env.JWT_SECRET, {
+    expiresIn: '30d',
   });
-
-const cookieOptions = {
-  httpOnly: true,
-  secure: process.env.NODE_ENV === 'production',
-  sameSite: 'strict',
-  maxAge: 7 * 24 * 60 * 60 * 1000,
 };
 
-export const register = async (req, res, next) => {
+export const register = async (req, res) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -39,29 +33,21 @@ export const register = async (req, res, next) => {
     user.verifyOtp = otp;
     user.verifyOtpExpires = new Date(Date.now() + 10 * 60 * 1000);
     await user.save();
-
-    if (isMailerConfigured()) {
-      await sendVerifyOtpEmail({ to: user.email, otp });
-    } else if (process.env.NODE_ENV !== 'production') {
-      console.warn(`[DEV VERIFY OTP] ${user.email} -> ${otp}`);
-    }
-
-    // Return user but do NOT issue JWT yet — force verification first
+    
+    console.log(`Verification OTP for ${email}: ${otp}`);
+    
     res.status(201).json({
-      message: 'Account created. Please verify your email.',
+      message: 'User created. Please verify your email.',
       email: user.email,
     });
-  } catch (err) {
-    next(err);
+  } catch (error) {
+    console.error('Register error:', error);
+    res.status(500).json({ message: 'Server error' });
   }
 };
 
-export const login = async (req, res, next) => {
+export const login = async (req, res) => {
   try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ message: 'Validation failed', errors: errors.array() });
-    }
     const { email, password } = req.body;
     
     // Check if it's an email to lowercase/normalize it, otherwise keep as is
@@ -77,33 +63,37 @@ export const login = async (req, res, next) => {
     if (!user || !(await user.matchPassword(password))) {
       return res.status(401).json({ message: 'Invalid email or password' });
     }
-
-    // Block login if email not verified
+    
+    const isPasswordMatch = await bcrypt.compare(password, user.password);
+    if (!isPasswordMatch) {
+      return res.status(401).json({ message: 'Invalid email or password' });
+    }
+    
     if (!user.isVerified) {
-      return res.status(403).json({
-        message: 'Please verify your email before logging in.',
+      return res.status(401).json({ 
+        message: 'Please verify your email first',
         needsVerification: true,
-        email: user.email,
+        email: user.email 
       });
     }
-
-    const token = signToken(user._id);
-    res.cookie('token', token, cookieOptions);
+    
+    const token = generateToken(user._id);
+    
     res.json({
       user: { id: user._id, name: user.name, email: user.email, contactNumber: user.contactNumber },
       token,
     });
-  } catch (err) {
-    next(err);
+  } catch (error) {
+    console.error('Login error:', error);
+    res.status(500).json({ message: 'Server error' });
   }
 };
 
 export const logout = (req, res) => {
-  res.clearCookie('token', { ...cookieOptions, maxAge: 0 });
-  res.json({ message: 'Logged out' });
+  res.json({ message: 'Logged out successfully' });
 };
 
-export const getMe = async (req, res, next) => {
+export const getMe = async (req, res) => {
   try {
     res.json({
       user: { 
@@ -118,7 +108,7 @@ export const getMe = async (req, res, next) => {
   }
 };
 
-export const updateMe = async (req, res, next) => {
+export const updateMe = async (req, res) => {
   try {
     const { name, email, contactNumber } = req.body;
     const user = await User.findById(req.user._id).select('+password');
@@ -134,6 +124,8 @@ export const updateMe = async (req, res, next) => {
       user.contactNumber = contactNumber;
     }
     if (name) user.name = name;
+    if (email) user.email = email;
+    
     await user.save();
     res.json({ 
       user: { 
@@ -148,137 +140,123 @@ export const updateMe = async (req, res, next) => {
   }
 };
 
-export const deleteMe = async (req, res, next) => {
+export const deleteMe = async (req, res) => {
   try {
-    await User.findByIdAndDelete(req.user._id);
-    res.json({ message: 'Account deleted' });
-  } catch (err) {
-    next(err);
+    await User.findByIdAndDelete(req.user.id);
+    res.json({ message: 'Account deleted successfully' });
+  } catch (error) {
+    console.error('Delete me error:', error);
+    res.status(500).json({ message: 'Server error' });
   }
 };
 
-export const requestPasswordOtp = async (req, res, next) => {
+export const requestPasswordOtp = async (req, res) => {
   try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ message: 'Validation failed', errors: errors.array() });
-    }
     const { email } = req.body;
     const user = await User.findOne({ email });
-    if (!user) return res.json({ success: true, message: 'If the email exists, OTP was sent.' });
-
-    const otp = String(Math.floor(100000 + Math.random() * 900000));
-    user.resetOtp = otp;
-    user.resetOtpExpires = new Date(Date.now() + 10 * 60 * 1000);
-    await user.save();
-
-    if (isMailerConfigured()) {
-      await sendOtpEmail({ to: user.email, otp });
-    } else if (process.env.NODE_ENV !== 'production') {
-      console.warn(`[DEV OTP] ${user.email} -> ${otp}`);
-      return res.json({
-        success: true,
-        message: 'SMTP not configured. OTP returned for development use.',
-        devOtp: otp,
-      });
-    } else {
-      return res.status(500).json({ message: 'Email service is not configured.' });
+    
+    if (!user) {
+      return res.json({ message: 'If an account exists, an OTP will be sent' });
     }
-
-    res.json({ success: true, message: 'OTP sent to your email.' });
-  } catch (err) {
-    next(err);
+    
+    const otp = crypto.randomInt(100000, 999999).toString();
+    const otpExpires = new Date(Date.now() + 10 * 60 * 1000);
+    
+    user.otp = otp;
+    user.otpExpires = otpExpires;
+    await user.save();
+    
+    console.log(`Password reset OTP for ${email}: ${otp}`);
+    
+    res.json({ message: 'OTP sent to your email' });
+  } catch (error) {
+    console.error('Request OTP error:', error);
+    res.status(500).json({ message: 'Server error' });
   }
 };
 
-export const resetPasswordWithOtp = async (req, res, next) => {
+export const resetPasswordWithOtp = async (req, res) => {
   try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ message: 'Validation failed', errors: errors.array() });
-    }
     const { email, otp, newPassword } = req.body;
-    const user = await User.findOne({ email }).select('+password');
-    if (!user) return res.status(400).json({ message: 'Invalid OTP or expired OTP' });
-
-    const now = new Date();
-    if (!user.resetOtp || user.resetOtp !== String(otp) || !user.resetOtpExpires || user.resetOtpExpires < now) {
-      return res.status(400).json({ message: 'Invalid OTP or expired OTP' });
+    const user = await User.findOne({ email });
+    
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
     }
-
+    
+    if (user.otp !== otp || user.otpExpires < new Date()) {
+      return res.status(400).json({ message: 'Invalid or expired OTP' });
+    }
+    
     user.password = newPassword;
-    user.resetOtp = '';
-    user.resetOtpExpires = null;
+    user.otp = undefined;
+    user.otpExpires = undefined;
     await user.save();
-
-    res.json({ success: true, message: 'Password has been reset. Please log in.' });
-  } catch (err) {
-    next(err);
+    
+    res.json({ message: 'Password reset successfully' });
+  } catch (error) {
+    console.error('Reset password error:', error);
+    res.status(500).json({ message: 'Server error' });
   }
 };
 
-// ─── NEW: Send email verification OTP ────────────────────────────────────────
-export const sendVerifyOtp = async (req, res, next) => {
+export const sendVerifyOtp = async (req, res) => {
   try {
     const { email } = req.body;
-    if (!email) return res.status(400).json({ message: 'Email is required' });
-
     const user = await User.findOne({ email });
-    if (!user) return res.status(404).json({ message: 'No account found with this email' });
-    if (user.isVerified) return res.status(400).json({ message: 'Email is already verified' });
-
-    const otp = String(Math.floor(100000 + Math.random() * 900000));
-    user.verifyOtp = otp;
-    user.verifyOtpExpires = new Date(Date.now() + 10 * 60 * 1000);
-    await user.save();
-
-    if (isMailerConfigured()) {
-      await sendVerifyOtpEmail({ to: user.email, otp });
-    } else if (process.env.NODE_ENV !== 'production') {
-      console.warn(`[DEV VERIFY OTP] ${user.email} -> ${otp}`);
-      return res.json({ success: true, message: 'Dev mode: OTP logged to console.', devOtp: otp });
-    } else {
-      return res.status(500).json({ message: 'Email service is not configured.' });
+    
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
     }
-
-    res.json({ success: true, message: 'Verification OTP sent to your email.' });
-  } catch (err) {
-    next(err);
+    
+    if (user.isVerified) {
+      return res.status(400).json({ message: 'Email already verified' });
+    }
+    
+    const otp = crypto.randomInt(100000, 999999).toString();
+    const otpExpires = new Date(Date.now() + 10 * 60 * 1000);
+    
+    user.otp = otp;
+    user.otpExpires = otpExpires;
+    await user.save();
+    
+    console.log(`Verification OTP for ${email}: ${otp}`);
+    
+    res.json({ message: 'Verification OTP sent to your email' });
+  } catch (error) {
+    console.error('Send verify OTP error:', error);
+    res.status(500).json({ message: 'Server error' });
   }
 };
 
-// ─── NEW: Verify email with OTP ───────────────────────────────────────────────
-export const verifyEmail = async (req, res, next) => {
+export const verifyEmail = async (req, res) => {
   try {
     const { email, otp } = req.body;
-    if (!email || !otp) return res.status(400).json({ message: 'Email and OTP are required' });
-
     const user = await User.findOne({ email });
-    if (!user) return res.status(404).json({ message: 'No account found with this email' });
-    if (user.isVerified) return res.status(400).json({ message: 'Email is already verified' });
-
-    if (user.verifyOtp !== String(otp)) {
-      return res.status(400).json({ message: 'Incorrect OTP. Please try again.' });
+    
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
     }
-    if (user.verifyOtpExpires < new Date()) {
-      return res.status(400).json({ message: 'OTP has expired. Please request a new one.' });
+    
+    if (user.otp !== otp || user.otpExpires < new Date()) {
+      return res.status(400).json({ message: 'Invalid or expired OTP' });
     }
-
+    
     user.isVerified = true;
-    user.verifyOtp = '';
-    user.verifyOtpExpires = null;
+    user.otp = undefined;
+    user.otpExpires = undefined;
     await user.save();
-
-    // Issue JWT so user is logged in immediately after verifying
-    const token = signToken(user._id);
-    res.cookie('token', token, cookieOptions);
+    
+    const token = generateToken(user._id);
+    
     res.json({
       success: true,
       message: 'Email verified! Welcome to MedSync.',
       user: { id: user._id, name: user.name, email: user.email, contactNumber: user.contactNumber },
       token,
     });
-  } catch (err) {
-    next(err);
+  } catch (error) {
+    console.error('Verify email error:', error);
+    res.status(500).json({ message: 'Server error' });
   }
 };

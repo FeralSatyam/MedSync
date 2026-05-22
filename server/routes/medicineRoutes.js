@@ -28,15 +28,20 @@ const medicineFields = [
   body('instructions').optional().isString(),
   body('prescriptionDate').optional().isISO8601(),
   body('prescriptionValid').optional().isISO8601(),
+  body('firstDoseTime').optional().isString(),
+  body('remindersEnabled').optional().custom((val) => val === 'true' || val === 'false' || typeof val === 'boolean'),
 ];
 
 router.get('/patient/:patientId', getMedicinesByPatient);
 function uploadPrescriptionSafe(req, res, next) {
-  uploadPrescription.single('prescriptionImage')(req, res, (err) => {
+  uploadPrescription.fields([
+    { name: 'prescriptionImage', maxCount: 1 },
+    { name: 'medicinePhoto', maxCount: 1 }
+  ])(req, res, (err) => {
     if (err) {
       console.error('[uploadPrescriptionSafe] upload error:', err);
       return res.status(400).json({
-        message: err?.message || 'Prescription upload failed',
+        message: err?.message || 'Upload failed',
         code: err?.code || 'UPLOAD_ERROR',
       });
     }

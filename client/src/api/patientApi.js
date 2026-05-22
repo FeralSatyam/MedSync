@@ -7,6 +7,14 @@ export const createPatient = (payload) =>
 
 export const getPatient = (id) => axiosInstance.get(`/patients/${id}`).then((r) => r.data);
 
+export const getPatientByQrToken = (qrToken) => {
+  console.log('Calling API with token:', qrToken);
+  return axiosInstance.get(`/patients/qr/${qrToken}`).then((r) => {
+    console.log('API Response:', r.data);
+    return r.data;
+  });
+};
+
 export const updatePatient = (id, payload) =>
   axiosInstance.put(`/patients/${id}`, payload).then((r) => r.data);
 

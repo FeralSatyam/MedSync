@@ -40,6 +40,7 @@ export default function AddMedicinePage() {
   const [showCamera, setShowCamera] = useState(false);
   const [medicinePhoto, setMedicinePhoto] = useState(null);
   const [medicinePhotoPreview, setMedicinePhotoPreview] = useState('');
+  const [step3Ready, setStep3Ready] = useState(false);
 
   const {
     register,
@@ -110,6 +111,19 @@ export default function AddMedicinePage() {
     setCurrentStep(currentStep - 1);
   };
 
+  // Prevent accidental submit when transitioning to step 3 on mobile/slow clicks
+  useEffect(() => {
+    if (currentStep === 3) {
+      setStep3Ready(false);
+      const timer = setTimeout(() => {
+        setStep3Ready(true);
+      }, 400);
+      return () => clearTimeout(timer);
+    } else {
+      setStep3Ready(false);
+    }
+  }, [currentStep]);
+
   // Redirect if no active patient
   useEffect(() => {
     if (!activePatientId) {
@@ -144,6 +158,12 @@ export default function AddMedicinePage() {
         setValue('prescriptionValid', med.prescriptionValid ? String(med.prescriptionValid).slice(0, 10) : '');
         setValue('firstDoseTime', med.firstDoseTime || '08:00');
         setValue('remindersEnabled', med.remindersEnabled !== undefined ? med.remindersEnabled : true);
+        if (med.medicinePhotoUrl) {
+          setMedicinePhotoPreview(med.medicinePhotoUrl);
+        }
+        if (med.prescriptionImgUrl) {
+          setPrescriptionPreviewUrl(med.prescriptionImgUrl);
+        }
       } catch {
         toast.error('Could not load medicine');
       }
@@ -171,6 +191,8 @@ export default function AddMedicinePage() {
           fd.append('instructions', values.instructions || '');
           fd.append('doctorName', values.doctorName || '');
           fd.append('hospitalName', values.hospitalName || '');
+          fd.append('firstDoseTime', values.firstDoseTime || '08:00');
+          fd.append('remindersEnabled', String(values.remindersEnabled));
           if (values.prescriptionDate) fd.append('prescriptionDate', values.prescriptionDate);
           if (values.prescriptionValid) fd.append('prescriptionValid', values.prescriptionValid);
           if (prescriptionFile) fd.append('prescriptionImage', prescriptionFile);
@@ -191,6 +213,8 @@ export default function AddMedicinePage() {
             hospitalName: values.hospitalName || '',
             prescriptionDate: values.prescriptionDate || null,
             prescriptionValid: values.prescriptionValid || null,
+            firstDoseTime: values.firstDoseTime || '08:00',
+            remindersEnabled: values.remindersEnabled,
           };
           response = await updateMedicine(medicineId, payload);
         }
@@ -209,6 +233,8 @@ export default function AddMedicinePage() {
         fd.append('instructions', values.instructions || '');
         fd.append('doctorName', values.doctorName || '');
         fd.append('hospitalName', values.hospitalName || '');
+        fd.append('firstDoseTime', values.firstDoseTime || '08:00');
+        fd.append('remindersEnabled', String(values.remindersEnabled));
         if (values.prescriptionDate) fd.append('prescriptionDate', values.prescriptionDate);
         if (values.prescriptionValid) fd.append('prescriptionValid', values.prescriptionValid);
         if (prescriptionFile) fd.append('prescriptionImage', prescriptionFile);
@@ -603,6 +629,7 @@ export default function AddMedicinePage() {
 
             {currentStep < 3 ? (
               <button
+                key="next-button"
                 type="button"
                 onClick={nextStep}
                 className="rounded-xl bg-mint text-white px-6 py-2.5 text-sm font-semibold hover:bg-mint-dark transition-colors"
@@ -611,8 +638,9 @@ export default function AddMedicinePage() {
               </button>
             ) : (
               <button
+                key="submit-button"
                 type="submit"
-                disabled={isSubmitting}
+                disabled={isSubmitting || !step3Ready}
                 className="rounded-xl bg-mint text-white px-6 py-2.5 text-sm font-semibold hover:bg-mint-dark transition-colors disabled:opacity-50 flex items-center gap-2"
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

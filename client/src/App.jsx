@@ -1,4 +1,4 @@
-//Production Push
+// Production Push
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { useAuthStore } from './store/authStore';
@@ -12,7 +12,9 @@ import ProfilePage from './pages/ProfilePage';
 import PharmacyPage from './pages/PharmacyPage';
 import OrdersPage from './pages/OrdersPage';
 import OrderTrackingPage from './pages/OrderTrackingPage';
-import AIHealthPage from './pages/AIHealthPage';  // ADD THIS IMPORT
+import AIHealthPage from './pages/AIHealthPage';
+import FamilyMembersPage from './pages/FamilyMembersPage';
+import AlarmManager from './components/AlarmManager';
 
 function ProtectedRoute({ children }) {
   const token = useAuthStore((s) => s.token);
@@ -22,6 +24,7 @@ function ProtectedRoute({ children }) {
 export default function App() {
   return (
     <BrowserRouter>
+      <AlarmManager />
       <Toaster
         position="bottom-right"
         toastOptions={{
@@ -43,8 +46,11 @@ export default function App() {
         }}
       />
       <Routes>
+        {/* Public Routes - No authentication required */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/pharma/:qrToken" element={<PharmacistPage />} />
+        
+        {/* Protected Routes - Require authentication */}
         <Route
           path="/dashboard"
           element={
@@ -109,7 +115,6 @@ export default function App() {
             </ProtectedRoute>
           }
         />
-        {/* ADD AI HEALTH ROUTE HERE */}
         <Route
           path="/ai-health"
           element={
@@ -118,6 +123,16 @@ export default function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/family-members"
+          element={
+            <ProtectedRoute>
+              <FamilyMembersPage />
+            </ProtectedRoute>
+          }
+        />
+        
+        {/* Fallback Route */}
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
     </BrowserRouter>

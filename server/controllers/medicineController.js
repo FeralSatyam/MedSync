@@ -51,9 +51,18 @@ export const createMedicine = async (req, res, next) => {
 
     let prescriptionImgUrl = '';
     let prescriptionImgId = '';
-    if (req.file) {
-      prescriptionImgUrl = req.file.secure_url || req.file.path || '';
-      prescriptionImgId = req.file.public_id || req.file.filename || '';
+    if (req.files && req.files.prescriptionImage && req.files.prescriptionImage[0]) {
+      const file = req.files.prescriptionImage[0];
+      prescriptionImgUrl = file.secure_url || file.path || '';
+      prescriptionImgId = file.public_id || file.filename || '';
+    }
+
+    let medicinePhotoUrl = '';
+    let medicinePhotoId = '';
+    if (req.files && req.files.medicinePhoto && req.files.medicinePhoto[0]) {
+      const file = req.files.medicinePhoto[0];
+      medicinePhotoUrl = file.secure_url || file.path || '';
+      medicinePhotoId = file.public_id || file.filename || '';
     }
 
     const medicine = await Medicine.create({
@@ -72,6 +81,10 @@ export const createMedicine = async (req, res, next) => {
       prescriptionValid: req.body.prescriptionValid ? new Date(req.body.prescriptionValid) : undefined,
       prescriptionImgUrl,
       prescriptionImgId,
+      medicinePhotoUrl,
+      medicinePhotoId,
+      firstDoseTime: req.body.firstDoseTime || '08:00',
+      remindersEnabled: req.body.remindersEnabled === 'false' || req.body.remindersEnabled === false ? false : true,
     });
     res.status(201).json(medicine);
   } catch (err) {
@@ -114,17 +127,39 @@ export const updateMedicine = async (req, res, next) => {
     if (req.body.prescriptionValid !== undefined) {
       medicine.prescriptionValid = req.body.prescriptionValid ? new Date(req.body.prescriptionValid) : null;
     }
+    if (req.body.firstDoseTime !== undefined) {
+      medicine.firstDoseTime = req.body.firstDoseTime;
+    }
+    if (req.body.remindersEnabled !== undefined) {
+      medicine.remindersEnabled = req.body.remindersEnabled === 'true' || req.body.remindersEnabled === true;
+    }
 
-    if (req.file) {
-      if (medicine.prescriptionImgId) {
-        try {
-          await cloudinary.uploader.destroy(medicine.prescriptionImgId);
-        } catch {
-          /* ignore */
+    if (req.files) {
+      if (req.files.prescriptionImage && req.files.prescriptionImage[0]) {
+        const file = req.files.prescriptionImage[0];
+        if (medicine.prescriptionImgId) {
+          try {
+            await cloudinary.uploader.destroy(medicine.prescriptionImgId);
+          } catch {
+            /* ignore */
+          }
         }
+        medicine.prescriptionImgUrl = file.secure_url || file.path || '';
+        medicine.prescriptionImgId = file.public_id || file.filename || '';
       }
-      medicine.prescriptionImgUrl = req.file.secure_url || req.file.path || '';
-      medicine.prescriptionImgId = req.file.public_id || req.file.filename || '';
+
+      if (req.files.medicinePhoto && req.files.medicinePhoto[0]) {
+        const file = req.files.medicinePhoto[0];
+        if (medicine.medicinePhotoId) {
+          try {
+            await cloudinary.uploader.destroy(medicine.medicinePhotoId);
+          } catch {
+            /* ignore */
+          }
+        }
+        medicine.medicinePhotoUrl = file.secure_url || file.path || '';
+        medicine.medicinePhotoId = file.public_id || file.filename || '';
+      }
     }
 
     await medicine.save();
@@ -158,6 +193,13 @@ export const deleteMedicine = async (req, res, next) => {
     if (medicine.prescriptionImgId) {
       try {
         await cloudinary.uploader.destroy(medicine.prescriptionImgId);
+      } catch {
+        /* ignore */
+      }
+    }
+    if (medicine.medicinePhotoId) {
+      try {
+        await cloudinary.uploader.destroy(medicine.medicinePhotoId);
       } catch {
         /* ignore */
       }

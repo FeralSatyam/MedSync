@@ -1,9 +1,11 @@
 import axios from 'axios';
 
 const getBaseURL = () => {
+  // Production (Vercel) - use your Render backend URL
   if (import.meta.env.PROD) {
-    return 'https://medsync-tle2.onrender.com/api';
+    return 'https://medsync-tle2.onrender.com/api';  // Your Render backend URL
   }
+  // Development (localhost)
   return 'http://localhost:5000/api';
 };
 
@@ -16,41 +18,36 @@ const axiosInstance = axios.create({
   }
 });
 
+// Request interceptor for auth token
 axiosInstance.interceptors.request.use(
   (config) => {
     const stored = localStorage.getItem('medsync-auth');
-    
     if (stored) {
       try {
         const parsed = JSON.parse(stored);
         const token = parsed?.state?.token || parsed?.token;
-        
         if (token) {
           config.headers.Authorization = `Bearer ${token}`;
         }
       } catch (e) {
-        // Silent fail - remove console.error
+        console.error('Error parsing auth storage:', e);
       }
     }
     return config;
   },
-  (error) => {
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
+// Response interceptor
 axiosInstance.interceptors.response.use(
   (response) => response,
-  async (error) => {
-    const originalRequest = error.config;
-    
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
+  (error) => {
+    if (error.response?.status === 401) {
       localStorage.removeItem('medsync-auth');
-      window.location.href = '/login';
-      return Promise.reject(error);
+      if (window.location.pathname !== '/login') {
+        window.location.href = '/login';
+      }
     }
-    
     return Promise.reject(error);
   }
 );

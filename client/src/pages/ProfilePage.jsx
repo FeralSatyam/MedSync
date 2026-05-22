@@ -95,6 +95,256 @@ function FeatureCard({ title, description, included }) {
   );
 }
 
+// Change Password Modal
+function ChangePasswordModal({ onClose, onSuccess }) {
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async () => {
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      toast.error('Please fill all fields');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      toast.error('New passwords do not match');
+      return;
+    }
+    if (newPassword.length < 6) {
+      toast.error('Password must be at least 6 characters');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await changePassword({ currentPassword, newPassword });
+      toast.success('Password changed successfully');
+      onSuccess();
+      onClose();
+    } catch (error) {
+      console.error('Error changing password:', error);
+      toast.error(error.response?.data?.message || 'Failed to change password');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={onClose}>
+      <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-xl font-bold text-gray-800">Change Password</h3>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+            <Icons.Close />
+          </button>
+        </div>
+        
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Current Password</label>
+            <input
+              type="password"
+              value={currentPassword}
+              onChange={(e) => setCurrentPassword(e.target.value)}
+              className="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500"
+              placeholder="Enter current password"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">New Password</label>
+            <input
+              type="password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              className="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500"
+              placeholder="Enter new password"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Confirm New Password</label>
+            <input
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              className="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500"
+              placeholder="Confirm new password"
+            />
+          </div>
+        </div>
+
+        <div className="flex gap-3 mt-6">
+          <button onClick={onClose} className="flex-1 border border-gray-200 rounded-lg py-2.5 text-gray-700 font-medium hover:bg-gray-50">
+            Cancel
+          </button>
+          <button onClick={handleSubmit} disabled={loading} className="flex-1 bg-teal-500 text-white rounded-lg py-2.5 font-medium hover:bg-teal-600">
+            {loading ? 'Updating...' : 'Update Password'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Reset Password Modal (OTP)
+function ResetPasswordModal({ onClose }) {
+  const [step, setStep] = useState('email'); // 'email', 'otp', 'reset'
+  const [email, setEmail] = useState('');
+  const [otp, setOtp] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleSendOtp = async () => {
+    if (!email) {
+      toast.error('Please enter your email');
+      return;
+    }
+    setLoading(true);
+    try {
+      await requestPasswordOtp({ email });
+      setStep('otp');
+      toast.success('OTP sent to your email');
+    } catch (error) {
+      console.error('Error sending OTP:', error);
+      toast.error(error.response?.data?.message || 'Failed to send OTP');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyOtp = async () => {
+    if (!otp || otp.length !== 6) {
+      toast.error('Please enter the 6-digit OTP');
+      return;
+    }
+    setStep('reset');
+  };
+
+  const handleResetPassword = async () => {
+    if (!newPassword || !confirmPassword) {
+      toast.error('Please fill all fields');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      toast.error('Passwords do not match');
+      return;
+    }
+    if (newPassword.length < 6) {
+      toast.error('Password must be at least 6 characters');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await resetPasswordWithOtp({ email, otp, newPassword });
+      toast.success('Password reset successfully! You can now login with your new password.');
+      onClose();
+    } catch (error) {
+      console.error('Error resetting password:', error);
+      toast.error(error.response?.data?.message || 'Failed to reset password');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={onClose}>
+      <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-xl font-bold text-gray-800">Reset Password</h3>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+            <Icons.Close />
+          </button>
+        </div>
+
+        {step === 'email' && (
+          <div className="space-y-4">
+            <p className="text-sm text-gray-600">Enter your email address to receive a password reset OTP.</p>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                placeholder="you@example.com"
+              />
+            </div>
+            <div className="flex gap-3">
+              <button onClick={onClose} className="flex-1 border border-gray-200 rounded-lg py-2.5 text-gray-700 font-medium hover:bg-gray-50">
+                Cancel
+              </button>
+              <button onClick={handleSendOtp} disabled={loading} className="flex-1 bg-teal-500 text-white rounded-lg py-2.5 font-medium hover:bg-teal-600">
+                {loading ? 'Sending...' : 'Send OTP'}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {step === 'otp' && (
+          <div className="space-y-4">
+            <p className="text-sm text-gray-600">Enter the 6-digit OTP sent to your email.</p>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">OTP Code</label>
+              <input
+                type="text"
+                maxLength={6}
+                value={otp}
+                onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
+                className="w-full text-center text-2xl tracking-widest border border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                placeholder="000000"
+              />
+            </div>
+            <div className="flex gap-3">
+              <button onClick={() => setStep('email')} className="flex-1 border border-gray-200 rounded-lg py-2.5 text-gray-700 font-medium hover:bg-gray-50">
+                Back
+              </button>
+              <button onClick={handleVerifyOtp} className="flex-1 bg-teal-500 text-white rounded-lg py-2.5 font-medium hover:bg-teal-600">
+                Verify
+              </button>
+            </div>
+          </div>
+        )}
+
+        {step === 'reset' && (
+          <div className="space-y-4">
+            <p className="text-sm text-gray-600">Create a new password for your account.</p>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">New Password</label>
+              <input
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                className="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                placeholder="Enter new password"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Confirm New Password</label>
+              <input
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                placeholder="Confirm new password"
+              />
+            </div>
+            <div className="flex gap-3">
+              <button onClick={() => setStep('otp')} className="flex-1 border border-gray-200 rounded-lg py-2.5 text-gray-700 font-medium hover:bg-gray-50">
+                Back
+              </button>
+              <button onClick={handleResetPassword} disabled={loading} className="flex-1 bg-teal-500 text-white rounded-lg py-2.5 font-medium hover:bg-teal-600">
+                {loading ? 'Resetting...' : 'Reset Password'}
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function ProfilePage() {
   const navigate = useNavigate();
   const authUser = useAuthStore((s) => s.user);

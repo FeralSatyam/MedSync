@@ -444,8 +444,32 @@ export default function DashboardPage() {
   const desktopNotificationRef = useRef(null);
   const activePatientId = useAppStore((s) => s.activePatientId);
   const setActivePatientId = useAppStore((s) => s.setActivePatientId);
+  const refreshTrigger = useAppStore((s) => s.refreshTrigger);
   const authUser = useAuthStore((s) => s.user);
   const userId = authUser?._id || authUser?.id;
+
+  const [profilePic, setProfilePic] = useState(null);
+  useEffect(() => {
+    if (authUser) {
+      const savedPic = localStorage.getItem(`medsync_pfp_${authUser.id || authUser._id}`);
+      if (savedPic) setProfilePic(savedPic);
+    }
+  }, [authUser]);
+
+  const userInitials = useMemo(() => {
+    return (authUser?.name || 'U')
+      .split(' ')
+      .map((n) => n[0])
+      .join('')
+      .substring(0, 2)
+      .toUpperCase();
+  }, [authUser]);
+
+  const activePatientName = useMemo(() => {
+    if (!patients || !Array.isArray(patients) || patients.length === 0) return 'User';
+    const currentPatient = patients.find((p) => (p._id || p.id) === activePatientId);
+    return currentPatient?.name || 'User';
+  }, [patients, activePatientId]);
 
   const [patientAlertMap, setPatientAlertMap] = useState({});
   const [addProfileOpen, setAddProfileOpen] = useState(false);
@@ -647,9 +671,10 @@ export default function DashboardPage() {
   }, [refreshPatients]);
 
   useEffect(() => {
-    if (!activePatientId) return;
-    refreshMedicines(activePatientId);
-  }, [activePatientId, refreshMedicines]);
+    if (activePatientId) {
+      refreshMedicines(activePatientId);
+    }
+  }, [activePatientId, refreshMedicines, refreshTrigger]);
 
   // Handle tab navigation
   useEffect(() => {
@@ -736,11 +761,32 @@ export default function DashboardPage() {
               <Icons.Logo />
               <span className="font-bold text-gray-800 text-xl tracking-tight">MedSync</span>
             </div>
-            <div className="relative" ref={notificationRef}>
-              <button onClick={() => setShowNotifications(!showNotifications)} className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors relative">
-                <Icons.Notification hasAlert={hasAnyAlerts} />
-              </button>
-              {showNotifications && <NotificationDropdown />}
+            <div className="flex items-center gap-3">
+              {/* User Profile Avatar with active profile name below */}
+              <div className="flex flex-col items-center justify-center -mt-0.5">
+                <button 
+                  onClick={() => navigate('/profile')} 
+                  className="w-8 h-8 rounded-full bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center text-white font-bold text-xs shadow-sm overflow-hidden hover:scale-105 transition-all duration-200 active:scale-95 cursor-pointer"
+                  title="View Profile"
+                >
+                  {profilePic ? (
+                    <img src={profilePic} alt="Profile" className="w-full h-full object-cover" />
+                  ) : (
+                    userInitials
+                  )}
+                </button>
+                <span className="text-[9px] text-teal-600 font-bold mt-0.5 max-w-[64px] truncate text-center">
+                  {activePatientName}
+                </span>
+              </div>
+
+              {/* Notification Bell */}
+              <div className="relative" ref={notificationRef}>
+                <button onClick={() => setShowNotifications(!showNotifications)} className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors relative">
+                  <Icons.Notification hasAlert={hasAnyAlerts} />
+                </button>
+                {showNotifications && <NotificationDropdown />}
+              </div>
             </div>
           </div>
         </div>
