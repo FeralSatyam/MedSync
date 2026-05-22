@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import { useAppStore } from '../store/appStore';
 import { useAuthStore } from '../store/authStore';
 import { getPatients, updatePatient } from '../api/patientApi';
+import { changePassword, requestPasswordOtp, resetPasswordWithOtp } from '../api/authApi';
 
 // SVG Icons
 const Icons = {
@@ -59,6 +60,25 @@ const Icons = {
       <path d="M16 17L21 12L16 7M21 12H9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
     </svg>
   ),
+  User: () => (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="12" cy="8" r="4" stroke="currentColor" strokeWidth="2"/>
+      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="currentColor" strokeWidth="2"/>
+    </svg>
+  ),
+  Users: () => (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+      <circle cx="9" cy="7" r="4"/>
+      <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+      <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+    </svg>
+  ),
+  ChevronRight: () => (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M9 18l6-6-6-6"/>
+    </svg>
+  ),
 };
 
 // Family Member Component
@@ -108,6 +128,256 @@ function FeatureCard({ title, description, included }) {
   );
 }
 
+// Change Password Modal
+function ChangePasswordModal({ onClose, onSuccess }) {
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async () => {
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      toast.error('Please fill all fields');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      toast.error('New passwords do not match');
+      return;
+    }
+    if (newPassword.length < 6) {
+      toast.error('Password must be at least 6 characters');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await changePassword({ currentPassword, newPassword });
+      toast.success('Password changed successfully');
+      onSuccess();
+      onClose();
+    } catch (error) {
+      console.error('Error changing password:', error);
+      toast.error(error.response?.data?.message || 'Failed to change password');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={onClose}>
+      <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-xl font-bold text-gray-800">Change Password</h3>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+            <Icons.Close />
+          </button>
+        </div>
+        
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Current Password</label>
+            <input
+              type="password"
+              value={currentPassword}
+              onChange={(e) => setCurrentPassword(e.target.value)}
+              className="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500"
+              placeholder="Enter current password"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">New Password</label>
+            <input
+              type="password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              className="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500"
+              placeholder="Enter new password"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Confirm New Password</label>
+            <input
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              className="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500"
+              placeholder="Confirm new password"
+            />
+          </div>
+        </div>
+
+        <div className="flex gap-3 mt-6">
+          <button onClick={onClose} className="flex-1 border border-gray-200 rounded-lg py-2.5 text-gray-700 font-medium hover:bg-gray-50">
+            Cancel
+          </button>
+          <button onClick={handleSubmit} disabled={loading} className="flex-1 bg-teal-500 text-white rounded-lg py-2.5 font-medium hover:bg-teal-600">
+            {loading ? 'Updating...' : 'Update Password'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Reset Password Modal (OTP)
+function ResetPasswordModal({ onClose }) {
+  const [step, setStep] = useState('email'); // 'email', 'otp', 'reset'
+  const [email, setEmail] = useState('');
+  const [otp, setOtp] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleSendOtp = async () => {
+    if (!email) {
+      toast.error('Please enter your email');
+      return;
+    }
+    setLoading(true);
+    try {
+      await requestPasswordOtp({ email });
+      setStep('otp');
+      toast.success('OTP sent to your email');
+    } catch (error) {
+      console.error('Error sending OTP:', error);
+      toast.error(error.response?.data?.message || 'Failed to send OTP');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyOtp = async () => {
+    if (!otp || otp.length !== 6) {
+      toast.error('Please enter the 6-digit OTP');
+      return;
+    }
+    setStep('reset');
+  };
+
+  const handleResetPassword = async () => {
+    if (!newPassword || !confirmPassword) {
+      toast.error('Please fill all fields');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      toast.error('Passwords do not match');
+      return;
+    }
+    if (newPassword.length < 6) {
+      toast.error('Password must be at least 6 characters');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await resetPasswordWithOtp({ email, otp, newPassword });
+      toast.success('Password reset successfully! You can now login with your new password.');
+      onClose();
+    } catch (error) {
+      console.error('Error resetting password:', error);
+      toast.error(error.response?.data?.message || 'Failed to reset password');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={onClose}>
+      <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-xl font-bold text-gray-800">Reset Password</h3>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+            <Icons.Close />
+          </button>
+        </div>
+
+        {step === 'email' && (
+          <div className="space-y-4">
+            <p className="text-sm text-gray-600">Enter your email address to receive a password reset OTP.</p>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                placeholder="you@example.com"
+              />
+            </div>
+            <div className="flex gap-3">
+              <button onClick={onClose} className="flex-1 border border-gray-200 rounded-lg py-2.5 text-gray-700 font-medium hover:bg-gray-50">
+                Cancel
+              </button>
+              <button onClick={handleSendOtp} disabled={loading} className="flex-1 bg-teal-500 text-white rounded-lg py-2.5 font-medium hover:bg-teal-600">
+                {loading ? 'Sending...' : 'Send OTP'}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {step === 'otp' && (
+          <div className="space-y-4">
+            <p className="text-sm text-gray-600">Enter the 6-digit OTP sent to your email.</p>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">OTP Code</label>
+              <input
+                type="text"
+                maxLength={6}
+                value={otp}
+                onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
+                className="w-full text-center text-2xl tracking-widest border border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                placeholder="000000"
+              />
+            </div>
+            <div className="flex gap-3">
+              <button onClick={() => setStep('email')} className="flex-1 border border-gray-200 rounded-lg py-2.5 text-gray-700 font-medium hover:bg-gray-50">
+                Back
+              </button>
+              <button onClick={handleVerifyOtp} className="flex-1 bg-teal-500 text-white rounded-lg py-2.5 font-medium hover:bg-teal-600">
+                Verify
+              </button>
+            </div>
+          </div>
+        )}
+
+        {step === 'reset' && (
+          <div className="space-y-4">
+            <p className="text-sm text-gray-600">Create a new password for your account.</p>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">New Password</label>
+              <input
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                className="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                placeholder="Enter new password"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Confirm New Password</label>
+              <input
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                placeholder="Confirm new password"
+              />
+            </div>
+            <div className="flex gap-3">
+              <button onClick={() => setStep('otp')} className="flex-1 border border-gray-200 rounded-lg py-2.5 text-gray-700 font-medium hover:bg-gray-50">
+                Back
+              </button>
+              <button onClick={handleResetPassword} disabled={loading} className="flex-1 bg-teal-500 text-white rounded-lg py-2.5 font-medium hover:bg-teal-600">
+                {loading ? 'Resetting...' : 'Reset Password'}
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function ProfilePage() {
   const navigate = useNavigate();
   const [patients, setPatients] = useState([]);
@@ -119,11 +389,12 @@ export default function ProfilePage() {
   const [pinError, setPinError] = useState('');
   const [biometricEnabled, setBiometricEnabled] = useState(false);
   const [showChangePassword, setShowChangePassword] = useState(false);
-  const [passwordForm, setPasswordForm] = useState({ current: '', new: '', confirm: '' });
+  const [showResetPassword, setShowResetPassword] = useState(false);
   const [memberImages, setMemberImages] = useState({});
 
-  // Get auth store for logout
+  // Get auth store for logout and user data
   const logout = useAuthStore((s) => s.logout);
+  const authUser = useAuthStore((s) => s.user);
 
   // Load patients
   useEffect(() => {
@@ -225,29 +496,6 @@ export default function ProfilePage() {
     }
   };
 
-  const handleChangePassword = async () => {
-    if (!passwordForm.current || !passwordForm.new || !passwordForm.confirm) {
-      toast.error('Please fill all fields');
-      return;
-    }
-    if (passwordForm.new !== passwordForm.confirm) {
-      toast.error('New passwords do not match');
-      return;
-    }
-    if (passwordForm.new.length < 6) {
-      toast.error('Password must be at least 6 characters');
-      return;
-    }
-    
-    toast.success('Password changed successfully');
-    setShowChangePassword(false);
-    setPasswordForm({ current: '', new: '', confirm: '' });
-  };
-
-  const handleResetPassword = () => {
-    toast.success('Password reset link sent to your email');
-  };
-
   // Pro features list
   const freeFeatures = [
     { title: 'Track up to 3 family members', description: 'Manage medications for yourself', included: true },
@@ -278,28 +526,36 @@ export default function ProfilePage() {
       </div>
 
       <div className="max-w-2xl mx-auto px-4 py-6 space-y-6">
-        {/* Family Members Section */}
-        <div className="bg-white rounded-xl p-4 shadow-sm">
-          <div className="flex justify-between items-center mb-3">
-            <h2 className="font-semibold text-gray-800">Family Members</h2>
-            <button 
-              onClick={() => navigate('/patients')}
-              className="text-xs text-teal-500 hover:underline"
-            >
-              Manage
-            </button>
+        {/* Current Account Holder Section */}
+        <div className="bg-gradient-to-r from-teal-500 to-teal-600 rounded-xl p-6 text-white shadow-lg">
+          <div className="flex items-center gap-4">
+            <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
+              <Icons.User />
+            </div>
+            <div>
+              <p className="text-white/80 text-sm">Account Holder</p>
+              <h2 className="text-xl font-bold">{authUser?.name || 'User'}</h2>
+              <p className="text-white/80 text-sm mt-1">{authUser?.email || 'user@example.com'}</p>
+            </div>
           </div>
-          <div className="space-y-2">
-            {patients.map((member) => (
-              <FamilyMemberCard
-                key={member._id}
-                member={member}
-                isActive={selectedMember?._id === member._id}
-                onSelect={setSelectedMember}
-                onImageUpload={handleImageUpload}
-                imagePreview={memberImages[member._id]}
-              />
-            ))}
+        </div>
+
+        {/* Family Members Section - Click to Manage */}
+        <div 
+          onClick={() => navigate('/family-members')}
+          className="bg-white rounded-xl p-4 shadow-sm cursor-pointer hover:shadow-md transition-all border border-gray-100"
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-teal-100 rounded-full flex items-center justify-center">
+                <Icons.Users />
+              </div>
+              <div>
+                <h2 className="font-semibold text-gray-800">Family Members</h2>
+                <p className="text-xs text-gray-500">{patients.length} member{patients.length !== 1 ? 's' : ''} in your family</p>
+              </div>
+            </div>
+            <Icons.ChevronRight />
           </div>
         </div>
 
@@ -332,6 +588,23 @@ export default function ProfilePage() {
           </div>
         )}
 
+        {/* Family Members List */}
+        <div className="bg-white rounded-xl p-4 shadow-sm">
+          <h2 className="font-semibold text-gray-800 mb-3">All Family Members</h2>
+          <div className="space-y-2">
+            {patients.map((member) => (
+              <FamilyMemberCard
+                key={member._id}
+                member={member}
+                isActive={selectedMember?._id === member._id}
+                onSelect={setSelectedMember}
+                onImageUpload={handleImageUpload}
+                imagePreview={memberImages[member._id]}
+              />
+            ))}
+          </div>
+        </div>
+
         {/* Security Section */}
         <div className="bg-white rounded-xl p-4 shadow-sm">
           <h2 className="font-semibold text-gray-800 mb-3">Security</h2>
@@ -348,7 +621,7 @@ export default function ProfilePage() {
             </button>
 
             <button 
-              onClick={handleResetPassword}
+              onClick={() => setShowResetPassword(true)}
               className="w-full flex items-center justify-between p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors"
             >
               <div className="flex items-center gap-3">
@@ -515,58 +788,17 @@ export default function ProfilePage() {
 
       {/* Change Password Modal */}
       {showChangePassword && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={() => setShowChangePassword(false)}>
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-bold text-gray-800">Change Password</h3>
-              <button onClick={() => setShowChangePassword(false)} className="text-gray-400 hover:text-gray-600">
-                <Icons.Close />
-              </button>
-            </div>
-            
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Current Password</label>
-                <input
-                  type="password"
-                  value={passwordForm.current}
-                  onChange={(e) => setPasswordForm({ ...passwordForm, current: e.target.value })}
-                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500"
-                  placeholder="Enter current password"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">New Password</label>
-                <input
-                  type="password"
-                  value={passwordForm.new}
-                  onChange={(e) => setPasswordForm({ ...passwordForm, new: e.target.value })}
-                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500"
-                  placeholder="Enter new password"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Confirm New Password</label>
-                <input
-                  type="password"
-                  value={passwordForm.confirm}
-                  onChange={(e) => setPasswordForm({ ...passwordForm, confirm: e.target.value })}
-                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500"
-                  placeholder="Confirm new password"
-                />
-              </div>
-            </div>
+        <ChangePasswordModal
+          onClose={() => setShowChangePassword(false)}
+          onSuccess={() => setShowChangePassword(false)}
+        />
+      )}
 
-            <div className="flex gap-3 mt-6">
-              <button onClick={() => setShowChangePassword(false)} className="flex-1 border border-gray-200 rounded-lg py-2.5 text-gray-700 font-medium hover:bg-gray-50">
-                Cancel
-              </button>
-              <button onClick={handleChangePassword} className="flex-1 bg-teal-500 text-white rounded-lg py-2.5 font-medium hover:bg-teal-600">
-                Update Password
-              </button>
-            </div>
-          </div>
-        </div>
+      {/* Reset Password Modal */}
+      {showResetPassword && (
+        <ResetPasswordModal
+          onClose={() => setShowResetPassword(false)}
+        />
       )}
     </div>
   );

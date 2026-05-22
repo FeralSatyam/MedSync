@@ -7,12 +7,13 @@ import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import AddMedicinePage from './pages/AddMedicinePage';
 import QRPage from './pages/QRPage';
-import PharmacistPage from './pages/PharmacistPage';  // Pharmacist view (public)
+import PharmacistPage from './pages/PharmacistPage';
 import ProfilePage from './pages/ProfilePage';
 import PharmacyPage from './pages/PharmacyPage';
 import OrdersPage from './pages/OrdersPage';
 import OrderTrackingPage from './pages/OrderTrackingPage';
 import AIHealthPage from './pages/AIHealthPage';
+import FamilyMembersPage from './pages/FamilyMembersPage';
 
 function ProtectedRoute({ children }) {
   const token = useAuthStore((s) => s.token);
@@ -43,11 +44,11 @@ export default function App() {
         }}
       />
       <Routes>
-        {/* ===== PUBLIC ROUTES (No authentication required) ===== */}
+        {/* Public Routes - No authentication required */}
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/pharma/:qrToken" element={<PharmacistPage />} />  {/* ✅ This is PUBLIC - no login needed */}
+        <Route path="/pharma/:qrToken" element={<PharmacistPage />} />
         
-        {/* ===== PROTECTED ROUTES (Authentication required) ===== */}
+        {/* Protected Routes - Require authentication */}
         <Route
           path="/dashboard"
           element={
@@ -117,6 +118,14 @@ export default function App() {
           element={
             <ProtectedRoute>
               <AIHealthPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/family-members"
+          element={
+            <ProtectedRoute>
+              <FamilyMembersPage />
             </ProtectedRoute>
           }
         />
