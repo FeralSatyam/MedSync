@@ -5,9 +5,10 @@ import { useAppStore } from '../store/appStore';
 import { getPatients } from '../api/patientApi';
 import { getMedicinesForPatient, updateMedicine } from '../api/medicineApi';
 
-// Web Audio API setup
+// Web Audio API — loud high-frequency siren alarm
 let audioCtx = null;
 let beepInterval = null;
+let sirenToggle = false;
 
 function startBeeping() {
   if (beepInterval) return;
@@ -17,23 +18,46 @@ function startBeeping() {
   if (audioCtx.state === 'suspended') {
     audioCtx.resume().catch((e) => console.log('Could not resume audio:', e));
   }
+
+  // Fire a rapid alternating dual-tone siren burst every 200ms
   beepInterval = setInterval(() => {
     try {
+      const t = audioCtx.currentTime;
+      // Alternate between two high-pitched frequencies for a siren effect
+      const freq = sirenToggle ? 1500 : 1800;
+      sirenToggle = !sirenToggle;
+
+      // Primary oscillator — square wave for harsh, piercing tone
       const osc = audioCtx.createOscillator();
       const gain = audioCtx.createGain();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(880, audioCtx.currentTime); // 880Hz beep
-      gain.gain.setValueAtTime(0, audioCtx.currentTime);
-      gain.gain.linearRampToValueAtTime(0.4, audioCtx.currentTime + 0.05);
-      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.35);
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(freq, t);
+      gain.gain.setValueAtTime(0, t);
+      gain.gain.linearRampToValueAtTime(1.0, t + 0.01);   // instant attack
+      gain.gain.setValueAtTime(1.0, t + 0.12);             // sustain
+      gain.gain.linearRampToValueAtTime(0.001, t + 0.18);  // quick decay
       osc.connect(gain);
       gain.connect(audioCtx.destination);
-      osc.start();
-      osc.stop(audioCtx.currentTime + 0.4);
+      osc.start(t);
+      osc.stop(t + 0.19);
+
+      // Harmonic overtone for extra urgency
+      const osc2 = audioCtx.createOscillator();
+      const gain2 = audioCtx.createGain();
+      osc2.type = 'sawtooth';
+      osc2.frequency.setValueAtTime(freq * 1.5, t);        // 1.5× harmonic
+      gain2.gain.setValueAtTime(0, t);
+      gain2.gain.linearRampToValueAtTime(0.5, t + 0.01);
+      gain2.gain.setValueAtTime(0.5, t + 0.12);
+      gain2.gain.linearRampToValueAtTime(0.001, t + 0.18);
+      osc2.connect(gain2);
+      gain2.connect(audioCtx.destination);
+      osc2.start(t);
+      osc2.stop(t + 0.19);
     } catch (e) {
-      console.error('Audio beep error', e);
+      console.error('Audio alarm error', e);
     }
-  }, 1000);
+  }, 200); // rapid 200ms interval for urgency
 }
 
 function stopBeeping() {
@@ -41,6 +65,7 @@ function stopBeeping() {
     clearInterval(beepInterval);
     beepInterval = null;
   }
+  sirenToggle = false;
 }
 
 // Helper to calculate times of day for a medicine
