@@ -59,13 +59,13 @@ export default function LoginPage() {
   const [forgotOpen, setForgotOpen] = useState(false);
   const [otpSent, setOtpSent] = useState(false);
   const [forgotEmail, setForgotEmail] = useState('');
-  const [resetOtp, setResetOtp] = useState('');
+  const [resetOtp, setResetOtp] = useState(['', '', '', '', '', '']);
   const [newPassword, setNewPassword] = useState('');
 
   // Email verification state
   const [verifyStep, setVerifyStep] = useState(false);
   const [pendingEmail, setPendingEmail] = useState('');
-  const [verifyOtp, setVerifyOtp] = useState('');
+  const [verifyOtp, setVerifyOtp] = useState(['', '', '', '', '', '']);
   const [verifying, setVerifying] = useState(false);
   const [resending, setResending] = useState(false);
 
@@ -84,27 +84,24 @@ export default function LoginPage() {
 
   const demoHint = useMemo(() => 'Support: contact@medsync.np', []);
 
-  // Login function - Fixed to prevent page refresh
+  // Login function
   const handleLoginSubmit = async (e) => {
-    // Prevent default form submission
     if (e) {
       e.preventDefault();
       e.stopPropagation();
     }
-    
-    // Validate form
+
     const isValid = await loginForm.trigger();
     if (!isValid) return;
-    
+
     const values = loginForm.getValues();
-    
     setFormError('');
     setSubmitting(true);
-    
+
     try {
       const loginVal = normalizeLoginIdentifier(values.email);
       const data = await login({ email: loginVal, password: values.password });
-      
+
       if (data && data.user && data.token) {
         loginFn(data.user, data.token);
         toast.success('Login successful! Redirecting...');
@@ -114,18 +111,15 @@ export default function LoginPage() {
         toast.error('Login failed. Please try again.');
       }
     } catch (err) {
-      // Check if it's a network error
       if (err.message === 'Network Error') {
         setFormError('Network error. Please check your internet connection.');
         toast.error('Network error. Please check your connection.');
-      } 
-      // Check for specific error from backend
+      }
       else if (err.response?.data?.message) {
         const errorMessage = err.response.data.message;
         setFormError(errorMessage);
         toast.error(errorMessage);
-      } 
-      // Check for needsVerification flag
+      }
       else if (err.response?.status === 403 && err.response?.data?.needsVerification) {
         const emailToVerify = err.response.data.email || values.email;
         setPendingEmail(emailToVerify);
@@ -152,12 +146,11 @@ export default function LoginPage() {
       e.preventDefault();
       e.stopPropagation();
     }
-    
+
     const isValid = await registerForm.trigger();
     if (!isValid) return;
-    
+
     const values = registerForm.getValues();
-    
     setFormError('');
     setSubmitting(true);
     try {
@@ -168,7 +161,6 @@ export default function LoginPage() {
       setVerifyStep(true);
       toast.success('Check your email for the verification code.');
     } catch (err) {
-      // console.error('Registration error:', err);
       const message = err?.response?.data?.message || err?.message || 'Registration failed';
       setFormError(message);
       toast.error(message);
@@ -181,13 +173,14 @@ export default function LoginPage() {
   async function handleVerify(e) {
     e.preventDefault();
     e.stopPropagation();
-    if (verifyOtp.length !== 6) {
-      toast.error('Please enter the 6-digit code');
+    const fullOtp = verifyOtp.join('');
+    if (fullOtp.length !== 6) {
+      toast.error('Please enter all 6 digits');
       return;
     }
     setVerifying(true);
     try {
-      const data = await verifyEmail(pendingEmail, verifyOtp);
+      const data = await verifyEmail(pendingEmail, fullOtp);
       if (data && data.user && data.token) {
         loginFn(data.user, data.token);
         toast.success(data.message || 'Email verified successfully!');
@@ -208,13 +201,91 @@ export default function LoginPage() {
     try {
       await sendVerifyOtp(pendingEmail);
       toast.success('New code sent! Check your email.');
-      setVerifyOtp('');
+      setVerifyOtp(['', '', '', '', '', '']);
+      setTimeout(() => {
+        const firstInput = document.getElementById('otp-box-0');
+        if (firstInput) firstInput.focus();
+      }, 100);
     } catch (err) {
       toast.error(err?.response?.data?.message || 'Could not resend code');
     } finally {
       setResending(false);
     }
   }
+
+  // Helper functions for OTP input (ONLY ONCE)
+  const handleOtpChange = (index, value) => {
+    const newValue = value.replace(/\D/g, '');
+    if (newValue.length > 1) return;
+
+    const newOtp = [...verifyOtp];
+    newOtp[index] = newValue;
+    setVerifyOtp(newOtp);
+
+    if (newValue && index < 5) {
+      const nextInput = document.getElementById(`otp-box-${index + 1}`);
+      if (nextInput) nextInput.focus();
+    }
+  };
+
+  const handleKeyDown = (index, e) => {
+    if (e.key === 'Backspace' && !verifyOtp[index] && index > 0) {
+      const prevInput = document.getElementById(`otp-box-${index - 1}`);
+      if (prevInput) {
+        prevInput.focus();
+        const newOtp = [...verifyOtp];
+        newOtp[index - 1] = '';
+        setVerifyOtp(newOtp);
+      }
+    }
+  };
+
+  const handlePaste = (e) => {
+    e.preventDefault();
+    const pastedData = e.clipboardData.getData('text');
+    const cleanedData = pastedData.replace(/\D/g, '').slice(0, 6);
+
+    if (cleanedData.length > 0) {
+      const newOtp = [...verifyOtp];
+      for (let i = 0; i < cleanedData.length; i++) {
+        newOtp[i] = cleanedData[i];
+      }
+      setVerifyOtp(newOtp);
+
+      if (cleanedData.length < 6) {
+        const nextIndex = cleanedData.length;
+        const nextInput = document.getElementById(`otp-box-${nextIndex}`);
+        if (nextInput) nextInput.focus();
+      } else {
+        const lastInput = document.getElementById('otp-box-5');
+        if (lastInput) lastInput.blur();
+      }
+    }
+  };
+
+  // Handle paste for reset password
+  const handleResetPaste = (e) => {
+    e.preventDefault();
+    const pastedData = e.clipboardData.getData('text');
+    const cleanedData = pastedData.replace(/\D/g, '').slice(0, 6);
+
+    if (cleanedData.length > 0) {
+      const newOtp = [...resetOtp];
+      for (let i = 0; i < cleanedData.length; i++) {
+        newOtp[i] = cleanedData[i];
+      }
+      setResetOtp(newOtp);
+
+      if (cleanedData.length < 6) {
+        const nextIndex = cleanedData.length;
+        const nextInput = document.getElementById(`reset-otp-box-${nextIndex}`);
+        if (nextInput) nextInput.focus();
+      } else {
+        const lastInput = document.getElementById('reset-otp-box-5');
+        if (lastInput) lastInput.blur();
+      }
+    }
+  };
 
   // OTP Verification screen
   if (verifyStep) {
@@ -237,15 +308,22 @@ export default function LoginPage() {
           </div>
 
           <form onSubmit={handleVerify} className="space-y-[14px]">
-            <input
-              type="text"
-              inputMode="numeric"
-              maxLength={6}
-              placeholder="000000"
-              value={verifyOtp}
-              onChange={(e) => setVerifyOtp(e.target.value.replace(/\D/g, ''))}
-              className="w-full rounded-btn border-[1.5px] border-border bg-bg px-[15px] py-[14px] text-center text-[28px] font-bold tracking-[0.5em] text-navy outline-none transition-colors focus:border-mint"
-            />
+            <div className="flex justify-center gap-[12px] mb-[20px]" onPaste={handlePaste}>
+              {[...Array(6)].map((_, index) => (
+                <input
+                  key={index}
+                  id={`otp-box-${index}`}
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={1}
+                  value={verifyOtp[index] || ''}
+                  onChange={(e) => handleOtpChange(index, e.target.value)}
+                  onKeyDown={(e) => handleKeyDown(index, e)}
+                  className="w-[52px] h-[60px] text-center text-[28px] font-bold bg-bg border-[1.5px] border-border rounded-btn text-navy outline-none focus:border-mint focus:ring-1 focus:ring-mint transition-all"
+                />
+              ))}
+            </div>
+
             <button
               type="submit"
               disabled={verifying}
@@ -271,7 +349,7 @@ export default function LoginPage() {
 
           <button
             type="button"
-            onClick={() => { setVerifyStep(false); setVerifyOtp(''); }}
+            onClick={() => { setVerifyStep(false); setVerifyOtp(['', '', '', '', '', '']); }}
             className="mt-[14px] text-[12px] text-muted hover:underline"
           >
             ← Back
@@ -283,8 +361,9 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex">
-      {/* LEFT PANEL */}
+      {/* LEFT PANEL - keep as is */}
       <aside className="hidden w-[420px] min-h-screen flex-col justify-center bg-navy px-[48px] py-[60px] relative overflow-hidden md:flex">
+        {/* ... left panel content ... */}
         <div className="absolute -top-[80px] -right-[80px] h-[300px] w-[300px] rounded-full bg-[rgba(0,200,150,0.08)] pointer-events-none" />
         <div className="absolute -bottom-[60px] -left-[60px] h-[220px] w-[220px] rounded-full bg-[rgba(0,200,150,0.05)] pointer-events-none" />
 
@@ -321,7 +400,6 @@ export default function LoginPage() {
       {/* RIGHT PANEL */}
       <section className="flex-1 bg-bg flex items-center justify-center px-[24px] py-[40px]">
         <div className="w-full max-w-[400px]">
-
           {/* Mobile mini logo */}
           <div className="md:hidden mb-[22px] flex items-center gap-[12px]">
             <div className="flex h-[38px] w-[38px] items-center justify-center">
@@ -360,7 +438,7 @@ export default function LoginPage() {
             </button>
           </div>
 
-          {/* LOGIN FORM - Using div instead of form to prevent page refresh */}
+          {/* LOGIN FORM */}
           {mode === 'login' ? (
             <div>
               <div className="space-y-[18px]">
@@ -403,7 +481,7 @@ export default function LoginPage() {
                 <button 
                   type="button" 
                   className="w-full text-[12px] text-mint-mid underline"
-                  onClick={() => { setForgotOpen(true); setOtpSent(false); setForgotEmail(loginForm.getValues('email') || ''); setResetOtp(''); setNewPassword(''); }}
+                  onClick={() => { setForgotOpen(true); setOtpSent(false); setForgotEmail(loginForm.getValues('email') || ''); setResetOtp(['', '', '', '', '', '']); setNewPassword(''); }}
                 >
                   Forgot password?
                 </button>
@@ -412,7 +490,6 @@ export default function LoginPage() {
                 </div>
               </div>
             </div>
-
           ) : (
             /* REGISTER FORM */
             <div>
@@ -523,12 +600,45 @@ export default function LoginPage() {
 
             {otpSent && (
               <>
-                <label className="mt-[12px] mb-[7px] block text-[12px] font-semibold tracking-[0.02em] text-navy">OTP</label>
-                <input 
-                  value={resetOtp} 
-                  onChange={(e) => setResetOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                  className="w-full rounded-btn border-[1.5px] border-border bg-card px-[15px] py-[11px] text-[14px] text-navy outline-none transition-colors focus:border-mint" 
-                />
+                <label className="mt-[12px] mb-[7px] block text-[12px] font-semibold tracking-[0.02em] text-navy">Enter OTP</label>
+
+                <div className="flex justify-center gap-[8px] mb-[16px]" onPaste={handleResetPaste}>
+                  {[...Array(6)].map((_, index) => (
+                    <input
+                      key={`reset-otp-${index}`}
+                      id={`reset-otp-box-${index}`}
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={1}
+                      value={resetOtp[index] || ''}
+                      onChange={(e) => {
+                        const newValue = e.target.value.replace(/\D/g, '');
+                        if (newValue.length > 1) return;
+                        const newOtp = [...resetOtp];
+                        newOtp[index] = newValue;
+                        setResetOtp(newOtp);
+
+                        if (newValue && index < 5) {
+                          const nextInput = document.getElementById(`reset-otp-box-${index + 1}`);
+                          if (nextInput) nextInput.focus();
+                        }
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Backspace' && !resetOtp[index] && index > 0) {
+                          const prevInput = document.getElementById(`reset-otp-box-${index - 1}`);
+                          if (prevInput) {
+                            prevInput.focus();
+                            const newOtp = [...resetOtp];
+                            newOtp[index - 1] = '';
+                            setResetOtp(newOtp);
+                          }
+                        }
+                      }}
+                      className="w-[45px] h-[50px] text-center text-[24px] font-bold bg-bg border-[1.5px] border-border rounded-btn text-navy outline-none focus:border-mint focus:ring-1 focus:ring-mint transition-all"
+                    />
+                  ))}
+                </div>
+
                 <label className="mt-[12px] mb-[7px] block text-[12px] font-semibold tracking-[0.02em] text-navy">New Password</label>
                 <input 
                   type="password" 
@@ -542,7 +652,11 @@ export default function LoginPage() {
             <div className="mt-[16px] flex gap-[8px]">
               <button 
                 type="button" 
-                onClick={() => setForgotOpen(false)}
+                onClick={() => {
+                  setForgotOpen(false);
+                  setResetOtp(['', '', '', '', '', '']);
+                  setNewPassword('');
+                }}
                 className="flex-1 rounded-btn border-[1.5px] border-border bg-card py-[9px] text-[13px] font-body font-semibold text-navy cursor-pointer"
               >
                 Cancel
@@ -573,8 +687,9 @@ export default function LoginPage() {
                   type="button"
                   className="flex-1 rounded-btn bg-mint text-white py-[10px] text-[13px] font-semibold"
                   onClick={async () => {
-                    if (!resetOtp || resetOtp.length !== 6) {
-                      toast.error('Please enter the 6-digit OTP');
+                    const fullOtp = resetOtp.join('');
+                    if (!fullOtp || fullOtp.length !== 6) {
+                      toast.error('Please enter all 6 digits of the OTP');
                       return;
                     }
                     if (!newPassword || newPassword.length < 6) {
@@ -582,9 +697,11 @@ export default function LoginPage() {
                       return;
                     }
                     try {
-                      await resetPasswordWithOtp({ email: forgotEmail, otp: resetOtp, newPassword });
+                      await resetPasswordWithOtp({ email: forgotEmail, otp: fullOtp, newPassword });
                       toast.success('Password reset successful');
                       setForgotOpen(false);
+                      setResetOtp(['', '', '', '', '', '']);
+                      setNewPassword('');
                     } catch (err) {
                       console.error('Reset password error:', err);
                       toast.error(err?.response?.data?.message || 'Reset failed');

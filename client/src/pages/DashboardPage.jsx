@@ -309,7 +309,7 @@ function DesktopSidebar({ activeTab, onTabChange, onQRPress, navigate }) {
         <div className="flex items-center justify-center h-16 px-4 border-b border-gray-100">
           <div className="flex items-center gap-2">
             <img src="/logo-b.png" alt="MedSync" className="w-8 h-8" />
-            <span className="font-bold text-gray-800 text-xl tracking-tight"></span>
+            <span className="font-bold text-gray-800 text-xl tracking-tight">MedSync</span>
           </div>
         </div>
 
