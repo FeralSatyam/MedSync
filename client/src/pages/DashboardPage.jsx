@@ -13,141 +13,141 @@ import { QRCodeCanvas } from 'qrcode.react';
 const Icons = {
   Home: ({ active = false }) => (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M3 9L12 3L21 9V20H3V9Z" stroke="currentColor" strokeWidth="1.5" fill={active ? "currentColor" : "none"}/>
-      <path d="M9 20V12H15V20" stroke="currentColor" strokeWidth="1.5" fill="none"/>
+      <path d="M3 9L12 3L21 9V20H3V9Z" stroke="currentColor" strokeWidth="1.5" fill={active ? "currentColor" : "none"} />
+      <path d="M9 20V12H15V20" stroke="currentColor" strokeWidth="1.5" fill="none" />
     </svg>
   ),
-  
+
   AIHealth: ({ active = false }) => (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M12 2c-3 0-5 2-5 5 0 1.5.5 2.5 1 3.5-1 1-2 2.5-2 4.5 0 3 2 5 5 5s5-2 5-5c0-2-1-3.5-2-4.5.5-1 1-2 1-3.5 0-3-2-5-5-5z" stroke="currentColor" strokeWidth="1.5" fill={active ? "currentColor" : "none"}/>
-      <path d="M12 7v10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-      <path d="M8 9l8 2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-      <path d="M8 13l8-2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+      <path d="M12 2c-3 0-5 2-5 5 0 1.5.5 2.5 1 3.5-1 1-2 2.5-2 4.5 0 3 2 5 5 5s5-2 5-5c0-2-1-3.5-2-4.5.5-1 1-2 1-3.5 0-3-2-5-5-5z" stroke="currentColor" strokeWidth="1.5" fill={active ? "currentColor" : "none"} />
+      <path d="M12 7v10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      <path d="M8 9l8 2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      <path d="M8 13l8-2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
     </svg>
   ),
-  
+
   Pharmacy: ({ active = false }) => (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M12 2V22M5 12H19" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-      <path d="M9 4H15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-      <path d="M7 8H17" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-      <path d="M7 16H17" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-      <path d="M9 20H15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+      <path d="M12 2V22M5 12H19" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      <path d="M9 4H15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      <path d="M7 8H17" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      <path d="M7 16H17" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      <path d="M9 20H15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
     </svg>
   ),
-  
+
   Profile: ({ active = false }) => (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="12" cy="8" r="4" stroke="currentColor" strokeWidth="1.5" fill={active ? "currentColor" : "none"}/>
-      <path d="M5 20V19C5 15.7 7.7 13 11 13H13C16.3 13 19 15.7 19 19V20" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+      <circle cx="12" cy="8" r="4" stroke="currentColor" strokeWidth="1.5" fill={active ? "currentColor" : "none"} />
+      <path d="M5 20V19C5 15.7 7.7 13 11 13H13C16.3 13 19 15.7 19 19V20" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
     </svg>
   ),
-  
+
   QR: ({ active = false }) => (
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect x="3" y="3" width="7" height="7" rx="1" stroke="currentColor" strokeWidth="1.5" fill="none"/>
-      <rect x="14" y="3" width="7" height="7" rx="1" stroke="currentColor" strokeWidth="1.5" fill="none"/>
-      <rect x="3" y="14" width="7" height="7" rx="1" stroke="currentColor" strokeWidth="1.5" fill="none"/>
-      <rect x="14" y="14" width="3" height="3" rx="0.5" fill="currentColor"/>
-      <rect x="18" y="18" width="3" height="3" rx="0.5" fill="currentColor"/>
+      <rect x="3" y="3" width="7" height="7" rx="1" stroke="currentColor" strokeWidth="1.5" fill="none" />
+      <rect x="14" y="3" width="7" height="7" rx="1" stroke="currentColor" strokeWidth="1.5" fill="none" />
+      <rect x="3" y="14" width="7" height="7" rx="1" stroke="currentColor" strokeWidth="1.5" fill="none" />
+      <rect x="14" y="14" width="3" height="3" rx="0.5" fill="currentColor" />
+      <rect x="18" y="18" width="3" height="3" rx="0.5" fill="currentColor" />
     </svg>
   ),
-  
+
   QRWhite: () => (
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect x="3" y="3" width="7" height="7" rx="1" stroke="white" strokeWidth="1.5" fill="none"/>
-      <rect x="14" y="3" width="7" height="7" rx="1" stroke="white" strokeWidth="1.5" fill="none"/>
-      <rect x="3" y="14" width="7" height="7" rx="1" stroke="white" strokeWidth="1.5" fill="none"/>
-      <rect x="14" y="14" width="3" height="3" rx="0.5" fill="white"/>
-      <rect x="18" y="18" width="3" height="3" rx="0.5" fill="white"/>
+      <rect x="3" y="3" width="7" height="7" rx="1" stroke="white" strokeWidth="1.5" fill="none" />
+      <rect x="14" y="3" width="7" height="7" rx="1" stroke="white" strokeWidth="1.5" fill="none" />
+      <rect x="3" y="14" width="7" height="7" rx="1" stroke="white" strokeWidth="1.5" fill="none" />
+      <rect x="14" y="14" width="3" height="3" rx="0.5" fill="white" />
+      <rect x="18" y="18" width="3" height="3" rx="0.5" fill="white" />
     </svg>
   ),
-  
+
   Add: () => (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M12 5V19M5 12H19" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+      <path d="M12 5V19M5 12H19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
     </svg>
   ),
-  
+
   Plus: () => (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M12 5V19M5 12H19" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+      <path d="M12 5V19M5 12H19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
     </svg>
   ),
-  
+
   Restock: () => (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M20 12L20 18C20 19.1 19.1 20 18 20L6 20C4.9 20 4 19.1 4 18L4 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-      <path d="M12 2L12 16M12 16L15 13M12 16L9 13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M20 12L20 18C20 19.1 19.1 20 18 20L6 20C4.9 20 4 19.1 4 18L4 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      <path d="M12 2L12 16M12 16L15 13M12 16L9 13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   ),
-  
+
   Edit: () => (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M17 3L21 7L7 21H3V17L17 3Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-      <path d="M15 5L19 9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+      <path d="M17 3L21 7L7 21H3V17L17 3Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M15 5L19 9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
     </svg>
   ),
-  
+
   Delete: () => (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M4 7H20M10 11V16M14 11V16M5 7L6 19C6 20.1 6.9 21 8 21H16C17.1 21 18 20.1 18 19L19 7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-      <path d="M9 7L10 3H14L15 7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+      <path d="M4 7H20M10 11V16M14 11V16M5 7L6 19C6 20.1 6.9 21 8 21H16C17.1 21 18 20.1 18 19L19 7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      <path d="M9 7L10 3H14L15 7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
     </svg>
   ),
-  
+
   Prescription: () => (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M4 4H20V20H4V4Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-      <path d="M8 8H16M8 12H14M8 16H12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+      <path d="M4 4H20V20H4V4Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      <path d="M8 8H16M8 12H14M8 16H12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
     </svg>
   ),
-  
+
   ChevronRight: () => (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M9 18L15 12L9 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M9 18L15 12L9 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   ),
-  
+
   Close: () => (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+      <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
     </svg>
   ),
-  
+
   Notification: ({ hasAlert = false }) => (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M18 8C18 4.7 15.3 2 12 2C8.7 2 6 4.7 6 8C6 15 3 17 3 17H21C21 17 18 15 18 8Z" stroke="currentColor" strokeWidth="1.5"/>
-      <path d="M13.7 21C13.4 21.6 12.8 22 12 22C11.2 22 10.6 21.6 10.3 21" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-      {hasAlert && <circle cx="18" cy="6" r="3" fill="#EF4444" stroke="white" strokeWidth="1.5"/>}
+      <path d="M18 8C18 4.7 15.3 2 12 2C8.7 2 6 4.7 6 8C6 15 3 17 3 17H21C21 17 18 15 18 8Z" stroke="currentColor" strokeWidth="1.5" />
+      <path d="M13.7 21C13.4 21.6 12.8 22 12 22C11.2 22 10.6 21.6 10.3 21" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      {hasAlert && <circle cx="18" cy="6" r="3" fill="#EF4444" stroke="white" strokeWidth="1.5" />}
     </svg>
   ),
-  
+
   Logout: () => (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M9 21H5C3.9 21 3 20.1 3 19V5C3 3.9 3.9 3 5 3H9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-      <path d="M16 17L21 12L16 7M21 12H9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M9 21H5C3.9 21 3 20.1 3 19V5C3 3.9 3.9 3 5 3H9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      <path d="M16 17L21 12L16 7M21 12H9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   ),
-  
+
   Settings: () => (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="1.5"/>
-      <path d="M19.4 15.1L18.7 16.6C18.3 17.5 17.3 17.9 16.4 17.5L15.3 17C14.6 16.7 13.8 16.9 13.3 17.5L12.5 18.5C11.9 19.2 10.8 19.2 10.2 18.5L9.4 17.5C8.9 16.9 8.1 16.7 7.4 17L6.3 17.5C5.4 17.9 4.4 17.5 4 16.6L3.3 15.1C2.9 14.2 3.3 13.1 4.2 12.7L5.3 12.2C6 11.9 6.4 11.1 6.3 10.3L6.2 9.2C6.1 8.2 6.9 7.3 7.9 7.2L9 7.1C9.8 7 10.5 6.5 10.8 5.8L11.3 4.7C11.7 3.8 12.7 3.4 13.6 3.8L14.7 4.3C15.4 4.6 16.2 4.4 16.7 3.8L17.7 2.8C18.4 2 19.6 2.1 20.2 2.9L21.2 4.1C21.8 4.9 21.6 6.1 20.8 6.7L19.7 7.5C19 8 18.8 8.9 19.1 9.6L19.6 10.7C20 11.6 19.6 12.7 18.7 13.1L17.6 13.6C16.8 13.9 16.4 14.7 16.6 15.5L16.7 16.6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+      <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="1.5" />
+      <path d="M19.4 15.1L18.7 16.6C18.3 17.5 17.3 17.9 16.4 17.5L15.3 17C14.6 16.7 13.8 16.9 13.3 17.5L12.5 18.5C11.9 19.2 10.8 19.2 10.2 18.5L9.4 17.5C8.9 16.9 8.1 16.7 7.4 17L6.3 17.5C5.4 17.9 4.4 17.5 4 16.6L3.3 15.1C2.9 14.2 3.3 13.1 4.2 12.7L5.3 12.2C6 11.9 6.4 11.1 6.3 10.3L6.2 9.2C6.1 8.2 6.9 7.3 7.9 7.2L9 7.1C9.8 7 10.5 6.5 10.8 5.8L11.3 4.7C11.7 3.8 12.7 3.4 13.6 3.8L14.7 4.3C15.4 4.6 16.2 4.4 16.7 3.8L17.7 2.8C18.4 2 19.6 2.1 20.2 2.9L21.2 4.1C21.8 4.9 21.6 6.1 20.8 6.7L19.7 7.5C19 8 18.8 8.9 19.1 9.6L19.6 10.7C20 11.6 19.6 12.7 18.7 13.1L17.6 13.6C16.8 13.9 16.4 14.7 16.6 15.5L16.7 16.6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
     </svg>
   ),
-  
+
   User: () => (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="12" cy="8" r="4" stroke="currentColor" strokeWidth="1.5"/>
-      <path d="M5 20V19C5 15.7 7.7 13 11 13H13C16.3 13 19 15.7 19 19V20" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+      <circle cx="12" cy="8" r="4" stroke="currentColor" strokeWidth="1.5" />
+      <path d="M5 20V19C5 15.7 7.7 13 11 13H13C16.3 13 19 15.7 19 19V20" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
     </svg>
   ),
-  
+
   Package: () => (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M20 7l-8-4-8 4m16 0v10l-8 4-8-4V7m8-4v18"/>
+      <path d="M20 7l-8-4-8 4m16 0v10l-8 4-8-4V7m8-4v18" />
     </svg>
   ),
 };
@@ -167,24 +167,21 @@ const FamilyAvatar = memo(function FamilyAvatar({ patient, isActive, hasAlert, o
         {/* Fixed-size wrapper to maintain position */}
         <div className="w-14 h-14 flex items-center justify-center">
           <div
-            className={`rounded-full transition-all duration-300 ease-in-out ${
-              isActive
-                ? 'ring-4 ring-teal-500 ring-offset-2 shadow-lg w-14 h-14'
-                : 'w-14 h-14 group-hover:w-[52px] group-hover:h-[52px] opacity-80 group-hover:opacity-100'
-            }`}
+            className={`rounded-full transition-all duration-300 ease-in-out ${isActive
+              ? 'ring-4 ring-teal-500 ring-offset-2 shadow-lg w-14 h-14'
+              : 'w-14 h-14 group-hover:w-[52px] group-hover:h-[52px] opacity-80 group-hover:opacity-100'
+              }`}
           >
             <div
-              className={`w-full h-full rounded-full flex items-center justify-center text-white font-semibold shadow-sm transition-all duration-300 ease-in-out ${
-                isActive
-                  ? 'bg-gradient-to-br from-teal-500 to-teal-600'
-                  : 'bg-gradient-to-br from-teal-400 to-teal-500 group-hover:from-teal-500 group-hover:to-teal-600'
-              }`}
+              className={`w-full h-full rounded-full flex items-center justify-center text-white font-semibold shadow-sm transition-all duration-300 ease-in-out ${isActive
+                ? 'bg-gradient-to-br from-teal-500 to-teal-600'
+                : 'bg-gradient-to-br from-teal-400 to-teal-500 group-hover:from-teal-500 group-hover:to-teal-600'
+                }`}
             >
-              <span className={`transition-all duration-300 ease-in-out ${
-                isActive
-                  ? 'text-lg'
-                  : 'text-lg group-hover:text-[17px]'
-              }`}>
+              <span className={`transition-all duration-300 ease-in-out ${isActive
+                ? 'text-lg'
+                : 'text-lg group-hover:text-[17px]'
+                }`}>
                 {initials}
               </span>
             </div>
@@ -195,9 +192,8 @@ const FamilyAvatar = memo(function FamilyAvatar({ patient, isActive, hasAlert, o
         )}
       </div>
       <span
-        className={`text-sm font-medium transition-colors duration-300 ${
-          isActive ? 'text-teal-600' : 'text-gray-500 group-hover:text-gray-700'
-        }`}
+        className={`text-sm font-medium transition-colors duration-300 ${isActive ? 'text-teal-600' : 'text-gray-500 group-hover:text-gray-700'
+          }`}
       >
         {patient.name.split(' ')[0]}
       </span>
@@ -315,7 +311,7 @@ function DesktopSidebar({ activeTab, onTabChange, onQRPress, navigate }) {
             <span className="font-bold text-gray-800 text-xl tracking-tight"></span>
           </div>
         </div>
-        
+
         <nav className="flex-1 px-3 py-6 space-y-1">
           {menuItems.map((item) => {
             const Icon = item.icon;
@@ -353,7 +349,7 @@ function DesktopSidebar({ activeTab, onTabChange, onQRPress, navigate }) {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
               </svg>
             </button>
-            
+
             {showUserMenu && (
               <div className="absolute bottom-full left-0 mb-2 w-full bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
                 <button onClick={() => navigate('/profile')} className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
@@ -394,7 +390,7 @@ function MobileBottomNav({ activeTab, onTabChange, onQRPress, navigate }) {
         {tabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
-          
+
           if (tab.isSpecial) {
             return (
               <button
@@ -406,7 +402,7 @@ function MobileBottomNav({ activeTab, onTabChange, onQRPress, navigate }) {
               </button>
             );
           }
-          
+
           return (
             <button key={tab.id} onClick={() => {
               if (tab.id === 'profile') {
@@ -462,7 +458,7 @@ export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState('home');
   const [showNotifications, setShowNotifications] = useState(false);
   const [alerts, setAlerts] = useState([]);
-  
+
   const notificationRef = useRef(null);
   const desktopNotificationRef = useRef(null);
   const activePatientId = useAppStore((s) => s.activePatientId);
@@ -789,8 +785,8 @@ export default function DashboardPage() {
             <div className="flex items-center gap-3">
               {/* Root account owner (registration account) */}
               <div className="flex flex-col items-center justify-center -mt-0.5">
-                <button 
-                  onClick={() => navigate('/profile')} 
+                <button
+                  onClick={() => navigate('/profile')}
                   className="w-8 h-8 rounded-full bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center text-white font-bold text-xs shadow-sm overflow-hidden hover:scale-105 transition-all duration-200 active:scale-95 cursor-pointer"
                   title="Account owner"
                 >
@@ -824,7 +820,7 @@ export default function DashboardPage() {
               <h1 className="text-2xl lg:text-3xl font-bold text-gray-800">{greeting}, {userName}!</h1>
               <p className="text-gray-500 text-sm lg:text-base mt-1">Here's your medication summary for today</p>
             </div>
-            
+
             {/* Desktop Notification Bell */}
             <div className="hidden lg:block relative" ref={desktopNotificationRef}>
               <button onClick={() => setShowNotifications(!showNotifications)} className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors relative">
@@ -846,8 +842,8 @@ export default function DashboardPage() {
                 Add Member
               </button>
             </div>
-            
-            <div className="flex gap-5 overflow-x-auto pb-3 lg:grid lg:grid-cols-6 lg:gap-4 lg:overflow-visible">
+
+            <div className="flex gap-5 overflow-x-auto pb-3">
               {patients && Array.isArray(patients) && patients.map((p) => {
                 const hasAlert = !!patientAlertMap[p._id || p.id];
                 const active = (p._id || p.id) === activePatientId;
@@ -918,9 +914,9 @@ export default function DashboardPage() {
       </div>
 
       {/* Mobile Bottom Navigation */}
-      <MobileBottomNav 
-        activeTab={activeTab} 
-        onTabChange={setActiveTab} 
+      <MobileBottomNav
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
         onQRPress={() => navigate('/qr')}
         navigate={navigate}
       />
@@ -936,16 +932,16 @@ export default function DashboardPage() {
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Full Name *</label>
-                <input type="text" placeholder="Enter full name" value={addProfileForm.name} onChange={(e) => setAddProfileForm({...addProfileForm, name: e.target.value})} className="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500" />
+                <input type="text" placeholder="Enter full name" value={addProfileForm.name} onChange={(e) => setAddProfileForm({ ...addProfileForm, name: e.target.value })} className="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500" />
                 {addProfileErrors.name && <p className="text-xs text-red-500 mt-1">{addProfileErrors.name}</p>}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Date of Birth</label>
-                <input type="date" value={addProfileForm.dateOfBirth} onChange={(e) => setAddProfileForm({...addProfileForm, dateOfBirth: e.target.value})} className="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500" />
+                <input type="date" value={addProfileForm.dateOfBirth} onChange={(e) => setAddProfileForm({ ...addProfileForm, dateOfBirth: e.target.value })} className="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Relation *</label>
-                <select value={addProfileForm.relation} onChange={(e) => setAddProfileForm({...addProfileForm, relation: e.target.value})} className="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500">
+                <select value={addProfileForm.relation} onChange={(e) => setAddProfileForm({ ...addProfileForm, relation: e.target.value })} className="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500">
                   <option value="self">Self</option><option value="mother">Mother</option><option value="father">Father</option>
                   <option value="grandmother">Grandmother</option><option value="grandfather">Grandfather</option>
                   <option value="spouse">Spouse</option><option value="other">Other</option>
@@ -954,11 +950,11 @@ export default function DashboardPage() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Allergies / Notes</label>
-                <textarea value={addProfileForm.allergies} onChange={(e) => setAddProfileForm({...addProfileForm, allergies: e.target.value})} placeholder="e.g., Allergic to penicillin" className="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500" rows={3} />
+                <textarea value={addProfileForm.allergies} onChange={(e) => setAddProfileForm({ ...addProfileForm, allergies: e.target.value })} placeholder="e.g., Allergic to penicillin" className="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500" rows={3} />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Pharmacy PIN (4-digit) *</label>
-                <input type="text" placeholder="Enter 4-digit PIN" maxLength={4} value={addProfileForm.pharmacyPin} onChange={(e) => setAddProfileForm({...addProfileForm, pharmacyPin: e.target.value.replace(/\D/g, '')})} className="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500" />
+                <input type="text" placeholder="Enter 4-digit PIN" maxLength={4} value={addProfileForm.pharmacyPin} onChange={(e) => setAddProfileForm({ ...addProfileForm, pharmacyPin: e.target.value.replace(/\D/g, '') })} className="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500" />
                 <p className="text-xs text-gray-400 mt-1">This PIN will be hashed and used for pharmacy verification</p>
                 {addProfileErrors.pharmacyPin && <p className="text-xs text-red-500 mt-1">{addProfileErrors.pharmacyPin}</p>}
               </div>
@@ -969,17 +965,17 @@ export default function DashboardPage() {
                   if (!addProfileForm.name.trim()) errors.name = 'Name is required';
                   if (!addProfileForm.relation) errors.relation = 'Relation is required';
                   if (!/^\d{4}$/.test(addProfileForm.pharmacyPin)) errors.pharmacyPin = 'PIN must be exactly 4 digits';
-                  
+
                   if (Object.keys(errors).length > 0) {
                     setAddProfileErrors(errors);
                     return;
                   }
-                  
+
                   if (!userId) {
                     toast.error('Please log in again');
                     return;
                   }
-                  
+
                   try {
                     await createPatient({
                       userId: userId,
