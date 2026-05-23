@@ -590,6 +590,12 @@ export default function DashboardPage() {
     return currentPatient?.name?.split(' ')[0] || 'User';
   }, [patients, activePatientId]);
 
+  const activePatientName = useMemo(() => {
+    if (!patients || !Array.isArray(patients) || patients.length === 0) return '';
+    const currentPatient = patients.find((p) => (p._id || p.id) === activePatientId);
+    return currentPatient?.name?.split(' ')[0] || '';
+  }, [patients, activePatientId]);
+
   const greeting = useMemo(() => {
     const hour = new Date().getHours();
     if (hour < 12) return 'Good morning';
@@ -842,7 +848,9 @@ export default function DashboardPage() {
           {/* Medicines Section */}
           <div>
             <div className="flex justify-between items-center mb-4">
-              <h2 className="font-semibold text-gray-800 text-lg">My Medications</h2>
+              <h2 className="font-semibold text-gray-800 text-lg">
+                {activePatientName ? `${activePatientName}'s Medications` : 'My Medications'}
+              </h2>
               <div className="flex gap-2">
                 <button
                   type="button"
