@@ -22,8 +22,8 @@ export default function PatientProfiles() {
   const userId = authUser?._id || authUser?.id;
   
   // Debug log
-  console.log('Auth User in PatientProfiles:', authUser);
-  console.log('User ID:', userId);
+  // console.log('Auth User in PatientProfiles:', authUser);
+  // console.log('User ID:', userId);
 
   async function load() {
     setLoading(true);

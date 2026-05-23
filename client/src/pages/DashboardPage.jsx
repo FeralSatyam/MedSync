@@ -261,12 +261,14 @@ const MobileMedicineCard = memo(function MobileMedicineCard({ medicine, onRestoc
     </div>
   );
 });
-// Desktop Sidebar Navigation
+
+// Desktop Sidebar Navigation
 function DesktopSidebar({ activeTab, onTabChange, onQRPress, navigate }) {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const menuRef = useRef(null);
   const authUser = useAuthStore((s) => s.user);
-  const userName = authUser?.name?.split(' ')[0] || 'User';
+  const rootUserName = authUser?.name || 'User';
+  const userName = rootUserName.split(' ')[0] || 'User';
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -321,10 +323,12 @@ function DesktopSidebar({ activeTab, onTabChange, onQRPress, navigate }) {
         <div className="p-4 border-t border-gray-100" ref={menuRef}>
           <div className="relative">
             <button onClick={() => setShowUserMenu(!showUserMenu)} className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors">
-              <div className="w-8 h-8 bg-teal-100 rounded-full flex items-center justify-center text-teal-600 font-semibold">{userName.charAt(0)}</div>
-              <div className="flex-1 text-left">
-                <p className="text-sm font-medium text-gray-700">{userName}</p>
-                <p className="text-xs text-gray-400">View profile</p>
+              <div className="w-8 h-8 bg-teal-100 rounded-full flex items-center justify-center text-teal-600 font-semibold text-sm">
+                {(rootUserName.charAt(0) || 'U').toUpperCase()}
+              </div>
+              <div className="flex-1 text-left min-w-0">
+                <p className="text-sm font-medium text-gray-700 truncate">{rootUserName}</p>
+                <p className="text-xs text-gray-400">Account owner</p>
               </div>
               <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -465,11 +469,7 @@ export default function DashboardPage() {
       .toUpperCase();
   }, [authUser]);
 
-  const activePatientName = useMemo(() => {
-    if (!patients || !Array.isArray(patients) || patients.length === 0) return 'User';
-    const currentPatient = patients.find((p) => (p._id || p.id) === activePatientId);
-    return currentPatient?.name || 'User';
-  }, [patients, activePatientId]);
+  const rootAccountName = authUser?.name || 'User';
 
   const [patientAlertMap, setPatientAlertMap] = useState({});
   const [addProfileOpen, setAddProfileOpen] = useState(false);
@@ -762,21 +762,21 @@ export default function DashboardPage() {
               <span className="font-bold text-gray-800 text-xl tracking-tight">MedSync</span>
             </div>
             <div className="flex items-center gap-3">
-              {/* User Profile Avatar with active profile name below */}
+              {/* Root account owner (registration account) */}
               <div className="flex flex-col items-center justify-center -mt-0.5">
                 <button 
                   onClick={() => navigate('/profile')} 
                   className="w-8 h-8 rounded-full bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center text-white font-bold text-xs shadow-sm overflow-hidden hover:scale-105 transition-all duration-200 active:scale-95 cursor-pointer"
-                  title="View Profile"
+                  title="Account owner"
                 >
                   {profilePic ? (
-                    <img src={profilePic} alt="Profile" className="w-full h-full object-cover" />
+                    <img src={profilePic} alt="Account" className="w-full h-full object-cover" />
                   ) : (
                     userInitials
                   )}
                 </button>
-                <span className="text-[9px] text-teal-600 font-bold mt-0.5 max-w-[64px] truncate text-center">
-                  {activePatientName}
+                <span className="text-[9px] text-teal-600 font-bold mt-0.5 max-w-[72px] truncate text-center">
+                  {rootAccountName.split(' ')[0]}
                 </span>
               </div>
 

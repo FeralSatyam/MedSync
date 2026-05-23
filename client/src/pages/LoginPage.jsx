@@ -103,9 +103,7 @@ export default function LoginPage() {
     
     try {
       const loginVal = normalizeLoginIdentifier(values.email);
-      console.log('Attempting login with:', loginVal);
       const data = await login({ email: loginVal, password: values.password });
-      console.log('Login response:', data);
       
       if (data && data.user && data.token) {
         loginFn(data.user, data.token);
@@ -116,8 +114,6 @@ export default function LoginPage() {
         toast.error('Login failed. Please try again.');
       }
     } catch (err) {
-      console.error('Login error details:', err);
-      
       // Check if it's a network error
       if (err.message === 'Network Error') {
         setFormError('Network error. Please check your internet connection.');
@@ -130,7 +126,7 @@ export default function LoginPage() {
         toast.error(errorMessage);
       } 
       // Check for needsVerification flag
-      else if (err.response?.data?.needsVerification) {
+      else if (err.response?.status === 403 && err.response?.data?.needsVerification) {
         const emailToVerify = err.response.data.email || values.email;
         setPendingEmail(emailToVerify);
         try {
@@ -170,9 +166,9 @@ export default function LoginPage() {
       const data = await register({ name, email: values.email, password: values.password, contactNumber });
       setPendingEmail(data.email || values.email);
       setVerifyStep(true);
-      toast.success('Account created! Check your email for the verification code.');
+      toast.success('Check your email for the verification code.');
     } catch (err) {
-      console.error('Registration error:', err);
+      // console.error('Registration error:', err);
       const message = err?.response?.data?.message || err?.message || 'Registration failed';
       setFormError(message);
       toast.error(message);
@@ -200,7 +196,6 @@ export default function LoginPage() {
         toast.error('Verification failed. Please try again.');
       }
     } catch (err) {
-      console.error('Verification error:', err);
       toast.error(err?.response?.data?.message || 'Verification failed');
     } finally {
       setVerifying(false);
@@ -215,7 +210,6 @@ export default function LoginPage() {
       toast.success('New code sent! Check your email.');
       setVerifyOtp('');
     } catch (err) {
-      console.error('Resend error:', err);
       toast.error(err?.response?.data?.message || 'Could not resend code');
     } finally {
       setResending(false);

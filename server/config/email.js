@@ -39,10 +39,10 @@ export const sendOTPEmail = async (to, otp, name) => {
 
   try {
     await transporter.sendMail(mailOptions);
-    console.log('OTP email sent to:', to);
+    // console.log('OTP email sent to:', to);
     return true;
   } catch (error) {
-    console.error('Error sending email:', error);
+    // console.error('Error sending email:', error);
     return false;
   }
 };
@@ -74,10 +74,10 @@ export const sendVerificationEmail = async (to, otp, name) => {
 
   try {
     await transporter.sendMail(mailOptions);
-    console.log('Verification email sent to:', to);
+    // console.log('Verification email sent to:', to);
     return true;
   } catch (error) {
-    console.error('Error sending email:', error);
+    // console.error('Error sending email:', error);
     return false;
   }
 };

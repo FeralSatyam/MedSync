@@ -115,9 +115,7 @@ router.put(
   async (req, res) => {
     try {
       const { currentPassword, newPassword } = req.body;
-      const userId = req.user.id;
-      
-      console.log('Change password request for user ID:', userId);
+      const userId = req.user._id;
       
       const user = await User.findById(userId);
       if (!user) {
@@ -126,7 +124,6 @@ router.put(
       
       // Verify current password
       const isMatch = await bcrypt.compare(currentPassword, user.password);
-      console.log('Current password match:', isMatch);
       
       if (!isMatch) {
         return res.status(400).json({ message: 'Current password is incorrect' });
@@ -140,34 +137,12 @@ router.put(
       user.password = hashedPassword;
       await user.save();
       
-      console.log('Password changed successfully for user:', user.email);
-      
       res.json({ message: 'Password changed successfully' });
     } catch (error) {
-      console.error('Error changing password:', error);
-      res.status(500).json({ message: 'Failed to change password', error: error.message });
+      // console.error('Error changing password:', error);
+      res.status(500).json({ message: 'Failed to change password' });
     }
   }
 );
-
-// Debug endpoint (remove in production)
-router.get('/debug/user/:email', async (req, res) => {
-  try {
-    const user = await User.findOne({ email: req.params.email });
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-    res.json({
-      id: user._id,
-      name: user.name,
-      email: user.email,
-      isVerified: user.isVerified,
-      passwordHash: user.password,
-      passwordLength: user.password?.length
-    });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
 
 export default router;
