@@ -279,6 +279,7 @@ const MobileMedicineCard = memo(function MobileMedicineCard({ medicine, onRestoc
 
 // Desktop Sidebar Navigation
 function DesktopSidebar({ activeTab, onTabChange, onQRPress, navigate }) {
+  const logout = useAuthStore((s) => s.logout);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const menuRef = useRef(null);
   const authUser = useAuthStore((s) => s.user);
@@ -361,7 +362,16 @@ function DesktopSidebar({ activeTab, onTabChange, onQRPress, navigate }) {
                   Settings
                 </button>
                 <hr className="my-1" />
-                <button className="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors">
+                <button
+                  onClick={() => {
+                    const logout = useAuthStore.getState().logout;
+                    if (logout) {
+                      logout();
+                      navigate('/login');
+                    }
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                >
                   <Icons.Logout />
                   Logout
                 </button>
