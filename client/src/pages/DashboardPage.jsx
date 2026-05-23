@@ -169,22 +169,51 @@ const FamilyAvatar = memo(function FamilyAvatar({ patient, isActive, hasAlert, o
   }, [patient.name]);
 
   return (
-    <button onClick={onClick} className="flex flex-col items-center gap-2 shrink-0 group transition-all duration-200">
+    <button
+      onClick={onClick}
+      className="flex flex-col items-center gap-2 shrink-0 group p-2"
+    >
       <div className="relative">
-        <div className={`w-14 h-14 rounded-full transition-all duration-200 ${isActive ? 'ring-4 ring-teal-500 ring-offset-2 shadow-lg scale-105' : 'opacity-80 group-hover:opacity-100 group-hover:scale-105'}`}>
-          <div className={`w-full h-full rounded-full flex items-center justify-center text-white font-semibold text-lg shadow-sm transition-all duration-200 ${isActive ? 'bg-gradient-to-br from-teal-500 to-teal-600' : 'bg-gradient-to-br from-teal-400 to-teal-500'}`}>
-            {initials}
+        {/* Fixed-size wrapper to maintain position */}
+        <div className="w-14 h-14 flex items-center justify-center">
+          <div
+            className={`rounded-full transition-all duration-300 ease-in-out ${
+              isActive
+                ? 'ring-4 ring-teal-500 ring-offset-2 shadow-lg w-14 h-14'
+                : 'w-14 h-14 group-hover:w-[52px] group-hover:h-[52px] opacity-80 group-hover:opacity-100'
+            }`}
+          >
+            <div
+              className={`w-full h-full rounded-full flex items-center justify-center text-white font-semibold shadow-sm transition-all duration-300 ease-in-out ${
+                isActive
+                  ? 'bg-gradient-to-br from-teal-500 to-teal-600'
+                  : 'bg-gradient-to-br from-teal-400 to-teal-500 group-hover:from-teal-500 group-hover:to-teal-600'
+              }`}
+            >
+              <span className={`transition-all duration-300 ease-in-out ${
+                isActive
+                  ? 'text-lg'
+                  : 'text-lg group-hover:text-[17px]'
+              }`}>
+                {initials}
+              </span>
+            </div>
           </div>
         </div>
-        {hasAlert && <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full border-2 border-white animate-pulse" />}
+        {hasAlert && (
+          <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full border-2 border-white animate-pulse" />
+        )}
       </div>
-      <span className={`text-sm font-medium transition-all duration-200 ${isActive ? 'text-teal-600' : 'text-gray-500 group-hover:text-gray-700'}`}>
+      <span
+        className={`text-sm font-medium transition-colors duration-300 ${
+          isActive ? 'text-teal-600' : 'text-gray-500 group-hover:text-gray-700'
+        }`}
+      >
         {patient.name.split(' ')[0]}
       </span>
     </button>
   );
 });
-
 // Memoized Mobile Medicine Card Component
 const MobileMedicineCard = memo(function MobileMedicineCard({ medicine, onRestock, onEdit, onRemove, onViewRx }) {
   const { status } = getStockStatus(medicine);
