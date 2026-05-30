@@ -1,0 +1,67 @@
+[33m0b6a37d[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m feat(auth): replace single OTP input with 6-box segmented UI
+[33m54f1113[m fix : make the logout button for desktop functional
+[33m3217031[m ui-fix : make the gap between patients profile fixed -> for lg:screen change grid to flex
+[33mec7bf9e[m fix : change favicon and logo of medsync
+[33m56ff282[m ui: improve FamilyAvatar hover effects and ring visibility
+[33md8612b6[m fix : change static 'my medication' in dashboard to dynamic so its {selected patient}'s medication
+[33m1c4b9b3[m fix: registration and login processes bug
+[33m9d12b68[m Bug Fix: Server Error
+[33m82ad4d8[m Feat: Alarm, bug fix
+[33mc6a5ed9[m feat: enhance profile management, notification system, and pharmacy QR functionality
+[33m6a34e56[m Add manage family members and show account holder details
+[33mf19bd6a[m Fix loading issue
+[33mbd3a0b4[m Fix: Unable to load information
+[33mc7a1e32[m Fix required login to scan qr
+[33m0cccc85[m Merge branch 'main' of https://github.com/FeralSatyam/MedSync
+[33md173297[m Fix qr opening pharmacy page
+[33me0e7fd7[m  chore : remove duplicate page components
+[33mbdd3312[m fix(auth): support all valid emails and strictly reject malformed addresses
+[33mfdeea2d[m Fix: login issue and pharmacy page overlapping qr code
+[33maccbd21[m Fix vercel
+[33m65d56a0[m Fix vercel
+[33m21296e0[m Vercel Fix
+[33md0af1ad[m Vercel Fix
+[33m12898b0[m Vercel issue fix
+[33m5e6e4f7[m Fix Vercel deployment
+[33m2cc7a00[m Fix vercel deployment error
+[33m6669155[m Fix: Vercel deployment error
+[33mfe2762e[m Merge pull request #3 from FeralSatyam/satyam-ai-health
+[33me088982[m[33m ([m[1;31morigin/satyam-ai-health[m[33m)[m Feat/Add: AI-health page with personalized health tracker
+[33m4e919ce[m[33m ([m[1;31morigin/satyam-update-pharmacy-page[m[33m)[m Feat/Add: Pharmacy Page order history
+[33m27ef2de[m Feat/Add: Map and order medicine in pharmacy page
+[33m5aa7364[m[33m ([m[1;31morigin/satyam-update-dashboard[m[33m)[m Update Dashboard and added pharmacy page
+[33m0d9a321[m Update Dashboard
+[33m9c3c491[m Merge branch Satyam-add-ocr and removed .env
+[33mf37b840[m[33m ([m[1;31morigin/Satyam-add-ocr[m[33m)[m Feat: Medicine extraction through camera
+[33me7cee55[m Add: CameraCampture
+[33m88a8b42[m Removed env
+[33m84892a5[m Updated gitignore
+[33m8b0d713[m Updated gitignore
+[33ma06efe6[m Fix/update: Server env - Mongodb conenction issue
+[33mba142ab[m Production on Vercel
+[33maa71dc0[m Make notification button functional-add email verification before sending OTP
+[33m1028cf7[m  fix : login page prfile -improve ui
+[33m73aa062[m version 1.0.0 ui update
+[33mfb8b91f[m delete : remove unnecessary svg files
+[33ma983f8d[m[33m ([m[1;31morigin/update/new-ui[m[33m)[m Production
+[33m726b9b7[m Merge pull request #2 from FuriLama/feat/email-otp
+[33m642f84d[m Merge : Merge ui-update branch with new UI from Ayush to main - no OTP feature yet
+[33m96426ea[m[33m ([m[1;31morigin/feat/email-otp[m[33m)[m chore: update OTP sender email and .env.example
+[33mffa40c6[m feat : add otp feature for verified email sign up & reset password
+[33mf8f0f01[m[33m ([m[1;31morigin/ui-update[m[33m)[m fix : bug fix
+[33m2064932[m Production
+[33me623575[m update UI ...
+[33m81b8515[m Production
+[33m621b38b[m Merge pull request #1 from lamafuri/fix
+[33mf59df6b[m[33m ([m[1;31morigin/fix[m[33m)[m Merge branch 'main' into fix
+[33m1569fb8[m fix : change .env so that it can run locally + quick npm run dev from main folder directly
+[33m351af23[m Fixed comment bug
+[33m274bf0d[m Update ui
+[33m38840b0[m update ui
+[33meb6065c[m Qr code fix
+[33md761438[m update on qr generation
+[33md221fa6[m Update server clineturi api
+[33m6e56d0b[m Replaced clinet env
+[33m0abd1fc[m Add backend api on frontend env
+[33m712c92e[m Add env file and mongodb uri
+[33m91cd546[m Initial Commit

@@ -731,6 +731,32 @@ export default function ProfilePage() {
           )}
         </div>
 
+        {/* ══════════════ PHARMACIST LINKING ══════════════ */}
+        <div className="bg-white rounded-2xl p-5 shadow-sm">
+          <h2 className="font-semibold text-gray-800 mb-3">Pharmacist Linking</h2>
+          <p className="text-sm text-gray-600 mb-4">Link your account to multiple pharmacists securely.</p>
+          <div className="space-y-3">
+            <button
+              onClick={() => navigate('/pharmacist-link')}
+              className="w-full flex items-center justify-between p-3 rounded-lg bg-teal-50 hover:bg-teal-100 transition-colors cursor-pointer"
+            >
+              <div className="flex items-center gap-3">
+                <div className="text-teal-600">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2V22M5 12H19" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                    <path d="M9 4H15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                    <path d="M7 8H17" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                    <path d="M7 16H17" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                    <path d="M9 20H15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                  </svg>
+                </div>
+                <span className="text-teal-800 font-medium">Link a Pharmacist</span>
+              </div>
+              <span className="text-teal-500 text-sm">→</span>
+            </button>
+          </div>
+        </div>
+
         {/* ══════════════ SECURITY ══════════════ */}
         <div className="bg-white rounded-2xl p-5 shadow-sm">
           <h2 className="font-semibold text-gray-800 mb-3">Security</h2>

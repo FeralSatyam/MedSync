@@ -301,6 +301,7 @@ function DesktopSidebar({ activeTab, onTabChange, onQRPress, navigate }) {
     { id: 'ai-health', label: 'AI Health', icon: Icons.AIHealth },
     { id: 'pharmacy', label: 'Pharmacy', icon: Icons.Pharmacy },
     { id: 'qr', label: 'Pharmacy QR', icon: Icons.QR },
+    { id: 'pharmacist-link', label: 'Link to Pharmacist', icon: Icons.Profile },
   ];
 
   return (
@@ -325,6 +326,8 @@ function DesktopSidebar({ activeTab, onTabChange, onQRPress, navigate }) {
                   navigate('/ai-health');
                 } else if (item.id === 'qr') {
                   onQRPress();
+                } else if (item.id === 'pharmacist-link') {
+                  navigate('/pharmacist-link');
                 } else {
                   onTabChange(item.id);
                 }

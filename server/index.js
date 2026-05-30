@@ -29,6 +29,7 @@ import patientRoutes from './routes/patientRoutes.js';
 import medicineRoutes from './routes/medicineRoutes.js';
 import orderRoutes from './routes/orderRoutes.js';
 import pharmacistRoutes from './routes/pharmacistRoutes.js';
+import pharmacistInvitationRoutes from './routes/pharmacistInvitationRoutes.js';
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -54,6 +55,7 @@ app.use('/api/patients', patientRoutes);
 app.use('/api/medicines', medicineRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/pharmacist', pharmacistRoutes);
+app.use('/api/pharmacist-invitations', pharmacistInvitationRoutes);
 
 // 404 handler - Use function, not '*'
 app.use((req, res) => {

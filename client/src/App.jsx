@@ -14,6 +14,7 @@ import OrdersPage from './pages/OrdersPage';
 import OrderTrackingPage from './pages/OrderTrackingPage';
 import AIHealthPage from './pages/AIHealthPage';
 import FamilyMembersPage from './pages/FamilyMembersPage';
+import PharmacistLinkPage from './pages/PharmacistLinkPage';
 import AlarmManager from './components/AlarmManager';
 
 function ProtectedRoute({ children }) {
@@ -128,6 +129,14 @@ export default function App() {
           element={
             <ProtectedRoute>
               <FamilyMembersPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/pharmacist-link"
+          element={
+            <ProtectedRoute>
+              <PharmacistLinkPage />
             </ProtectedRoute>
           }
         />
