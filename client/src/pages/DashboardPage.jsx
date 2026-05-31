@@ -131,13 +131,6 @@ const Icons = {
     </svg>
   ),
 
-  Settings: () => (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="1.5" />
-      <path d="M19.4 15.1L18.7 16.6C18.3 17.5 17.3 17.9 16.4 17.5L15.3 17C14.6 16.7 13.8 16.9 13.3 17.5L12.5 18.5C11.9 19.2 10.8 19.2 10.2 18.5L9.4 17.5C8.9 16.9 8.1 16.7 7.4 17L6.3 17.5C5.4 17.9 4.4 17.5 4 16.6L3.3 15.1C2.9 14.2 3.3 13.1 4.2 12.7L5.3 12.2C6 11.9 6.4 11.1 6.3 10.3L6.2 9.2C6.1 8.2 6.9 7.3 7.9 7.2L9 7.1C9.8 7 10.5 6.5 10.8 5.8L11.3 4.7C11.7 3.8 12.7 3.4 13.6 3.8L14.7 4.3C15.4 4.6 16.2 4.4 16.7 3.8L17.7 2.8C18.4 2 19.6 2.1 20.2 2.9L21.2 4.1C21.8 4.9 21.6 6.1 20.8 6.7L19.7 7.5C19 8 18.8 8.9 19.1 9.6L19.6 10.7C20 11.6 19.6 12.7 18.7 13.1L17.6 13.6C16.8 13.9 16.4 14.7 16.6 15.5L16.7 16.6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-    </svg>
-  ),
-
   User: () => (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
       <circle cx="12" cy="8" r="4" stroke="currentColor" strokeWidth="1.5" />
@@ -359,10 +352,6 @@ function DesktopSidebar({ activeTab, onTabChange, onQRPress, navigate }) {
                 <button onClick={() => navigate('/profile')} className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
                   <Icons.User />
                   My Profile
-                </button>
-                <button className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
-                  <Icons.Settings />
-                  Settings
                 </button>
                 <hr className="my-1" />
                 <button
