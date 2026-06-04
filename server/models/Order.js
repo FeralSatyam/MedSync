@@ -21,6 +21,13 @@ const orderSchema = new mongoose.Schema(
     medicines: [orderMedicineSchema],
     prescription: { type: String, default: '' },
     notes: { type: String, default: '' },
+    // Contact and delivery details provided by the user during placement
+    // These are optional at initial creation and can be filled in/confirmed later by the user or pharmacist
+    deliveryAddress: { type: String, default: '' },
+    contactPhone: { type: String, default: '' },
+    contactEmail: { type: String, default: '' },
+    // Number of medicine slips / prescriptions uploaded by user
+    slipCount: { type: Number, default: 0 },
     deliveryFee: { type: String, required: true },
     estimatedDelivery: { type: String, required: true },
     totalItems: { type: Number, required: true },

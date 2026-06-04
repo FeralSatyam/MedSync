@@ -150,9 +150,18 @@ export default function Navbar({ hasAlerts = false }) {
                       <div key={n._id} className="p-[12px] border-b border-border hover:bg-faint transition-colors cursor-default">
                         <div className="flex items-start justify-between mb-[4px]">
                           <div className="font-semibold text-navy text-[13px]">{n.title || n.offerTitle}</div>
-                          {!n.read ? (
-                            <div className="text-[11px] font-bold px-[6px] py-[2px] rounded-full bg-[#ffedec] text-red">New</div>
-                          ) : null}
+                          <div className="flex items-center gap-2">
+                            {!n.read ? (
+                              <div className="text-[11px] font-bold px-[6px] py-[2px] rounded-full bg-[#ffedec] text-red">New</div>
+                            ) : null}
+                            <button
+                              type="button"
+                              onClick={() => navigate(`/place-order?notifId=${n._id}`)}
+                              className="text-[12px] px-2 py-1 rounded bg-primary text-white"
+                            >
+                              Order
+                            </button>
+                          </div>
                         </div>
                         <div className="text-[12px] text-muted">{n.offerMessage || n.message}</div>
                       </div>

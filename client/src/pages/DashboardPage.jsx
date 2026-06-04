@@ -4,7 +4,7 @@ import toast from 'react-hot-toast';
 
 import { createPatient, getPatients, generatePatientOtp } from '../api/patientApi';
 import { deleteMedicine, getMedicinesForPatient, restockMedicine, updateMedicine } from '../api/medicineApi';
-import { getNotifications, markNotificationAsRead, placeOrderFromNotification } from '../api/notificationApi';
+import { getNotifications, markNotificationAsRead } from '../api/notificationApi';
 import { getStockStatus, sortMedicinesByUrgency } from '../utils/stockUtils';
 import { useAppStore } from '../store/appStore';
 import { useAuthStore } from '../store/authStore';
@@ -608,19 +608,8 @@ export default function DashboardPage() {
     }
   }, []);
 
-  const handlePlaceOrderFromOffer = async (notificationId) => {
-    try {
-      const res = await placeOrderFromNotification(notificationId);
-      if (res.success) {
-        toast.success(`Order placed successfully! Order ID: ${res.orderId}`);
-        await fetchDbNotifications();
-      } else {
-        toast.error(res.message || 'Failed to place order');
-      }
-    } catch (err) {
-      console.error(err);
-      toast.error(err.response?.data?.message || 'Failed to place order');
-    }
+  const handlePlaceOrderFromOffer = (notificationId) => {
+    navigate(`/place-order?notifId=${notificationId}`);
   };
 
   const handleMarkAsRead = async (notificationId) => {

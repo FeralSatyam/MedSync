@@ -13,6 +13,7 @@ import PharmacyPage from './pages/PharmacyPage';
 import OrdersPage from './pages/OrdersPage';
 import OrderTrackingPage from './pages/OrderTrackingPage';
 import AIHealthPage from './pages/AIHealthPage';
+import OrderPlacement from './pages/OrderPlacement';
 import FamilyMembersPage from './pages/FamilyMembersPage';
 import PharmacistLinkPage from './pages/PharmacistLinkPage';
 import AlarmManager from './components/AlarmManager';
@@ -105,6 +106,14 @@ export default function App() {
           element={
             <ProtectedRoute>
               <OrdersPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/place-order"
+          element={
+            <ProtectedRoute>
+              <OrderPlacement />
             </ProtectedRoute>
           }
         />

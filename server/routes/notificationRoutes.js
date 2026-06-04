@@ -156,26 +156,39 @@ router.put('/:id/place-order', protect, async (req, res) => {
       return res.status(400).json({ message: 'This offer has expired' });
     }
 
-    // Find patient record
-    const patient = await Patient.findOne({ userId: req.user._id });
+    // Find the specific patient record referenced by the notification (must belong to user)
+    let patient = null;
+    if (notification.patientId) {
+      patient = await Patient.findOne({ _id: notification.patientId, userId: req.user._id });
+    }
+    if (!patient) {
+      // fallback to any patient for the user
+      patient = await Patient.findOne({ userId: req.user._id });
+    }
     if (!patient) {
       return res.status(404).json({ message: 'Patient record not found' });
     }
 
     // Create order
+    // Ensure required Order fields are present. The `order` schema requires a numeric `pharmacyId` and
+    // each medicine requires an `id` string. Use safe fallbacks here.
     const order = await Order.create({
       userId: req.user._id,
       orderId: 'ORD' + Date.now(),
-      pharmacyName: notification.pharmacyName,
-      pharmacyAddress: notification.pharmacyAddress,
+      pharmacyId: 0,
+      pharmacyName: notification.pharmacyName || 'Partner Pharmacy',
+      pharmacyAddress: notification.pharmacyAddress || '',
       patientId: patient._id,
       patientName: patient.name,
       medicines: [{
-        name: notification.medicineName,
+        id: `offer-${Date.now()}`,
+        name: notification.medicineName || 'Medicine',
+        strength: '',
+        unit: '',
         quantity: 1,
-        type: 'offer'
+        type: 'custom'
       }],
-      notes: notification.offerMessage,
+      notes: notification.offerMessage || notification.message || '',
       status: 'pending',
       deliveryFee: 'To be confirmed',
       estimatedDelivery: 'Contact pharmacy',
