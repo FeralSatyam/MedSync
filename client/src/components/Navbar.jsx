@@ -2,7 +2,7 @@ import { useEffect, useState, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { getPatients } from '../api/patientApi';
-import { getNotifications } from '../api/notificationApi';
+import { getNotifications, markNotificationAsRead } from '../api/notificationApi';
 import { getMedicinesForPatient } from '../api/medicineApi';
 import { getStockStatus } from '../utils/stockUtils';
 
@@ -44,22 +44,23 @@ export default function Navbar({ hasAlerts = false }) {
           });
         }
         if (!cancelled) setAlerts(lowStockAlerts);
-        // also fetch in-app notifications from backend
-        try {
-          const notifs = await getNotifications();
-          if (!cancelled) setDbNotifications(Array.isArray(notifs) ? notifs : []);
-        } catch (e) {
-          // ignore notification fetch errors
-        }
       } catch {
         // ignore
       }
     }
     fetchAlerts();
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, []);
+
+  // Re-fetch notifications every time the panel is opened so it's always fresh
+  useEffect(() => {
+    if (!showNotifications) return;
+    let cancelled = false;
+    getNotifications()
+      .then((notifs) => { if (!cancelled) setDbNotifications(Array.isArray(notifs) ? notifs : []); })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [showNotifications]);
 
   useEffect(() => {
     function handleClickOutside(e) {
@@ -71,8 +72,15 @@ export default function Navbar({ hasAlerts = false }) {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const hasUnreadDb = dbNotifications.some((n) => !n.read);
+  const activeNotifs = dbNotifications.filter((n) => !n.read && !n.orderPlaced);
+  const hasUnreadDb = activeNotifs.length > 0;
   const displayAlerts = hasAlerts || alerts.length > 0 || hasUnreadDb;
+
+  async function handleDismissNotif(id) {
+    // Optimistic remove then persist
+    setDbNotifications((prev) => prev.filter((n) => (n._id || n.id) !== id));
+    try { await markNotificationAsRead(id); } catch { /* ignore */ }
+  }
 
   const initials = useMemo(
     () =>
@@ -142,28 +150,34 @@ export default function Navbar({ hasAlerts = false }) {
                 <div className="text-[13px] font-bold text-navy">Notifications</div>
               </div>
               <div className="max-h-[300px] overflow-y-auto">
-                {dbNotifications.length === 0 && alerts.length === 0 ? (
+                {activeNotifs.length === 0 && alerts.length === 0 ? (
                   <div className="p-[16px] text-center text-[13px] text-muted">No new notifications.</div>
                 ) : (
                   <>
-                    {dbNotifications.map((n) => (
-                      <div key={n._id} className="p-[12px] border-b border-border hover:bg-faint transition-colors cursor-default">
-                        <div className="flex items-start justify-between mb-[4px]">
-                          <div className="font-semibold text-navy text-[13px]">{n.title || n.offerTitle}</div>
-                          <div className="flex items-center gap-2">
-                            {!n.read ? (
-                              <div className="text-[11px] font-bold px-[6px] py-[2px] rounded-full bg-[#ffedec] text-red">New</div>
-                            ) : null}
-                            <button
-                              type="button"
-                              onClick={() => navigate(`/place-order?notifId=${n._id}`)}
-                              className="text-[12px] px-2 py-1 rounded bg-primary text-white"
-                            >
-                              Order
-                            </button>
-                          </div>
+                    {activeNotifs.map((n) => (
+                      <div key={n._id} className="p-[12px] border-b border-border hover:bg-faint transition-colors">
+                        <div className="flex items-start justify-between gap-2 mb-[4px]">
+                          <div className="font-semibold text-navy text-[13px] leading-snug">{n.title || n.offerTitle}</div>
+                          <button
+                            type="button"
+                            onClick={() => handleDismissNotif(n._id)}
+                            title="Dismiss"
+                            className="shrink-0 w-[18px] h-[18px] flex items-center justify-center rounded-full text-muted hover:bg-gray-200 hover:text-navy transition-colors text-[14px] leading-none"
+                          >
+                            ×
+                          </button>
                         </div>
-                        <div className="text-[12px] text-muted">{n.offerMessage || n.message}</div>
+                        <div className="text-[12px] text-muted mb-[8px]">{n.offerMessage || n.message}</div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowNotifications(false);
+                            navigate(`/place-order?notifId=${n._id}`);
+                          }}
+                          className="w-full text-[12px] py-[6px] rounded-[8px] bg-primary text-white font-semibold hover:opacity-90 transition-opacity"
+                        >
+                          Place Order
+                        </button>
                       </div>
                     ))}
 

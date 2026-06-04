@@ -772,7 +772,7 @@ export default function DashboardPage() {
 
   const NotificationDropdown = () => {
     const patientAlerts = alerts;
-    const patientOffers = dbNotifications;
+    const patientOffers = dbNotifications.filter((n) => !n.read && !n.orderPlaced);
 
     const getPatientName = (id) => {
       if (!id) return 'Patient';

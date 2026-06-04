@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
-import { getNotifications } from '../api/notificationApi';
+import { getNotifications, markNotificationAsRead } from '../api/notificationApi';
 import { createOrder } from '../api/orderApi';
 import { getPatients } from '../api/patientApi';
 import { getMedicinesForPatient } from '../api/medicineApi';
@@ -649,6 +649,8 @@ export default function OrderPlacement() {
       };
 
       await createOrder(orderData);
+      // Mark the source notification as read so it disappears from all notification panels
+      if (notifId) markNotificationAsRead(notifId).catch(() => {});
       setOrderSuccess(true);
       setTimeout(() => navigate('/'), 1500);
     } catch (err) {
