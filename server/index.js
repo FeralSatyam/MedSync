@@ -30,6 +30,7 @@ import medicineRoutes from './routes/medicineRoutes.js';
 import orderRoutes from './routes/orderRoutes.js';
 import pharmacistRoutes from './routes/pharmacistRoutes.js';
 import pharmacistInvitationRoutes from './routes/pharmacistInvitationRoutes.js';
+import notificationRoutes from './routes/notificationRoutes.js';
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -56,6 +57,7 @@ app.use('/api/medicines', medicineRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/pharmacist', pharmacistRoutes);
 app.use('/api/pharmacist-invitations', pharmacistInvitationRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // 404 handler - Use function, not '*'
 app.use((req, res) => {

@@ -2,6 +2,7 @@ import { useEffect, useState, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { getPatients } from '../api/patientApi';
+import { getNotifications } from '../api/notificationApi';
 import { getMedicinesForPatient } from '../api/medicineApi';
 import { getStockStatus } from '../utils/stockUtils';
 
@@ -11,6 +12,7 @@ export default function Navbar({ hasAlerts = false }) {
   const navigate = useNavigate();
 
   const [alerts, setAlerts] = useState([]);
+  const [dbNotifications, setDbNotifications] = useState([]);
   const [showNotifications, setShowNotifications] = useState(false);
   const [profilePic, setProfilePic] = useState(null);
   const notifRef = useRef(null);
@@ -42,6 +44,13 @@ export default function Navbar({ hasAlerts = false }) {
           });
         }
         if (!cancelled) setAlerts(lowStockAlerts);
+        // also fetch in-app notifications from backend
+        try {
+          const notifs = await getNotifications();
+          if (!cancelled) setDbNotifications(Array.isArray(notifs) ? notifs : []);
+        } catch (e) {
+          // ignore notification fetch errors
+        }
       } catch {
         // ignore
       }
@@ -62,7 +71,8 @@ export default function Navbar({ hasAlerts = false }) {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const displayAlerts = hasAlerts || alerts.length > 0;
+  const hasUnreadDb = dbNotifications.some((n) => !n.read);
+  const displayAlerts = hasAlerts || alerts.length > 0 || hasUnreadDb;
 
   const initials = useMemo(
     () =>
@@ -132,22 +142,36 @@ export default function Navbar({ hasAlerts = false }) {
                 <div className="text-[13px] font-bold text-navy">Notifications</div>
               </div>
               <div className="max-h-[300px] overflow-y-auto">
-                {alerts.length === 0 ? (
+                {dbNotifications.length === 0 && alerts.length === 0 ? (
                   <div className="p-[16px] text-center text-[13px] text-muted">No new notifications.</div>
                 ) : (
-                  alerts.map((a) => (
-                    <div key={a._id} className="p-[12px] border-b border-border hover:bg-faint transition-colors cursor-default">
-                      <div className="flex items-start justify-between mb-[4px]">
-                        <div className="font-semibold text-navy text-[13px]">{a.name}</div>
-                        <div
-                          className={`text-[11px] font-bold px-[6px] py-[2px] rounded-full ${a.status === 'red' ? 'bg-[#ffedec] text-red' : 'bg-[#fff5e6] text-amber'}`}
-                        >
-                          {a.daysLeft} days left
+                  <>
+                    {dbNotifications.map((n) => (
+                      <div key={n._id} className="p-[12px] border-b border-border hover:bg-faint transition-colors cursor-default">
+                        <div className="flex items-start justify-between mb-[4px]">
+                          <div className="font-semibold text-navy text-[13px]">{n.title || n.offerTitle}</div>
+                          {!n.read ? (
+                            <div className="text-[11px] font-bold px-[6px] py-[2px] rounded-full bg-[#ffedec] text-red">New</div>
+                          ) : null}
                         </div>
+                        <div className="text-[12px] text-muted">{n.offerMessage || n.message}</div>
                       </div>
-                      <div className="text-[12px] text-muted">For {a.patientName}</div>
-                    </div>
-                  ))
+                    ))}
+
+                    {alerts.map((a) => (
+                      <div key={a._id} className="p-[12px] border-b border-border hover:bg-faint transition-colors cursor-default">
+                        <div className="flex items-start justify-between mb-[4px]">
+                          <div className="font-semibold text-navy text-[13px]">{a.name}</div>
+                          <div
+                            className={`text-[11px] font-bold px-[6px] py-[2px] rounded-full ${a.status === 'red' ? 'bg-[#ffedec] text-red' : 'bg-[#fff5e6] text-amber'}`}
+                          >
+                            {a.daysLeft} days left
+                          </div>
+                        </div>
+                        <div className="text-[12px] text-muted">For {a.patientName}</div>
+                      </div>
+                    ))}
+                  </>
                 )}
               </div>
             </div>

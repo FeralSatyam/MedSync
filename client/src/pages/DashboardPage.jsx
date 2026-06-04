@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 
 import { createPatient, getPatients, generatePatientOtp } from '../api/patientApi';
 import { deleteMedicine, getMedicinesForPatient, restockMedicine, updateMedicine } from '../api/medicineApi';
+import { getNotifications, markNotificationAsRead, placeOrderFromNotification } from '../api/notificationApi';
 import { getStockStatus, sortMedicinesByUrgency } from '../utils/stockUtils';
 import { useAppStore } from '../store/appStore';
 import { useAuthStore } from '../store/authStore';
@@ -460,6 +461,7 @@ export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState('home');
   const [showNotifications, setShowNotifications] = useState(false);
   const [alerts, setAlerts] = useState([]);
+  const [dbNotifications, setDbNotifications] = useState([]);
 
   const notificationRef = useRef(null);
   const desktopNotificationRef = useRef(null);
@@ -597,9 +599,51 @@ export default function DashboardPage() {
   }, []);
 
   // Memoized values
+  const fetchDbNotifications = useCallback(async () => {
+    try {
+      const data = await getNotifications();
+      setDbNotifications(data || []);
+    } catch (err) {
+      console.error('Error fetching notifications:', err);
+    }
+  }, []);
+
+  const handlePlaceOrderFromOffer = async (notificationId) => {
+    try {
+      const res = await placeOrderFromNotification(notificationId);
+      if (res.success) {
+        toast.success(`Order placed successfully! Order ID: ${res.orderId}`);
+        await fetchDbNotifications();
+      } else {
+        toast.error(res.message || 'Failed to place order');
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error(err.response?.data?.message || 'Failed to place order');
+    }
+  };
+
+  const handleMarkAsRead = async (notificationId) => {
+    try {
+      await markNotificationAsRead(notificationId);
+      await fetchDbNotifications();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  useEffect(() => {
+    fetchDbNotifications();
+  }, [fetchDbNotifications, refreshTrigger]);
+
+  const hasUnreadDbNotifs = useMemo(() => {
+    return dbNotifications.some((n) => !n.read);
+  }, [dbNotifications]);
+
   const hasAnyAlerts = useMemo(() => {
-    return Object.values(patientAlertMap).some(Boolean);
-  }, [patientAlertMap]);
+    const hasLowStock = Object.values(patientAlertMap).some(Boolean);
+    return hasLowStock || hasUnreadDbNotifs;
+  }, [patientAlertMap, hasUnreadDbNotifs]);
 
   const userName = useMemo(() => {
     if (!patients || !Array.isArray(patients) || patients.length === 0) return 'User';
@@ -630,6 +674,9 @@ export default function DashboardPage() {
       const firstId = activePatientId || patientsArray[0]?._id || patientsArray[0]?.id;
       if (firstId && !activePatientId) setActivePatientId(firstId);
 
+      // Trigger DB notifications fetch
+      fetchDbNotifications();
+
       let lowStockAlerts = [];
       const alertPairs = await Promise.all(
         patientsArray.map(async (p) => {
@@ -656,7 +703,7 @@ export default function DashboardPage() {
       setPatients([]);
       toast.error('Could not load profiles');
     }
-  }, [activePatientId, setActivePatientId]);
+  }, [activePatientId, setActivePatientId, fetchDbNotifications]);
 
   const refreshMedicines = useCallback(async (pid) => {
     if (!pid) return;
@@ -734,41 +781,129 @@ export default function DashboardPage() {
     );
   }
 
-  const NotificationDropdown = () => (
-    <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-lg border border-gray-100 z-50">
-      <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50 rounded-t-xl">
-        <h4 className="font-semibold text-gray-850 text-sm">Refill Notifications</h4>
-        {alerts.length > 0 && (
-          <span className="text-[10px] px-2 py-0.5 bg-red-50 text-red-500 rounded-full font-bold uppercase tracking-wider shrink-0">
-            {alerts.length} Alert{alerts.length > 1 ? 's' : ''}
-          </span>
-        )}
-      </div>
-      <div className="max-h-96 overflow-y-auto divide-y divide-gray-50">
-        {alerts.length === 0 ? (
-          <div className="p-8 text-center text-gray-400 text-sm">
-            <span className="text-2xl mb-2 block">🎉</span>
-            All medications are well stocked!
-          </div>
-        ) : (
-          alerts.map((a) => (
-            <div key={a._id} className="p-4 hover:bg-gray-50 transition-colors cursor-default">
-              <div className="flex items-start justify-between gap-2 mb-1">
-                <div className="font-semibold text-gray-800 text-sm leading-snug">{a.name}</div>
-                <div className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${a.status === 'red' ? 'bg-red-50 text-red-500' : 'bg-amber-50 text-amber-500'}`}>
-                  {a.daysLeft} days left
-                </div>
-              </div>
-              <div className="flex justify-between items-center text-xs text-gray-500">
-                <span>For <strong className="text-gray-600 font-medium">{a.patientName}</strong></span>
-                <span>Stock: {a.currentStock} {a.unit || 'units'}</span>
+  const NotificationDropdown = () => {
+    const patientAlerts = alerts;
+    const patientOffers = dbNotifications;
+
+    const getPatientName = (id) => {
+      if (!id) return 'Patient';
+      const pId = typeof id === 'object' ? id._id : id;
+      const p = patients.find((pat) => (pat._id || pat.id) === pId);
+      return p ? p.name.split(' ')[0] : 'Patient';
+    };
+
+    const totalCount = patientAlerts.length + patientOffers.length;
+
+    return (
+      <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-lg border border-gray-100 z-50 overflow-hidden text-left">
+        <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+          <h4 className="font-semibold text-gray-800 text-sm">Notifications</h4>
+          {totalCount > 0 && (
+            <span className="text-[10px] px-2 py-0.5 bg-teal-50 text-teal-605 rounded-full font-bold uppercase tracking-wider shrink-0">
+              {totalCount} New
+            </span>
+          )}
+        </div>
+        <div className="max-h-96 overflow-y-auto divide-y divide-gray-50">
+          {/* Special Offers Section */}
+          {patientOffers.length > 0 && (
+            <div className="p-3 bg-teal-50/20">
+              <div className="text-[10px] font-bold text-teal-700 uppercase tracking-wider mb-2">Special Offers</div>
+              <div className="space-y-2">
+                {patientOffers.map((offer) => (
+                  <div
+                    key={offer._id}
+                    className={`p-3 rounded-lg border bg-white transition-all ${
+                      offer.read
+                        ? 'border-gray-100 opacity-70'
+                        : 'border-teal-100 shadow-sm'
+                    }`}
+                  >
+                    <div className="flex justify-between items-start gap-2 mb-1.5">
+                      <span className="text-[9px] font-bold px-1.5 py-0.5 bg-teal-50 text-teal-600 rounded-full uppercase">
+                        {offer.discountPercent}% OFF
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[9px] font-semibold text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded-full">
+                          For {getPatientName(offer.patientId)}
+                        </span>
+                        {!offer.read && (
+                          <button
+                            onClick={() => handleMarkAsRead(offer._id)}
+                            className="text-[9px] text-teal-600 hover:text-teal-700 font-medium"
+                          >
+                            Mark Read
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                    <div className="font-bold text-gray-800 text-xs leading-snug">{offer.title}</div>
+                    <div className="text-gray-500 text-[11px] mt-1 leading-normal">
+                      {offer.message}
+                    </div>
+                    
+                    <div className="text-[10px] text-gray-400 mt-2 bg-gray-50 p-1.5 rounded flex justify-between items-center">
+                      <div className="min-w-0 flex-1 pr-2">
+                        <div className="font-medium text-gray-600 truncate">{offer.pharmacyName}</div>
+                        <div className="text-[9px] text-gray-400">Exp: {offer.expiresAt ? new Date(offer.expiresAt).toLocaleDateString() : 'N/A'}</div>
+                      </div>
+                      <div className="shrink-0">
+                        {offer.orderPlaced ? (
+                          <span className="text-emerald-600 font-bold bg-emerald-50 px-2 py-1 rounded text-[9px] block">
+                            Ordered
+                          </span>
+                        ) : (
+                          <button
+                            onClick={() => handlePlaceOrderFromOffer(offer._id)}
+                            className="bg-teal-500 hover:bg-teal-600 text-white font-bold px-2 py-1 rounded text-[9px] transition-colors"
+                          >
+                            Place Order
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
-          ))
-        )}
+          )}
+
+          {/* Low Stock Alerts Section */}
+          {patientAlerts.length > 0 && (
+            <div className="p-3">
+              <div className="text-[10px] font-bold text-amber-700 uppercase tracking-wider mb-2">Stock Alerts</div>
+              <div className="space-y-2">
+                {patientAlerts.map((a) => (
+                  <div key={a._id} className="p-2.5 rounded-lg border border-gray-100 hover:bg-gray-50 transition-colors">
+                    <div className="flex items-start justify-between gap-2 mb-1">
+                      <div className="font-semibold text-gray-800 text-xs leading-snug">{a.name}</div>
+                      <div
+                        className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full shrink-0 ${
+                          a.status === 'red' ? 'bg-red-50 text-red-500' : 'bg-amber-50 text-amber-500'
+                        }`}
+                      >
+                        {a.daysLeft} days left
+                      </div>
+                    </div>
+                    <div className="flex justify-between items-center text-[10px] text-gray-500">
+                      <span>Stock: {a.currentStock} {a.unit || 'tablets'}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {totalCount === 0 && (
+            <div className="p-8 text-center text-gray-400 text-sm">
+              <span className="text-2xl mb-2 block">🎉</span>
+              All good! No new notifications.
+            </div>
+          )}
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20 lg:pb-0">
