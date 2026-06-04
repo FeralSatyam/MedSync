@@ -54,7 +54,16 @@ export default function PatientProfiles() {
       toast.error('Pharmacy PIN must be exactly 4 digits');
       return;
     }
-    
+
+    if (form.dateOfBirth) {
+      const d = new Date(form.dateOfBirth);
+      const today = new Date(); today.setHours(0, 0, 0, 0);
+      const ageYears = (today - d) / (365.25 * 24 * 60 * 60 * 1000);
+      if (d > today) { toast.error('Date of birth cannot be in the future'); return; }
+      if (ageYears > 120) { toast.error('Please enter a valid date of birth'); return; }
+      if (ageYears < 6) { toast.error('Patient must be at least 6 years old'); return; }
+    }
+
     setSaving(true);
     try {
       await createPatient({
@@ -113,6 +122,8 @@ export default function PatientProfiles() {
               <input
                 type="date"
                 value={form.dateOfBirth}
+                max={(() => { const d = new Date(); d.setFullYear(d.getFullYear() - 6); return d.toISOString().split('T')[0]; })()}
+                min={(() => { const d = new Date(); d.setFullYear(d.getFullYear() - 120); return d.toISOString().split('T')[0]; })()}
                 onChange={(e) => setForm((f) => ({ ...f, dateOfBirth: e.target.value }))}
                 className="w-full rounded-lg border border-slate-300 px-3 py-2"
               />

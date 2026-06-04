@@ -4,6 +4,29 @@ import toast from 'react-hot-toast';
 import { getPatients, updatePatient, deletePatient, createPatient } from '../api/patientApi';
 import { useAuthStore } from '../store/authStore';
 
+// ── Date helpers ─────────────────────────────────────────────────────────────
+const todayStr = () => new Date().toISOString().split('T')[0];
+const minDOBStr = () => {
+  const d = new Date();
+  d.setFullYear(d.getFullYear() - 120);
+  return d.toISOString().split('T')[0];
+};
+const maxDOBStr = () => {
+  const d = new Date();
+  d.setFullYear(d.getFullYear() - 6);
+  return d.toISOString().split('T')[0];
+};
+function validateDOB(dob) {
+  if (!dob) return null;
+  const d = new Date(dob);
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  if (d > today) return 'Date of birth cannot be in the future';
+  const ageYears = (today - d) / (365.25 * 24 * 60 * 60 * 1000);
+  if (ageYears > 120) return 'Please enter a valid date of birth';
+  if (ageYears < 6) return 'Patient must be at least 6 years old';
+  return null;
+}
+
 const Icons = {
   ArrowLeft: () => (
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -49,11 +72,10 @@ function EditMemberModal({ member, onClose, onSave }) {
   const [saving, setSaving] = useState(false);
 
   const handleSubmit = async () => {
-    if (!name.trim()) {
-      toast.error('Name is required');
-      return;
-    }
-    
+    if (!name.trim()) { toast.error('Name is required'); return; }
+    const dobErr = validateDOB(dateOfBirth);
+    if (dobErr) { toast.error(dobErr); return; }
+
     setSaving(true);
     try {
       await onSave(member._id, { name, relation, dateOfBirth, allergies });
@@ -108,11 +130,14 @@ function EditMemberModal({ member, onClose, onSave }) {
             <input
               type="date"
               value={dateOfBirth}
+              min={minDOBStr()}
+              max={maxDOBStr()}
               onChange={(e) => setDateOfBirth(e.target.value)}
               className="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500"
             />
+            <p className="text-xs text-gray-400 mt-1">Patient must be between 6 and 120 years old</p>
           </div>
-          
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Allergies / Notes</label>
             <textarea
@@ -123,12 +148,12 @@ function EditMemberModal({ member, onClose, onSave }) {
               placeholder="e.g., Allergic to penicillin"
             />
           </div>
-          
+
           <div className="flex gap-3 pt-2">
             <button onClick={onClose} className="flex-1 border border-gray-200 rounded-lg py-2.5 text-gray-700 font-medium hover:bg-gray-50">
               Cancel
             </button>
-            <button onClick={handleSubmit} disabled={saving} className="flex-1 bg-teal-500 text-white rounded-lg py-2.5 font-medium hover:bg-teal-600">
+            <button onClick={handleSubmit} disabled={saving} className="flex-1 bg-teal-500 text-white rounded-lg py-2.5 font-medium hover:bg-teal-600 disabled:opacity-60">
               {saving ? 'Saving...' : 'Save Changes'}
             </button>
           </div>
@@ -178,15 +203,11 @@ function AddMemberModal({ onClose, onAdd }) {
   const [saving, setSaving] = useState(false);
 
   const handleSubmit = async () => {
-    if (!name.trim()) {
-      toast.error('Name is required');
-      return;
-    }
-    if (!pharmacyPin || pharmacyPin.length !== 4) {
-      toast.error('Pharmacy PIN must be exactly 4 digits');
-      return;
-    }
-    
+    if (!name.trim()) { toast.error('Name is required'); return; }
+    if (!pharmacyPin || pharmacyPin.length !== 4) { toast.error('Pharmacy PIN must be exactly 4 digits'); return; }
+    const dobErr = validateDOB(dateOfBirth);
+    if (dobErr) { toast.error(dobErr); return; }
+
     setSaving(true);
     try {
       await onAdd({ name, relation, dateOfBirth, allergies, pharmacyPin });
@@ -241,11 +262,14 @@ function AddMemberModal({ onClose, onAdd }) {
             <input
               type="date"
               value={dateOfBirth}
+              min={minDOBStr()}
+              max={maxDOBStr()}
               onChange={(e) => setDateOfBirth(e.target.value)}
               className="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500"
             />
+            <p className="text-xs text-gray-400 mt-1">Patient must be between 6 and 120 years old</p>
           </div>
-          
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Allergies / Notes</label>
             <textarea
@@ -255,7 +279,7 @@ function AddMemberModal({ onClose, onAdd }) {
               className="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500"
             />
           </div>
-          
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Pharmacy PIN (4-digit) *</label>
             <input
@@ -267,12 +291,12 @@ function AddMemberModal({ onClose, onAdd }) {
             />
             <p className="text-xs text-gray-400 mt-1">Required for pharmacy verification</p>
           </div>
-          
+
           <div className="flex gap-3 pt-2">
             <button onClick={onClose} className="flex-1 border border-gray-200 rounded-lg py-2.5 text-gray-700 font-medium hover:bg-gray-50">
               Cancel
             </button>
-            <button onClick={handleSubmit} disabled={saving} className="flex-1 bg-teal-500 text-white rounded-lg py-2.5 font-medium hover:bg-teal-600">
+            <button onClick={handleSubmit} disabled={saving} className="flex-1 bg-teal-500 text-white rounded-lg py-2.5 font-medium hover:bg-teal-600 disabled:opacity-60">
               {saving ? 'Adding...' : 'Add Member'}
             </button>
           </div>

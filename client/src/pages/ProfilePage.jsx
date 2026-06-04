@@ -464,6 +464,16 @@ export default function ProfilePage() {
 
   const handleSaveFamily = async () => {
     if (!editFamilyForm.name.trim()) { toast.error('Name is required'); return; }
+
+    if (editFamilyForm.dateOfBirth) {
+      const d = new Date(editFamilyForm.dateOfBirth);
+      const today = new Date(); today.setHours(0, 0, 0, 0);
+      const ageYears = (today - d) / (365.25 * 24 * 60 * 60 * 1000);
+      if (d > today) { toast.error('Date of birth cannot be in the future'); return; }
+      if (ageYears > 120) { toast.error('Please enter a valid date of birth'); return; }
+      if (ageYears < 6) { toast.error('Patient must be at least 6 years old'); return; }
+    }
+
     setSavingFamily(true);
     try {
       await updatePatient(editFamilyTarget._id || editFamilyTarget.id, {
@@ -876,6 +886,8 @@ export default function ProfilePage() {
                 <input
                   type="date"
                   value={editFamilyForm.dateOfBirth}
+                  max={(() => { const d = new Date(); d.setFullYear(d.getFullYear() - 6); return d.toISOString().split('T')[0]; })()}
+                  min={(() => { const d = new Date(); d.setFullYear(d.getFullYear() - 120); return d.toISOString().split('T')[0]; })()}
                   onChange={(e) => setEditFamilyForm({ ...editFamilyForm, dateOfBirth: e.target.value })}
                   className="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500"
                 />

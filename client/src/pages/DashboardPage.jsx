@@ -499,6 +499,7 @@ export default function DashboardPage() {
     allergies: '',
     pharmacyPin: '',
   });
+  const [isAddingProfile, setIsAddingProfile] = useState(false);
   const [addProfileErrors, setAddProfileErrors] = useState({});
   const [restockTarget, setRestockTarget] = useState(null);
   const [restockQty, setRestockQty] = useState('');
@@ -1063,7 +1064,16 @@ export default function DashboardPage() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Date of Birth</label>
-                <input type="date" value={addProfileForm.dateOfBirth} onChange={(e) => setAddProfileForm({ ...addProfileForm, dateOfBirth: e.target.value })} className="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500" />
+                <input
+                  type="date"
+                  value={addProfileForm.dateOfBirth}
+                  max={(() => { const d = new Date(); d.setFullYear(d.getFullYear() - 6); return d.toISOString().split('T')[0]; })()}
+                  min={(() => { const d = new Date(); d.setFullYear(d.getFullYear() - 120); return d.toISOString().split('T')[0]; })()}
+                  onChange={(e) => setAddProfileForm({ ...addProfileForm, dateOfBirth: e.target.value })}
+                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                />
+                <p className="text-xs text-gray-400 mt-1">Patient must be between 6 and 120 years old</p>
+                {addProfileErrors.dateOfBirth && <p className="text-xs text-red-500 mt-1">{addProfileErrors.dateOfBirth}</p>}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Relation *</label>
@@ -1086,40 +1096,49 @@ export default function DashboardPage() {
               </div>
               <div className="flex gap-3 pt-2">
                 <button onClick={() => setAddProfileOpen(false)} className="flex-1 border border-gray-200 rounded-lg py-2.5 text-gray-700 font-medium hover:bg-gray-50">Cancel</button>
-                <button onClick={async () => {
-                  const errors = {};
-                  if (!addProfileForm.name.trim()) errors.name = 'Name is required';
-                  if (!addProfileForm.relation) errors.relation = 'Relation is required';
-                  if (!/^\d{4}$/.test(addProfileForm.pharmacyPin)) errors.pharmacyPin = 'PIN must be exactly 4 digits';
+                <button
+                  disabled={isAddingProfile}
+                  onClick={async () => {
+                    const errors = {};
+                    if (!addProfileForm.name.trim()) errors.name = 'Name is required';
+                    if (!addProfileForm.relation) errors.relation = 'Relation is required';
+                    if (!/^\d{4}$/.test(addProfileForm.pharmacyPin)) errors.pharmacyPin = 'PIN must be exactly 4 digits';
 
-                  if (Object.keys(errors).length > 0) {
-                    setAddProfileErrors(errors);
-                    return;
-                  }
+                    if (addProfileForm.dateOfBirth) {
+                      const d = new Date(addProfileForm.dateOfBirth);
+                      const today = new Date(); today.setHours(0, 0, 0, 0);
+                      const ageYears = (today - d) / (365.25 * 24 * 60 * 60 * 1000);
+                      if (d > today) errors.dateOfBirth = 'Date of birth cannot be in the future';
+                      else if (ageYears > 120) errors.dateOfBirth = 'Please enter a valid date of birth';
+                      else if (ageYears < 6) errors.dateOfBirth = 'Patient must be at least 6 years old';
+                    }
 
-                  if (!userId) {
-                    toast.error('Please log in again');
-                    return;
-                  }
+                    if (Object.keys(errors).length > 0) { setAddProfileErrors(errors); return; }
+                    if (!userId) { toast.error('Please log in again'); return; }
 
-                  try {
-                    await createPatient({
-                      userId: userId,
-                      name: addProfileForm.name.trim(),
-                      dateOfBirth: addProfileForm.dateOfBirth || undefined,
-                      relation: addProfileForm.relation,
-                      allergies: addProfileForm.allergies || '',
-                      pharmacyPin: addProfileForm.pharmacyPin,
-                    });
-                    toast.success('Profile added successfully');
-                    setAddProfileOpen(false);
-                    await refreshPatients();
-                  } catch (err) {
-                    console.error('Error:', err.response?.data);
-                    toast.error(err?.response?.data?.message || 'Failed to add profile');
-                  }
-                }} className="flex-1 bg-teal-500 text-white rounded-lg py-2.5 font-medium hover:bg-teal-600">
-                  Add Member
+                    setIsAddingProfile(true);
+                    try {
+                      await createPatient({
+                        userId: userId,
+                        name: addProfileForm.name.trim(),
+                        dateOfBirth: addProfileForm.dateOfBirth || undefined,
+                        relation: addProfileForm.relation,
+                        allergies: addProfileForm.allergies || '',
+                        pharmacyPin: addProfileForm.pharmacyPin,
+                      });
+                      toast.success('Profile added successfully');
+                      setAddProfileOpen(false);
+                      await refreshPatients();
+                    } catch (err) {
+                      console.error('Error:', err.response?.data);
+                      toast.error(err?.response?.data?.message || 'Failed to add profile');
+                    } finally {
+                      setIsAddingProfile(false);
+                    }
+                  }}
+                  className="flex-1 bg-teal-500 text-white rounded-lg py-2.5 font-medium hover:bg-teal-600 disabled:opacity-60"
+                >
+                  {isAddingProfile ? 'Adding...' : 'Add Member'}
                 </button>
               </div>
             </div>

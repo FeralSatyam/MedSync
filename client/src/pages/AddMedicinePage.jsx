@@ -174,6 +174,20 @@ export default function AddMedicinePage() {
   async function onSubmit(values) {
     if (!activePatientId) return;
 
+    // ── Date validation ────────────────────────────────────────────────────
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    if (values.prescriptionDate) {
+      const pd = new Date(values.prescriptionDate);
+      if (pd > today) { toast.error('Prescription date cannot be in the future'); return; }
+    }
+    if (values.prescriptionValid) {
+      const pv = new Date(values.prescriptionValid);
+      if (pv < today) { toast.error('"Valid Until" date cannot be in the past'); return; }
+      if (values.prescriptionDate && pv <= new Date(values.prescriptionDate)) {
+        toast.error('"Valid Until" must be after the prescription date'); return;
+      }
+    }
+
     try {
       let response;
 
@@ -532,17 +546,21 @@ export default function AddMedicinePage() {
               <label className="mb-2 block text-xs font-semibold tracking-wide text-navy">Prescription Date</label>
               <input
                 type="date"
+                max={new Date().toISOString().split('T')[0]}
                 {...register('prescriptionDate')}
                 className="w-full rounded-xl border border-border bg-card px-4 py-3 text-sm text-navy outline-none transition-colors"
               />
+              <p className="text-xs text-muted mt-1">Cannot be a future date</p>
             </div>
             <div>
               <label className="mb-2 block text-xs font-semibold tracking-wide text-navy">Valid Until</label>
               <input
                 type="date"
+                min={new Date().toISOString().split('T')[0]}
                 {...register('prescriptionValid')}
                 className="w-full rounded-xl border border-border bg-card px-4 py-3 text-sm text-navy outline-none transition-colors"
               />
+              <p className="text-xs text-muted mt-1">Must be today or a future date</p>
             </div>
           </div>
 
