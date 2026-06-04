@@ -6,6 +6,7 @@ import toast from 'react-hot-toast';
 import { getPatients } from '../api/patientApi';
 import { getMedicinesForPatient } from '../api/medicineApi';
 import { createOrder, getUserOrders, cancelOrder } from '../api/orderApi';
+import { getNotifications, markNotificationAsRead } from '../api/notificationApi';
 import { useAuthStore } from '../store/authStore';
 import QRCode from 'qrcode';
 
@@ -957,6 +958,104 @@ function OrderModal({ pharmacy, onClose, onSubmit }) {
   );
 }
 
+// ─── Offer Card ───────────────────────────────────────────────────────────────
+function OfferCard({ offer, patientName, onAccept, onDismiss }) {
+  const isExpired = offer.expiresAt && new Date(offer.expiresAt) < new Date();
+  const daysLeft = offer.expiresAt
+    ? Math.max(0, Math.ceil((new Date(offer.expiresAt) - new Date()) / 86400000))
+    : null;
+
+  return (
+    <div className={`bg-white rounded-2xl border shadow-sm overflow-hidden transition-all ${isExpired ? 'opacity-60 border-gray-100' : 'border-teal-100 hover:shadow-md'}`}>
+      {/* Header strip */}
+      <div className="flex items-center justify-between px-4 pt-4 pb-3">
+        <div className="flex items-center gap-2 min-w-0">
+          {/* Pharmacy icon */}
+          <div className="shrink-0 w-9 h-9 rounded-xl bg-teal-50 flex items-center justify-center">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0d9488" strokeWidth="2">
+              <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+              <polyline points="9 22 9 12 15 12 15 22"/>
+            </svg>
+          </div>
+          <div className="min-w-0">
+            <p className="text-sm font-bold text-gray-800 truncate">{offer.pharmacyName || 'Partner Pharmacy'}</p>
+            {offer.pharmacyAddress && (
+              <p className="text-xs text-gray-400 truncate">{offer.pharmacyAddress}</p>
+            )}
+          </div>
+        </div>
+        <button
+          onClick={() => onDismiss(offer._id || offer.id)}
+          className="shrink-0 ml-2 w-7 h-7 flex items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors text-lg leading-none"
+          title="Dismiss offer"
+        >
+          ×
+        </button>
+      </div>
+
+      {/* Offer body */}
+      <div className="px-4 pb-4 space-y-3">
+        {/* Discount badge + medicine */}
+        <div className="flex items-start gap-3">
+          {offer.discountPercent > 0 && (
+            <div className="shrink-0 bg-teal-500 text-white text-xs font-bold px-2.5 py-1.5 rounded-xl leading-tight text-center">
+              <span className="text-lg font-extrabold leading-none">{offer.discountPercent}%</span>
+              <br />OFF
+            </div>
+          )}
+          <div className="min-w-0">
+            {offer.medicineName && (
+              <p className="text-sm font-semibold text-gray-800">{offer.medicineName}</p>
+            )}
+            <p className="text-sm text-gray-500 mt-0.5 leading-snug">
+              {offer.offerMessage || offer.message}
+            </p>
+          </div>
+        </div>
+
+        {/* Meta row: patient + expiry */}
+        <div className="flex items-center justify-between text-xs">
+          <div className="flex items-center gap-1.5 text-gray-500">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
+              <circle cx="12" cy="7" r="4"/>
+            </svg>
+            <span>For <span className="font-medium text-gray-700">{patientName}</span></span>
+          </div>
+          {daysLeft !== null && (
+            <span className={`font-semibold px-2 py-0.5 rounded-full ${
+              isExpired
+                ? 'bg-red-50 text-red-500'
+                : daysLeft <= 2
+                  ? 'bg-orange-50 text-orange-500'
+                  : 'bg-gray-100 text-gray-500'
+            }`}>
+              {isExpired ? 'Expired' : `${daysLeft}d left`}
+            </span>
+          )}
+        </div>
+
+        {/* Actions */}
+        <div className="flex gap-2 pt-1">
+          <button
+            onClick={() => onDismiss(offer._id || offer.id)}
+            className="flex-1 border border-gray-200 text-gray-600 text-sm font-medium py-2.5 rounded-xl hover:bg-gray-50 transition-colors"
+          >
+            Dismiss
+          </button>
+          <button
+            onClick={() => onAccept(offer._id || offer.id)}
+            disabled={isExpired}
+            className="flex-[2] bg-teal-600 text-white text-sm font-semibold py-2.5 rounded-xl hover:bg-teal-700 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isExpired ? 'Expired' : 'Accept & Order'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // Get user's current location
 function useUserLocation() {
   const [location, setLocation] = useState(null);
@@ -1088,6 +1187,9 @@ export default function PharmacyPage() {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [cancellingOrder, setCancellingOrder] = useState(null);
   const [ordersActiveTab, setOrdersActiveTab] = useState('active'); // 'active', 'history', 'all'
+  const [offers, setOffers] = useState([]);
+  const [loadingOffers, setLoadingOffers] = useState(false);
+  const [offerPatients, setOfferPatients] = useState([]);
   
   const { location: userLocation, loading: locationLoading } = useUserLocation();
   const [mapCenter, setMapCenter] = useState({ lat: 27.6866, lng: 85.3374 });
@@ -1112,6 +1214,48 @@ export default function PharmacyPage() {
   useEffect(() => {
     loadOrders();
   }, [userId]);
+
+  const loadOffers = async () => {
+    setLoadingOffers(true);
+    try {
+      const [notifs, pats] = await Promise.all([getNotifications(), getPatients()]);
+      const active = (Array.isArray(notifs) ? notifs : []).filter((n) => !n.read && !n.orderPlaced);
+      setOffers(active);
+      setOfferPatients(Array.isArray(pats) ? pats : []);
+    } catch {
+      setOffers([]);
+    } finally {
+      setLoadingOffers(false);
+    }
+  };
+
+  useEffect(() => {
+    loadOffers();
+  }, []);
+
+  const handleAcceptOffer = (notifId) => {
+    navigate(`/place-order?notifId=${notifId}`);
+  };
+
+  const handleDismissOffer = async (notifId) => {
+    setOffers((prev) => prev.filter((o) => (o._id || o.id) !== notifId));
+    try {
+      await markNotificationAsRead(notifId);
+    } catch {
+      toast.error('Could not dismiss offer');
+    }
+  };
+
+  const getOfferPatientName = (patientId) => {
+    if (!patientId) return 'Patient';
+    const id = typeof patientId === 'object' ? String(patientId._id || patientId) : String(patientId);
+    const p = offerPatients.find((pt) => String(pt._id || pt.id) === id);
+    return p ? p.name.split(' ')[0] : 'Patient';
+  };
+
+  useEffect(() => {
+    if (activeView === 'offers') loadOffers();
+  }, [activeView]);
 
   useEffect(() => {
     if (searchLocation) {
@@ -1197,19 +1341,34 @@ export default function PharmacyPage() {
         <div className="flex border-b border-gray-100 px-4">
           <button
             onClick={() => setActiveView('pharmacies')}
-            className={`px-4 py-2 text-sm font-medium transition-colors ${
-              activeView === 'pharmacies' 
-                ? 'text-teal-600 border-b-2 border-teal-600' 
+            className={`px-4 py-2.5 text-sm font-medium transition-colors ${
+              activeView === 'pharmacies'
+                ? 'text-teal-600 border-b-2 border-teal-600'
                 : 'text-gray-500 hover:text-gray-700'
             }`}
           >
-            Nearby Pharmacies
+            Nearby
+          </button>
+          <button
+            onClick={() => setActiveView('offers')}
+            className={`px-4 py-2.5 text-sm font-medium transition-colors flex items-center gap-1.5 ${
+              activeView === 'offers'
+                ? 'text-teal-600 border-b-2 border-teal-600'
+                : 'text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            Offers
+            {offers.length > 0 && (
+              <span className="min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full bg-teal-500 text-white text-[10px] font-bold leading-none">
+                {offers.length}
+              </span>
+            )}
           </button>
           <button
             onClick={() => setActiveView('orders')}
-            className={`px-4 py-2 text-sm font-medium transition-colors ${
-              activeView === 'orders' 
-                ? 'text-teal-600 border-b-2 border-teal-600' 
+            className={`px-4 py-2.5 text-sm font-medium transition-colors ${
+              activeView === 'orders'
+                ? 'text-teal-600 border-b-2 border-teal-600'
                 : 'text-gray-500 hover:text-gray-700'
             }`}
           >
@@ -1296,6 +1455,66 @@ export default function PharmacyPage() {
               ))}
             </div>
           </div>
+        </div>
+      )}
+
+      {/* ── Offers View ──────────────────────────────────────────────────── */}
+      {activeView === 'offers' && (
+        <div className="max-w-lg mx-auto px-4 py-6">
+          <div className="flex items-center justify-between mb-5">
+            <div>
+              <h2 className="text-lg font-bold text-gray-800">Pharmacy Offers</h2>
+              <p className="text-sm text-gray-400 mt-0.5">Offers sent to you by linked pharmacists</p>
+            </div>
+            {!loadingOffers && offers.length > 0 && (
+              <button
+                onClick={async () => {
+                  const ids = offers.map((o) => o._id || o.id);
+                  setOffers([]);
+                  try {
+                    await Promise.all(ids.map((id) => markNotificationAsRead(id)));
+                  } catch {
+                    toast.error('Could not dismiss all offers');
+                  }
+                }}
+                className="text-xs text-gray-400 hover:text-red-500 transition-colors font-medium"
+              >
+                Dismiss all
+              </button>
+            )}
+          </div>
+
+          {loadingOffers ? (
+            <div className="flex justify-center py-16">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500" />
+            </div>
+          ) : offers.length === 0 ? (
+            <div className="text-center py-16 bg-white rounded-2xl border border-gray-100">
+              <div className="w-16 h-16 bg-teal-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#0d9488" strokeWidth="1.5">
+                  <path d="M20 12V22H4V12"/>
+                  <path d="M22 7H2v5h20V7z"/>
+                  <path d="M12 22V7"/>
+                  <path d="M12 7H7.5a2.5 2.5 0 010-5C11 2 12 7 12 7z"/>
+                  <path d="M12 7h4.5a2.5 2.5 0 000-5C13 2 12 7 12 7z"/>
+                </svg>
+              </div>
+              <p className="text-gray-700 font-semibold mb-1">No offers yet</p>
+              <p className="text-gray-400 text-sm">Offers sent by your pharmacist will appear here.</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {offers.map((offer) => (
+                <OfferCard
+                  key={offer._id || offer.id}
+                  offer={offer}
+                  patientName={getOfferPatientName(offer.patientId)}
+                  onAccept={handleAcceptOffer}
+                  onDismiss={handleDismissOffer}
+                />
+              ))}
+            </div>
+          )}
         </div>
       )}
 
