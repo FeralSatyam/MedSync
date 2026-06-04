@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { getNotifications } from '../api/notificationApi';
 import { createOrder } from '../api/orderApi';
 import { getPatients } from '../api/patientApi';
+import { getMedicinesForPatient } from '../api/medicineApi';
 import toast from 'react-hot-toast';
 
 function useQuery() {
@@ -105,37 +106,106 @@ function Select({ className = '', children, ...props }) {
   );
 }
 
+// Autocomplete combobox for medicine name input
+function MedicineCombobox({ value, onChange, onSelect, suggestions, placeholder }) {
+  const [open, setOpen] = useState(false);
+  const wrapRef = useRef(null);
+
+  const filtered = value
+    ? suggestions.filter((m) => m.displayName.toLowerCase().includes(value.toLowerCase()))
+    : suggestions;
+
+  // Close on outside click
+  useEffect(() => {
+    const handler = (e) => {
+      if (wrapRef.current && !wrapRef.current.contains(e.target)) setOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  return (
+    <div ref={wrapRef} className="relative">
+      <input
+        className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-transparent transition placeholder-gray-400"
+        placeholder={placeholder}
+        value={value}
+        autoComplete="off"
+        onChange={(e) => { onChange(e.target.value); setOpen(true); }}
+        onFocus={() => setOpen(true)}
+      />
+      {open && filtered.length > 0 && (
+        <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-gray-100 rounded-2xl shadow-xl z-50 max-h-52 overflow-y-auto">
+          {filtered.map((m, i) => (
+            <button
+              key={i}
+              type="button"
+              className="w-full text-left px-4 py-3 hover:bg-teal-50 active:bg-teal-100 text-sm border-b last:border-0 border-gray-50 flex items-center justify-between gap-3 transition-colors"
+              onMouseDown={(e) => {
+                e.preventDefault();
+                onSelect(m);
+                setOpen(false);
+              }}
+            >
+              <div className="min-w-0">
+                <p className="font-medium text-gray-800 truncate">{m.name}</p>
+                {m.strength && <p className="text-xs text-gray-400">{m.strength} {m.unit}</p>}
+              </div>
+              <span className="shrink-0 text-[10px] font-semibold text-teal-600 bg-teal-50 px-2 py-0.5 rounded-full">Your med</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // Step 1 — Medicines & Prescription
-function StepMedicines({ medicines, onUpdate, onAdd, onRemove, slipCount, onSlipCount, specialNotes, onSpecialNotes }) {
+function StepMedicines({ medicines, onUpdate, onAdd, onRemove, slipCount, onSlipCount, specialNotes, onSpecialNotes, patientMedicines }) {
+  // Suggestions = profile medicines not already in the order list
+  const usedNames = medicines.map((m) => m.name.toLowerCase());
+  const suggestions = patientMedicines
+    .filter((pm) => !usedNames.includes(pm.displayName.toLowerCase()))
+    .map((pm) => pm);
+
   return (
     <div className="space-y-5">
       <div>
         <h3 className="text-lg font-bold text-gray-800 mb-1">Medicine Details</h3>
-        <p className="text-sm text-gray-500">List the medicines you need and how many of each.</p>
+        <p className="text-sm text-gray-500">
+          {patientMedicines.length > 0
+            ? 'Your medicines have been pre-filled. Adjust quantities or remove what you don\'t need.'
+            : 'List the medicines you need and how many of each.'}
+        </p>
       </div>
 
       <div className="space-y-3">
         {medicines.map((m, idx) => (
-          <div key={idx} className="bg-gray-50 rounded-2xl p-4 border border-gray-100">
+          <div key={idx} className={`rounded-2xl p-4 border ${m.fromProfile ? 'bg-teal-50 border-teal-100' : 'bg-gray-50 border-gray-100'}`}>
             <div className="flex justify-between items-center mb-3">
-              <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Medicine {idx + 1}</span>
-              {medicines.length > 1 && (
-                <button
-                  onClick={() => onRemove(idx)}
-                  className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                  type="button"
-                >
-                  <TrashIcon />
-                </button>
-              )}
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Medicine {idx + 1}</span>
+                {m.fromProfile && (
+                  <span className="text-[10px] font-semibold text-teal-600 bg-teal-100 px-2 py-0.5 rounded-full">From your profile</span>
+                )}
+              </div>
+              <button
+                onClick={() => onRemove(idx)}
+                className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                type="button"
+              >
+                <TrashIcon />
+              </button>
             </div>
             <div className="space-y-3">
               <div>
                 <FieldLabel required>Medicine Name</FieldLabel>
-                <Input
-                  placeholder="e.g. Paracetamol 500mg"
+                <MedicineCombobox
                   value={m.name}
-                  onChange={(e) => onUpdate(idx, 'name', e.target.value)}
+                  placeholder="e.g. Paracetamol 500mg"
+                  suggestions={[...suggestions, ...(m.fromProfile ? [] : patientMedicines.filter(pm => pm.displayName.toLowerCase() === m.name.toLowerCase()))]}
+                  onChange={(val) => onUpdate(idx, 'name', val)}
+                  onSelect={(pm) => onUpdate(idx, 'fill', pm)}
                 />
               </div>
               <div className="grid grid-cols-2 gap-3">
@@ -421,7 +491,9 @@ export default function OrderPlacement() {
   const [notification, setNotification] = useState(null);
   const [patients, setPatients] = useState([]);
   const [selectedPatientId, setSelectedPatientId] = useState('');
+  const [patientMedicines, setPatientMedicines] = useState([]);
   const [submitting, setSubmitting] = useState(false);
+  const [orderSuccess, setOrderSuccess] = useState(false);
 
   // Step 1
   const [medicines, setMedicines] = useState([{ name: '', quantity: 1, unit: '' }]);
@@ -453,6 +525,35 @@ export default function OrderPlacement() {
     })();
   }, []);
 
+  // Fetch patient's medicines and pre-populate the order list (skip when coming from a notification)
+  useEffect(() => {
+    if (!selectedPatientId || notifId) return;
+    (async () => {
+      try {
+        const meds = await getMedicinesForPatient(selectedPatientId);
+        const arr = Array.isArray(meds) ? meds.filter((m) => m.isActive !== false) : [];
+        const shaped = arr.map((m) => ({
+          displayName: `${m.name}${m.strength ? ` ${m.strength}${m.unit}` : ''}`,
+          name: m.name,
+          strength: m.strength || '',
+          unit: m.unit || '',
+          refillQty: m.refillThreshold || 30,
+        }));
+        setPatientMedicines(shaped);
+        if (shaped.length > 0) {
+          setMedicines(shaped.map((pm) => ({
+            name: pm.displayName,
+            quantity: pm.refillQty,
+            unit: 'tablets',
+            fromProfile: true,
+          })));
+        }
+      } catch {
+        setPatientMedicines([]);
+      }
+    })();
+  }, [selectedPatientId, notifId]);
+
   useEffect(() => {
     if (!notifId) return;
     (async () => {
@@ -470,8 +571,18 @@ export default function OrderPlacement() {
     })();
   }, [notifId]);
 
-  const addMedicine = () => setMedicines((s) => [...s, { name: '', quantity: 1, unit: '' }]);
-  const updateMedicine = (idx, field, value) => setMedicines((s) => s.map((m, i) => (i === idx ? { ...m, [field]: value } : m)));
+  const addMedicine = () => setMedicines((s) => [...s, { name: '', quantity: 1, unit: '', fromProfile: false }]);
+  const updateMedicine = (idx, field, value) => {
+    if (field === 'fill') {
+      // value is a patientMedicine object — fill the whole row
+      setMedicines((s) => s.map((m, i) => i === idx
+        ? { ...m, name: value.displayName, quantity: value.refillQty, unit: 'tablets', fromProfile: true }
+        : m
+      ));
+    } else {
+      setMedicines((s) => s.map((m, i) => (i === idx ? { ...m, [field]: value, fromProfile: field === 'name' ? false : m.fromProfile } : m)));
+    }
+  };
   const removeMedicine = (idx) => setMedicines((s) => s.filter((_, i) => i !== idx));
   const updateDelivery = (field, value) => setDelivery((d) => ({ ...d, [field]: value }));
 
@@ -537,13 +648,9 @@ export default function OrderPlacement() {
         slipCount: Number(slipCount) || 0,
       };
 
-      const res = await createOrder(orderData);
-      toast.success('Order placed! Awaiting pharmacist confirmation.');
-      if (res && res.orderId) {
-        navigate(`/order-tracking/${res.orderId}`);
-      } else {
-        navigate('/orders');
-      }
+      await createOrder(orderData);
+      setOrderSuccess(true);
+      setTimeout(() => navigate('/'), 1500);
     } catch (err) {
       console.error(err);
       toast.error(err?.response?.data?.message || 'Failed to place order');
@@ -551,6 +658,56 @@ export default function OrderPlacement() {
       setSubmitting(false);
     }
   };
+
+  if (orderSuccess) {
+    return (
+      <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white">
+        <style>{`
+          @keyframes circle-scale-in {
+            0%   { transform: scale(0); opacity: 0; }
+            60%  { transform: scale(1.15); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+          }
+          @keyframes tick-draw {
+            0%   { stroke-dashoffset: 60; }
+            100% { stroke-dashoffset: 0; }
+          }
+          @keyframes label-fade-up {
+            0%   { opacity: 0; transform: translateY(10px); }
+            100% { opacity: 1; transform: translateY(0); }
+          }
+          .success-circle {
+            animation: circle-scale-in 0.45s cubic-bezier(0.22,1,0.36,1) forwards;
+          }
+          .success-tick {
+            stroke-dasharray: 60;
+            stroke-dashoffset: 60;
+            animation: tick-draw 0.35s ease-out 0.4s forwards;
+          }
+          .success-label {
+            opacity: 0;
+            animation: label-fade-up 0.35s ease-out 0.65s forwards;
+          }
+        `}</style>
+
+        <div className="success-circle w-28 h-28 rounded-full bg-teal-500 flex items-center justify-center shadow-xl shadow-teal-200">
+          <svg width="56" height="56" viewBox="0 0 56 56" fill="none">
+            <polyline
+              className="success-tick"
+              points="14,28 24,40 42,18"
+              stroke="white"
+              strokeWidth="5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </div>
+
+        <p className="success-label mt-6 text-xl font-bold text-gray-800">Order Placed!</p>
+        <p className="success-label mt-1 text-sm text-gray-400">Redirecting to dashboard...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 pb-24">
@@ -586,6 +743,7 @@ export default function OrderPlacement() {
               onSlipCount={setSlipCount}
               specialNotes={specialNotes}
               onSpecialNotes={setSpecialNotes}
+              patientMedicines={patientMedicines}
             />
           )}
           {step === 2 && (
