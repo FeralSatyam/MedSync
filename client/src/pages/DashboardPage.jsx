@@ -38,6 +38,14 @@ const Icons = {
     </svg>
   ),
 
+  Orders: ({ active = false }) => (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M6 2L3 6V20C3 21.1 3.9 22 5 22H19C20.1 22 21 21.1 21 20V6L18 2H6Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill={active ? "currentColor" : "none"} fillOpacity={active ? "0.1" : "0"} />
+      <path d="M3 6H21" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      <path d="M16 10C16 12.2 14.2 14 12 14C9.8 14 8 12.2 8 10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  ),
+
   Profile: ({ active = false }) => (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
       <circle cx="12" cy="8" r="4" stroke="currentColor" strokeWidth="1.5" fill={active ? "currentColor" : "none"} />
@@ -293,7 +301,7 @@ function DesktopSidebar({ activeTab, onTabChange, onQRPress, navigate }) {
   const menuItems = [
     { id: 'home', label: 'Dashboard', icon: Icons.Home },
     { id: 'ai-health', label: 'AI Health', icon: Icons.AIHealth },
-    { id: 'pharmacy', label: 'Pharmacy', icon: Icons.Pharmacy },
+    { id: 'orders', label: 'Orders', icon: Icons.Orders },
     { id: 'qr', label: 'Pharmacy QR', icon: Icons.QR },
     { id: 'pharmacist-link', label: 'Link to Pharmacist', icon: Icons.Profile },
   ];
@@ -314,7 +322,7 @@ function DesktopSidebar({ activeTab, onTabChange, onQRPress, navigate }) {
             const isActive = activeTab === item.id;
             return (
               <button key={item.id} onClick={() => {
-                if (item.id === 'pharmacy') {
+                if (item.id === 'orders') {
                   navigate('/pharmacy');
                 } else if (item.id === 'ai-health') {
                   navigate('/ai-health');
@@ -383,7 +391,7 @@ function MobileBottomNav({ activeTab, onTabChange, onQRPress, navigate }) {
     { id: 'home', label: 'Home', icon: Icons.Home },
     { id: 'ai-health', label: 'AI Health', icon: Icons.AIHealth },
     { id: 'qr', label: '', icon: Icons.QR, isQR: true, isSpecial: true },
-    { id: 'pharmacy', label: 'Pharmacy', icon: Icons.Pharmacy },
+    { id: 'orders', label: 'Orders', icon: Icons.Orders },
     { id: 'profile', label: 'Profile', icon: Icons.Profile },
   ];
 
@@ -410,7 +418,7 @@ function MobileBottomNav({ activeTab, onTabChange, onQRPress, navigate }) {
             <button key={tab.id} onClick={() => {
               if (tab.id === 'profile') {
                 navigate('/profile');
-              } else if (tab.id === 'pharmacy') {
+              } else if (tab.id === 'orders') {
                 navigate('/pharmacy');
               } else if (tab.id === 'ai-health') {
                 navigate('/ai-health');

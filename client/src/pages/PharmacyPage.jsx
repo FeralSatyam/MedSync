@@ -1173,7 +1173,7 @@ function SearchBox({ onLocationSelect }) {
 // Main Pharmacy Page Component
 export default function PharmacyPage() {
   const navigate = useNavigate();
-  const [activeView, setActiveView] = useState('pharmacies'); // 'pharmacies' or 'orders'
+  const [activeView, setActiveView] = useState('orders'); // 'orders', 'offers', or 'pharmacies'
   const [selectedPharmacy, setSelectedPharmacy] = useState(null);
   const [showOrderModal, setShowOrderModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -1334,20 +1334,20 @@ export default function PharmacyPage() {
           <button onClick={() => navigate(-1)} className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
             <Icons.ArrowLeft />
           </button>
-          <h1 className="text-xl font-bold text-gray-800">Pharmacy</h1>
+          <h1 className="text-xl font-bold text-gray-800">Orders</h1>
         </div>
         
         {/* Main Tab Navigation */}
         <div className="flex border-b border-gray-100 px-4">
           <button
-            onClick={() => setActiveView('pharmacies')}
+            onClick={() => setActiveView('orders')}
             className={`px-4 py-2.5 text-sm font-medium transition-colors ${
-              activeView === 'pharmacies'
+              activeView === 'orders'
                 ? 'text-teal-600 border-b-2 border-teal-600'
                 : 'text-gray-500 hover:text-gray-700'
             }`}
           >
-            Nearby
+            My Orders
           </button>
           <button
             onClick={() => setActiveView('offers')}
@@ -1365,14 +1365,14 @@ export default function PharmacyPage() {
             )}
           </button>
           <button
-            onClick={() => setActiveView('orders')}
+            onClick={() => setActiveView('pharmacies')}
             className={`px-4 py-2.5 text-sm font-medium transition-colors ${
-              activeView === 'orders'
+              activeView === 'pharmacies'
                 ? 'text-teal-600 border-b-2 border-teal-600'
                 : 'text-gray-500 hover:text-gray-700'
             }`}
           >
-            My Orders
+            Nearby Pharmacy
           </button>
         </div>
       </div>
