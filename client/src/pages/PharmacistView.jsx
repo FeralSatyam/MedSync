@@ -24,6 +24,8 @@ export default function PharmacistView() {
 
   const [otpInput, setOtpInput] = useState('');
   const [verifyingOtp, setVerifyingOtp] = useState(false);
+  const [otpAttempts, setOtpAttempts] = useState(0);
+  const MAX_OTP_ATTEMPTS = 5;
 
   async function load() {
     setLoading(true);
@@ -74,9 +76,18 @@ export default function PharmacistView() {
         init[m._id] = '';
       });
       setQuantities(init);
+      setOtpAttempts(0);
       toast.success('Patient prescription unlocked successfully!');
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Invalid or expired OTP code');
+      const newAttempts = otpAttempts + 1;
+      setOtpAttempts(newAttempts);
+      setOtpInput('');
+      const remaining = MAX_OTP_ATTEMPTS - newAttempts;
+      if (remaining > 0) {
+        toast.error(`Incorrect OTP — ${remaining} attempt${remaining === 1 ? '' : 's'} remaining`);
+      } else {
+        toast.error('Too many incorrect attempts. Ask the patient to regenerate their OTP.');
+      }
     } finally {
       setVerifyingOtp(false);
     }
@@ -198,12 +209,38 @@ export default function PharmacistView() {
                 Retry / Check Status
               </button>
             </div>
+          ) : otpAttempts >= MAX_OTP_ATTEMPTS ? (
+            <div className="bg-red-light border border-red rounded-2xl p-5 text-center">
+              <div className="w-12 h-12 bg-red rounded-full flex items-center justify-center mx-auto mb-3">
+                <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+              <p className="text-sm font-bold text-red mb-1">Too Many Incorrect Attempts</p>
+              <p className="text-xs text-red mb-4">Please ask the patient to regenerate their OTP and try again.</p>
+              <button
+                onClick={() => { setOtpAttempts(0); setOtpInput(''); load(); }}
+                className="border border-border bg-white text-navy rounded-full px-5 py-2.5 text-xs font-semibold hover:bg-faint transition-all flex items-center gap-2 mx-auto cursor-pointer"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 4.75M9 9h1.586M9 9l1.586-1.586" />
+                </svg>
+                Reset & Try Again
+              </button>
+            </div>
           ) : (
             <form onSubmit={handleOtpSubmit} className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold tracking-widest text-white/40 uppercase mb-2 text-left">
-                  Verification OTP
-                </label>
+                <div className="flex justify-between items-center mb-2">
+                  <label className="block text-xs font-semibold tracking-widest text-white/40 uppercase">
+                    Verification OTP
+                  </label>
+                  {otpAttempts > 0 && (
+                    <span className="text-xs font-semibold text-red bg-red-light px-2 py-0.5 rounded-full">
+                      {MAX_OTP_ATTEMPTS - otpAttempts} attempt{MAX_OTP_ATTEMPTS - otpAttempts === 1 ? '' : 's'} left
+                    </span>
+                  )}
+                </div>
                 <input
                   type="text"
                   inputMode="numeric"
@@ -212,7 +249,7 @@ export default function PharmacistView() {
                   value={otpInput}
                   onChange={(e) => setOtpInput(e.target.value.replace(/\D/g, '').slice(0, 6))}
                   placeholder="000000"
-                  className="w-full bg-white/10 border border-white/15 focus:border-mint rounded-2xl px-4 py-3.5 text-center text-3xl font-bold tracking-[0.5em] text-white focus:outline-none focus:ring-2 focus:ring-mint/50 transition-all font-mono placeholder:text-white/10"
+                  className={`w-full bg-white/10 border focus:border-mint rounded-2xl px-4 py-3.5 text-center text-3xl font-bold tracking-[0.5em] text-white focus:outline-none focus:ring-2 focus:ring-mint/50 transition-all font-mono placeholder:text-white/10 ${otpAttempts > 0 ? 'border-red/50' : 'border-white/15'}`}
                   autoComplete="one-time-code"
                 />
               </div>

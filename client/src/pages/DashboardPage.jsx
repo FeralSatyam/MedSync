@@ -1162,12 +1162,12 @@ export default function DashboardPage() {
       {/* QR Code & OTP Modal */}
       {qrModalOpen && qrPatient && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md transition-all duration-300" onClick={handleCloseQrModal}>
-          <div className="bg-white/95 backdrop-blur-xl border border-white/20 rounded-3xl max-w-md w-full p-6 shadow-2xl relative overflow-hidden transition-all transform scale-100" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-white/95 backdrop-blur-xl border border-white/20 rounded-3xl max-w-md w-full shadow-2xl relative overflow-hidden transition-all transform scale-100 max-h-[90vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
             {/* Background glowing circle for aesthetic depth */}
             <div className="absolute -top-24 -right-24 w-48 h-48 bg-teal-500/10 rounded-full blur-3xl pointer-events-none" />
             <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
 
-            <div className="flex justify-between items-center mb-6 relative z-10">
+            <div className="flex justify-between items-center mb-6 relative z-10 px-6 pt-6 shrink-0">
               <div>
                 <h3 className="text-xl font-bold text-navy tracking-tight flex items-center gap-2">
                   <Icons.QR className="w-6 h-6 text-mint" />
@@ -1180,18 +1180,19 @@ export default function DashboardPage() {
               </button>
             </div>
 
+            <div className="overflow-y-auto flex-1 px-6 pb-6 relative z-10">
             {qrLoading ? (
-              <div className="flex flex-col items-center justify-center py-12 relative z-10">
+              <div className="flex flex-col items-center justify-center py-12">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-mint mb-4" />
                 <p className="text-sm text-muted">Generating secure OTP...</p>
               </div>
             ) : (
-              <div className="flex flex-col items-center relative z-10">
-                <div className="bg-faint p-3 rounded-2xl border border-border mb-6 flex justify-center items-center">
+              <div className="flex flex-col items-center">
+                <div className="bg-faint p-3 rounded-2xl border border-border mb-5 flex justify-center items-center">
                   <div className="p-2 bg-white rounded-xl">
                     <QRCodeCanvas
                       value={`${window.location.origin}/pharma/${qrPatient.qrToken}`}
-                      size={200}
+                      size={160}
                       fgColor="#0f172a"
                       bgColor="#ffffff"
                       level="H"
@@ -1199,7 +1200,7 @@ export default function DashboardPage() {
                   </div>
                 </div>
 
-                <div className="text-center w-full mb-6">
+                <div className="text-center w-full mb-5">
                   <span className="text-xs font-semibold text-muted uppercase tracking-widest block mb-2">Patient Profile</span>
                   <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-mint-light text-mint font-semibold text-sm border border-mint/20">
                     <span className="w-2 h-2 rounded-full bg-mint animate-ping" />
@@ -1209,13 +1210,13 @@ export default function DashboardPage() {
 
                 {qrSecondsLeft > 0 ? (
                   <>
-                    <div className="text-center w-full mb-6">
+                    <div className="text-center w-full mb-4">
                       <span className="text-xs font-semibold text-muted uppercase tracking-widest block mb-2">Temporary Verification OTP</span>
                       <div className="flex gap-2 justify-center">
                         {qrOtp.split('').map((char, index) => (
                           <div
                             key={index}
-                            className="w-11 h-14 bg-mint-light border-2 border-mint/20 rounded-xl flex items-center justify-center text-2xl font-bold text-mint"
+                            className="w-10 h-12 bg-mint-light border-2 border-mint/20 rounded-xl flex items-center justify-center text-xl font-bold text-mint"
                             style={{ animationDelay: `${index * 50}ms` }}
                           >
                             {char}
@@ -1233,7 +1234,7 @@ export default function DashboardPage() {
                     </div>
                   </>
                 ) : (
-                  <div className="w-full text-center py-4 px-6 bg-red-50/80 border border-red-100 rounded-2xl mb-6 animate-shake">
+                  <div className="w-full text-center py-4 px-6 bg-red-50/80 border border-red-100 rounded-2xl mb-5 animate-shake">
                     <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-2 text-red-500">
                       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
@@ -1253,11 +1254,12 @@ export default function DashboardPage() {
                   </div>
                 )}
 
-                <div className="bg-mint-light border border-mint/20 rounded-2xl px-4 py-3.5 text-xs text-mint leading-relaxed text-center">
-                  💡 Let the pharmacist scan this QR code, then give them the 6-digit OTP code to verify and access your active medications & prescriptions safely.
+                <div className="bg-mint-light border border-mint/20 rounded-2xl px-4 py-3 text-xs text-mint leading-relaxed text-center">
+                  Let the pharmacist scan this QR code, then give them the 6-digit OTP code to verify and access your active medications safely.
                 </div>
               </div>
             )}
+            </div>
           </div>
         </div>
       )}
