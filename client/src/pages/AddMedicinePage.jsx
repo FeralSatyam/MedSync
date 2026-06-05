@@ -1,31 +1,51 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useForm } from 'react-hook-form';
-import { z } from 'zod';
-import { zodResolver } from '@hookform/resolvers/zod';
 import toast from 'react-hot-toast';
 
 import { useAppStore } from '../store/appStore';
 import { createMedicine, getMedicinesForPatient, updateMedicine } from '../api/medicineApi';
 import SimpleCamera from '../components/SimpleCamera';
 
-// Form validation schema
-const schema = z.object({
-  name: z.string().trim().min(1, 'Medicine name is required'),
-  strengthNumber: z.coerce.number().min(0, 'Strength is required'),
-  unit: z.enum(['mg', 'ml', 'IU', 'mcg']),
-  frequencyPerDay: z.coerce.number().min(1, 'Must be at least 1').max(8, 'Must be at most 8'),
-  dosePerIntake: z.coerce.number().min(0.5, 'Must be at least 0.5'),
-  currentStock: z.coerce.number().min(0, 'Must be 0 or more'),
-  refillThreshold: z.coerce.number().min(1, 'Must be at least 1').default(7),
-  instructions: z.string().trim().optional().default(''),
-  doctorName: z.string().trim().optional().default(''),
-  hospitalName: z.string().trim().optional().default(''),
-  prescriptionDate: z.string().optional(),
-  prescriptionValid: z.string().optional(),
-  firstDoseTime: z.string().optional(),
-  remindersEnabled: z.boolean().default(true),
-});
+// ── Config ────────────────────────────────────────────────────────────────────
+
+const FORM_OPTIONS = [
+  { value: 'tablets',   label: 'Tablets & Capsules',  emoji: '💊', desc: 'Pills, tablets, capsules' },
+  { value: 'syrup',     label: 'Syrups & Solutions',  emoji: '🧴', desc: 'Liquid medicines, drops' },
+  { value: 'cream',     label: 'Creams & Ointments',  emoji: '🫙', desc: 'Topical applications' },
+  { value: 'inhaler',   label: 'Inhalers',             emoji: '💨', desc: 'MDI, dry powder inhalers' },
+  { value: 'injection', label: 'Injections',           emoji: '💉', desc: 'Vials, ampoules, pens' },
+  { value: 'powder',    label: 'Powder Form',          emoji: '⚗️', desc: 'Sachets, powder packs' },
+];
+
+const STRENGTH_CONFIG = {
+  tablets:   { units: ['mg', 'mcg', 'g'],                                defaultUnit: 'mg',       label: 'Strength per tablet / capsule', placeholder: '500',  disabled: false },
+  syrup:     { units: ['mg/ml', 'mg/5ml'],                               defaultUnit: 'mg/ml',    label: 'Concentration',                 placeholder: '25',   disabled: false },
+  cream:     { units: [],                                                 defaultUnit: '',          label: 'Strength',                      placeholder: '',     disabled: true  },
+  inhaler:   { units: ['mcg/puff'],                                       defaultUnit: 'mcg/puff', label: 'Dose per puff',                 placeholder: '200',  disabled: false },
+  injection: { units: ['mg/ml', 'mcg/ml', 'IU/ml', 'g/ml', 'mg/dose'],  defaultUnit: 'mg/ml',    label: 'Concentration per dose',        placeholder: '10',   disabled: false },
+  powder:    { units: ['mg', 'g'],                                        defaultUnit: 'mg',       label: 'Strength per serving',          placeholder: '200',  disabled: false },
+};
+
+const QUANTITY_CONFIG = {
+  tablets:   { label: 'Number of Tablets / Capsules', step: '1',    units: null,               defaultUnit: 'tablets', placeholder: '30',  hint: 'Total count of individual units you currently have.' },
+  syrup:     { label: 'Volume Available',             step: '0.1',  units: ['mL', 'L'],         defaultUnit: 'mL',      placeholder: '100', hint: 'Total liquid volume in the bottle.' },
+  cream:     { label: 'Estimated Duration',           step: '1',    units: ['days', 'weeks'],   defaultUnit: 'days',    placeholder: '30',  hint: 'How long this tube or jar is expected to last.', isDuration: true },
+  inhaler:   { label: 'Puffs Remaining',              step: '1',    units: null,               defaultUnit: 'puffs',   placeholder: '200', hint: 'Check the dose counter on your inhaler.' },
+  injection: { label: 'Quantity Available',           step: '1',    units: ['vials', 'doses'],  defaultUnit: 'vials',   placeholder: '5',   hint: 'Number of vials or pre-filled syringes.' },
+  powder:    { label: 'Quantity Available',           step: '0.01', units: ['g', 'mg'],         defaultUnit: 'g',       placeholder: '500', hint: 'Total amount of powder you have.' },
+};
+
+const ORDINALS = ['First', 'Second', 'Third', 'Fourth', 'Fifth', 'Sixth', 'Seventh', 'Eighth'];
+const DEFAULT_DOSE_TIMES = ['08:00', '14:00', '20:00', '06:00', '10:00', '16:00', '22:00', '12:00'];
+
+const STEPS = [
+  { number: 1, label: 'Basic Info',   pct: 25  },
+  { number: 2, label: 'Quantity',     pct: 50  },
+  { number: 3, label: 'Dose Times',   pct: 75  },
+  { number: 4, label: 'Prescription', pct: 100 },
+];
+
+// ── Component ─────────────────────────────────────────────────────────────────
 
 export default function AddMedicinePage() {
   const navigate = useNavigate();
@@ -33,56 +53,97 @@ export default function AddMedicinePage() {
   const isEdit = Boolean(medicineId);
   const activePatientId = useAppStore((s) => s.activePatientId);
 
-  // UI state
-  const [currentStep, setCurrentStep] = useState(1);
-  const [prescriptionFile, setPrescriptionFile] = useState(null);
-  const [prescriptionPreviewUrl, setPrescriptionPreviewUrl] = useState('');
+  const [step, setStep] = useState(1);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [showCamera, setShowCamera] = useState(false);
+
+  // Step 1
+  const [name, setName] = useState('');
   const [medicinePhoto, setMedicinePhoto] = useState(null);
   const [medicinePhotoPreview, setMedicinePhotoPreview] = useState('');
-  const [step3Ready, setStep3Ready] = useState(false);
+  const [medicineForm, setMedicineForm] = useState('tablets');
+  const [strengthValue, setStrengthValue] = useState('');
+  const [strengthUnit, setStrengthUnit] = useState('mg');
 
-  const {
-    register,
-    handleSubmit,
-    setValue,
-    watch,
-    formState: { errors, isSubmitting },
-  } = useForm({
-    resolver: zodResolver(schema),
-    defaultValues: {
-      unit: 'mg',
-      frequencyPerDay: 2,
-      dosePerIntake: 1,
-      currentStock: 50,
-      refillThreshold: 7,
-      instructions: '',
-      doctorName: '',
-      hospitalName: '',
-      prescriptionDate: '',
-      prescriptionValid: '',
-      firstDoseTime: '08:00',
-      remindersEnabled: true,
-    },
-  });
+  // Step 2
+  const [quantityValue, setQuantityValue] = useState('');
+  const [quantityUnit, setQuantityUnit] = useState('tablets');
+  const [alertThreshold, setAlertThreshold] = useState(7);
+  const [timesPerDay, setTimesPerDay] = useState(1);
 
-  // Watch values for live updates
-  const frequencyPerDay = watch('frequencyPerDay');
-  const firstDoseTime = watch('firstDoseTime');
-  const remindersEnabled = watch('remindersEnabled');
+  // Step 3
+  const [doseTimes, setDoseTimes] = useState(['08:00']);
 
-  // Handle camera capture for medicine name
-  const handleCameraCapture = (medicineName) => {
-    if (medicineName && medicineName.trim()) {
-      setValue('name', medicineName.trim());
-      toast.success(`Medicine name set to: ${medicineName}`);
-    } else {
-      toast.error('No medicine name captured');
+  // Step 4
+  const [doctorName, setDoctorName] = useState('');
+  const [hospitalName, setHospitalName] = useState('');
+  const [prescriptionDate, setPrescriptionDate] = useState('');
+  const [prescriptionFile, setPrescriptionFile] = useState(null);
+  const [prescriptionPreviewUrl, setPrescriptionPreviewUrl] = useState('');
+
+  // Sync doseTimes array length with timesPerDay
+  useEffect(() => {
+    setDoseTimes((prev) => {
+      const updated = [...prev];
+      while (updated.length < timesPerDay) {
+        updated.push(DEFAULT_DOSE_TIMES[updated.length] || '08:00');
+      }
+      return updated.slice(0, timesPerDay);
+    });
+  }, [timesPerDay]);
+
+  // Guard: must have active patient
+  useEffect(() => {
+    if (!activePatientId) {
+      toast.error('Select a patient first');
+      navigate('/');
     }
-    setShowCamera(false);
+  }, [activePatientId, navigate]);
+
+  // Load data for edit mode
+  useEffect(() => {
+    if (!isEdit || !activePatientId) return;
+    (async () => {
+      try {
+        const meds = await getMedicinesForPatient(activePatientId);
+        const med = meds.find((m) => m._id === medicineId);
+        if (!med) { toast.error('Medicine not found'); navigate('/'); return; }
+
+        const form = med.medicineForm || 'tablets';
+        setMedicineForm(form);
+        setName(med.name || '');
+        setStrengthValue(med.strength || '');
+        setStrengthUnit(med.unit || STRENGTH_CONFIG[form].defaultUnit || 'mg');
+        setQuantityValue(String(med.currentStock ?? ''));
+        setQuantityUnit(med.stockUnit || QUANTITY_CONFIG[form].defaultUnit);
+        setAlertThreshold(med.refillThreshold || 7);
+        const freq = med.frequencyPerDay || 1;
+        setTimesPerDay(freq);
+        const times = Array.isArray(med.doseTimes) && med.doseTimes.length
+          ? med.doseTimes
+          : [med.firstDoseTime || '08:00'];
+        setDoseTimes(times.slice(0, freq));
+        setDoctorName(med.doctorName || '');
+        setHospitalName(med.hospitalName || '');
+        setPrescriptionDate(med.prescriptionDate ? String(med.prescriptionDate).slice(0, 10) : '');
+        if (med.medicinePhotoUrl) setMedicinePhotoPreview(med.medicinePhotoUrl);
+        if (med.prescriptionImgUrl) setPrescriptionPreviewUrl(med.prescriptionImgUrl);
+      } catch {
+        toast.error('Could not load medicine data');
+      }
+    })();
+  }, [isEdit, activePatientId, medicineId, navigate]);
+
+  // ── Handlers ─────────────────────────────────────────────────────────────
+
+  const handleFormChange = (newForm) => {
+    setMedicineForm(newForm);
+    setStrengthValue('');
+    setStrengthUnit(STRENGTH_CONFIG[newForm].defaultUnit);
+    setQuantityValue('');
+    setQuantityUnit(QUANTITY_CONFIG[newForm].defaultUnit);
   };
 
-  // Handle medicine photo upload
   const handleMedicinePhotoUpload = (e) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -91,592 +152,591 @@ export default function AddMedicinePage() {
     }
   };
 
-  // Navigate between steps
-  const nextStep = () => {
-    // Validate step 1 fields
-    if (currentStep === 1) {
-      const name = watch('name');
-      const strength = watch('strengthNumber');
-      if (!name || !strength) {
-        toast.error('Please fill in Medicine Name and Strength');
-        return;
-      }
-      setCurrentStep(2);
-    } else if (currentStep === 2) {
-      setCurrentStep(3);
-    }
-  };
-
-  const prevStep = () => {
-    setCurrentStep(currentStep - 1);
-  };
-
-  // Prevent accidental submit when transitioning to step 3 on mobile/slow clicks
-  useEffect(() => {
-    if (currentStep === 3) {
-      setStep3Ready(false);
-      const timer = setTimeout(() => {
-        setStep3Ready(true);
-      }, 400);
-      return () => clearTimeout(timer);
+  const handleCameraCapture = (capturedName) => {
+    if (capturedName?.trim()) {
+      setName(capturedName.trim());
+      toast.success(`Medicine name: ${capturedName}`);
     } else {
-      setStep3Ready(false);
+      toast.error('No name captured');
     }
-  }, [currentStep]);
+    setShowCamera(false);
+  };
 
-  // Redirect if no active patient
-  useEffect(() => {
-    if (!activePatientId) {
-      toast.error('Select a patient first');
-      navigate('/dashboard');
-    }
-  }, [activePatientId, navigate]);
+  // ── Validation & navigation ───────────────────────────────────────────────
 
-  // Load medicine data for editing
-  useEffect(() => {
-    if (!isEdit || !activePatientId) return;
-    (async () => {
-      try {
-        const meds = await getMedicinesForPatient(activePatientId);
-        const med = meds.find((m) => m._id === medicineId);
-        if (!med) {
-          toast.error('Medicine not found');
-          navigate('/dashboard');
-          return;
-        }
-        setValue('name', med.name || '');
-        setValue('strengthNumber', Number(med.strength || 0));
-        setValue('unit', med.unit || 'mg');
-        setValue('frequencyPerDay', Number(med.frequencyPerDay || 1));
-        setValue('dosePerIntake', Number(med.dosePerIntake || 1));
-        setValue('currentStock', Number(med.currentStock || 0));
-        setValue('refillThreshold', Number(med.refillThreshold || 7));
-        setValue('instructions', med.instructions || '');
-        setValue('doctorName', med.doctorName || '');
-        setValue('hospitalName', med.hospitalName || '');
-        setValue('prescriptionDate', med.prescriptionDate ? String(med.prescriptionDate).slice(0, 10) : '');
-        setValue('prescriptionValid', med.prescriptionValid ? String(med.prescriptionValid).slice(0, 10) : '');
-        setValue('firstDoseTime', med.firstDoseTime || '08:00');
-        setValue('remindersEnabled', med.remindersEnabled !== undefined ? med.remindersEnabled : true);
-        if (med.medicinePhotoUrl) {
-          setMedicinePhotoPreview(med.medicinePhotoUrl);
-        }
-        if (med.prescriptionImgUrl) {
-          setPrescriptionPreviewUrl(med.prescriptionImgUrl);
-        }
-      } catch {
-        toast.error('Could not load medicine');
+  const validate = () => {
+    if (step === 1) {
+      if (!name.trim()) { toast.error('Medicine name is required'); return false; }
+      if (!STRENGTH_CONFIG[medicineForm].disabled && !strengthValue) {
+        toast.error('Please enter the strength'); return false;
       }
-    })();
-  }, [isEdit, activePatientId, medicineId, setValue, navigate]);
-
-  // Form submission handler - FIXED: Only send fields that backend expects
-  async function onSubmit(values) {
-    if (!activePatientId) return;
-
-    // ── Date validation ────────────────────────────────────────────────────
-    const today = new Date(); today.setHours(0, 0, 0, 0);
-    if (values.prescriptionDate) {
-      const pd = new Date(values.prescriptionDate);
-      if (pd > today) { toast.error('Prescription date cannot be in the future'); return; }
+      return true;
     }
-    if (values.prescriptionValid) {
-      const pv = new Date(values.prescriptionValid);
-      if (pv < today) { toast.error('"Valid Until" date cannot be in the past'); return; }
-      if (values.prescriptionDate && pv <= new Date(values.prescriptionDate)) {
-        toast.error('"Valid Until" must be after the prescription date'); return;
+    if (step === 2) {
+      if (!quantityValue) {
+        toast.error(QUANTITY_CONFIG[medicineForm].isDuration
+          ? 'Please enter the estimated duration'
+          : 'Please enter the quantity');
+        return false;
       }
+      if (!alertThreshold || alertThreshold < 1) { toast.error('Alert threshold must be at least 1'); return false; }
+      return true;
     }
+    return true;
+  };
 
+  const nextStep = () => { if (validate()) setStep((s) => Math.min(s + 1, 4)); };
+  const prevStep = () => setStep((s) => Math.max(s - 1, 1));
+
+  // ── Submit ────────────────────────────────────────────────────────────────
+
+  const handleSubmit = async () => {
+    if (!activePatientId || isSubmitting) return;
+    setIsSubmitting(true);
     try {
-      let response;
+      const strCfg = STRENGTH_CONFIG[medicineForm];
+      const isCreams = medicineForm === 'cream';
 
-      if (isEdit && medicineId) {
-        // For update - send as JSON or FormData based on whether files are present
-        if (prescriptionFile || medicinePhoto) {
-          const fd = new FormData();
-          fd.append('name', values.name);
-          fd.append('strength', String(values.strengthNumber));
-          fd.append('unit', values.unit);
-          fd.append('frequencyPerDay', String(values.frequencyPerDay));
-          fd.append('dosePerIntake', String(values.dosePerIntake));
-          fd.append('currentStock', String(values.currentStock));
-          fd.append('refillThreshold', String(values.refillThreshold));
-          fd.append('instructions', values.instructions || '');
-          fd.append('doctorName', values.doctorName || '');
-          fd.append('hospitalName', values.hospitalName || '');
-          fd.append('firstDoseTime', values.firstDoseTime || '08:00');
-          fd.append('remindersEnabled', String(values.remindersEnabled));
-          if (values.prescriptionDate) fd.append('prescriptionDate', values.prescriptionDate);
-          if (values.prescriptionValid) fd.append('prescriptionValid', values.prescriptionValid);
-          if (prescriptionFile) fd.append('prescriptionImage', prescriptionFile);
-          if (medicinePhoto) fd.append('medicinePhoto', medicinePhoto);
-          response = await updateMedicine(medicineId, fd);
-        } else {
-          // Send as JSON if no files
-          const payload = {
-            name: values.name,
-            strength: String(values.strengthNumber),
-            unit: values.unit,
-            frequencyPerDay: Number(values.frequencyPerDay),
-            dosePerIntake: Number(values.dosePerIntake),
-            currentStock: Number(values.currentStock),
-            refillThreshold: Number(values.refillThreshold),
-            instructions: values.instructions || '',
-            doctorName: values.doctorName || '',
-            hospitalName: values.hospitalName || '',
-            prescriptionDate: values.prescriptionDate || null,
-            prescriptionValid: values.prescriptionValid || null,
-            firstDoseTime: values.firstDoseTime || '08:00',
-            remindersEnabled: values.remindersEnabled,
-          };
-          response = await updateMedicine(medicineId, payload);
-        }
-        toast.success(`${response.name} updated!`);
+      const fd = new FormData();
+      if (!isEdit) fd.append('patientId', activePatientId);
+
+      // Step 1
+      fd.append('name', name.trim());
+      fd.append('medicineForm', medicineForm);
+      fd.append('strength', strCfg.disabled ? '0' : strengthValue);
+      fd.append('unit', strCfg.disabled ? 'N/A' : strengthUnit);
+
+      // Step 2
+      const stockDays = isCreams
+        ? String(quantityUnit === 'weeks' ? Number(quantityValue) * 7 : Number(quantityValue))
+        : quantityValue;
+      fd.append('currentStock', stockDays);
+      fd.append('stockUnit', quantityUnit);
+      if (isCreams) fd.append('durationEstimate', `${quantityValue} ${quantityUnit}`);
+      fd.append('refillThreshold', String(alertThreshold));
+      fd.append('frequencyPerDay', String(timesPerDay));
+      fd.append('dosePerIntake', '1');
+
+      // Step 3
+      fd.append('firstDoseTime', doseTimes[0] || '08:00');
+      fd.append('doseTimes', JSON.stringify(doseTimes));
+      fd.append('remindersEnabled', 'true');
+
+      // Step 4
+      fd.append('doctorName', doctorName);
+      fd.append('hospitalName', hospitalName);
+      if (prescriptionDate) fd.append('prescriptionDate', prescriptionDate);
+      if (prescriptionFile) fd.append('prescriptionImage', prescriptionFile);
+      if (medicinePhoto) fd.append('medicinePhoto', medicinePhoto);
+
+      if (isEdit) {
+        const res = await updateMedicine(medicineId, fd);
+        toast.success(`${res.name} updated!`);
       } else {
-        // For create - use FormData
-        const fd = new FormData();
-        fd.append('patientId', activePatientId);
-        fd.append('name', values.name);
-        fd.append('strength', String(values.strengthNumber));
-        fd.append('unit', values.unit);
-        fd.append('frequencyPerDay', String(values.frequencyPerDay));
-        fd.append('dosePerIntake', String(values.dosePerIntake));
-        fd.append('currentStock', String(values.currentStock));
-        fd.append('refillThreshold', String(values.refillThreshold));
-        fd.append('instructions', values.instructions || '');
-        fd.append('doctorName', values.doctorName || '');
-        fd.append('hospitalName', values.hospitalName || '');
-        fd.append('firstDoseTime', values.firstDoseTime || '08:00');
-        fd.append('remindersEnabled', String(values.remindersEnabled));
-        if (values.prescriptionDate) fd.append('prescriptionDate', values.prescriptionDate);
-        if (values.prescriptionValid) fd.append('prescriptionValid', values.prescriptionValid);
-        if (prescriptionFile) fd.append('prescriptionImage', prescriptionFile);
-        if (medicinePhoto) fd.append('medicinePhoto', medicinePhoto);
-
-        response = await createMedicine(fd);
-        toast.success(`${response.name} ${response.strength}${response.unit} added!`);
+        const res = await createMedicine(fd);
+        toast.success(`${res.name} added!`);
       }
-      navigate('/dashboard');
+      navigate('/');
     } catch (err) {
-      console.error('Save error:', err);
-      const errorMessage = err?.response?.data?.message || err?.message || 'Save failed';
-      toast.error(errorMessage);
+      toast.error(err?.response?.data?.message || err?.message || 'Save failed');
+    } finally {
+      setIsSubmitting(false);
     }
-  }
+  };
 
-  // Helper to render step indicator
+  // ── Step renderers ────────────────────────────────────────────────────────
+
   const renderStepIndicator = () => {
-    const steps = [
-      { number: 1, title: 'Basic Information', percent: 33 },
-      { number: 2, title: 'Inventory Details', percent: 66 },
-      { number: 3, title: 'Dosage & Schedule', percent: 100 },
-    ];
-
+    const current = STEPS[step - 1];
     return (
       <div className="mb-8">
-        <div className="flex justify-between items-center mb-2">
-          <div className="font-display text-sm font-semibold text-navy">
-            STEP {currentStep} OF {steps.length}
-          </div>
-          <div className="text-xs text-muted">{steps[currentStep - 1].percent}% Complete</div>
+        <div className="flex items-center gap-1 mb-5">
+          {STEPS.map((s, i) => (
+            <div key={s.number} className="flex items-center">
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
+                step > s.number
+                  ? 'bg-mint text-white'
+                  : step === s.number
+                  ? 'bg-mint text-white ring-4 ring-mint/20'
+                  : 'bg-faint text-muted'
+              }`}>
+                {step > s.number ? (
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                ) : s.number}
+              </div>
+              {i < STEPS.length - 1 && (
+                <div className={`h-0.5 flex-1 w-8 mx-1 rounded-full transition-all ${step > s.number ? 'bg-mint' : 'bg-border'}`} />
+              )}
+            </div>
+          ))}
         </div>
-        <div className="w-full bg-gray-200 rounded-full h-2">
+        <div className="w-full bg-faint rounded-full h-1.5 mb-3">
           <div
-            className="bg-mint h-2 rounded-full transition-all duration-300"
-            style={{ width: `${steps[currentStep - 1].percent}%` }}
-          ></div>
+            className="bg-mint h-1.5 rounded-full transition-all duration-500"
+            style={{ width: `${current.pct}%` }}
+          />
         </div>
-        <div className="font-display text-lg font-bold text-navy mt-3">
-          {steps[currentStep - 1].title}
+        <div className="flex justify-between items-baseline">
+          <h2 className="font-display text-xl font-bold text-navy">{current.label}</h2>
+          <span className="text-xs text-muted">Step {step} of {STEPS.length}</span>
         </div>
       </div>
     );
   };
 
-  // Step 1: Basic Information
-  const renderStep1 = () => (
-    <div className="space-y-5">
-      {/* Medicine Photo Section */}
-      <div>
-        <label className="mb-2 block text-xs font-semibold tracking-wide text-navy">Medicine Photo</label>
-        <div
-          className="border-2 border-dashed border-border rounded-2xl p-6 text-center cursor-pointer transition-all hover:border-mint hover:bg-mint-light"
-          onClick={() => document.getElementById('medicine-photo-input')?.click()}
-        >
-          <input
-            id="medicine-photo-input"
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={handleMedicinePhotoUpload}
-          />
-          {medicinePhotoPreview ? (
-            <div className="space-y-3">
-              <img src={medicinePhotoPreview} alt="Medicine preview" className="w-32 h-32 object-cover rounded-lg mx-auto" />
-              <div className="text-xs text-muted">Click to change photo</div>
-            </div>
-          ) : (
-            <>
-              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" className="mx-auto mb-2 text-muted">
-                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" stroke="currentColor" strokeWidth="1.5" fill="none" />
-                <circle cx="12" cy="13" r="4" stroke="currentColor" strokeWidth="1.5" fill="none" />
+  // ── Step 1: Basic Info ────────────────────────────────────────────────────
+
+  const renderStep1 = () => {
+    const strCfg = STRENGTH_CONFIG[medicineForm];
+    return (
+      <div className="space-y-6">
+        {/* Medicine Photo */}
+        <div>
+          <label className="mb-2 block text-xs font-semibold tracking-wide text-navy">Medicine Photo</label>
+          <div
+            className="border-2 border-dashed border-border rounded-2xl p-5 text-center cursor-pointer hover:border-mint hover:bg-mint-light transition-all"
+            onClick={() => document.getElementById('med-photo-input')?.click()}
+          >
+            <input
+              id="med-photo-input"
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleMedicinePhotoUpload}
+            />
+            {medicinePhotoPreview ? (
+              <div className="space-y-2">
+                <img
+                  src={medicinePhotoPreview}
+                  alt="Medicine"
+                  className="w-28 h-28 object-cover rounded-xl mx-auto border border-border"
+                />
+                <p className="text-xs text-muted">Tap to change photo</p>
+              </div>
+            ) : (
+              <div className="py-2">
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" className="mx-auto mb-2 text-navIcon">
+                  <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" stroke="currentColor" strokeWidth="1.5" />
+                  <circle cx="12" cy="13" r="4" stroke="currentColor" strokeWidth="1.5" />
+                </svg>
+                <p className="text-sm font-medium text-muted">Tap to add a photo</p>
+                <p className="text-xs text-navIcon mt-0.5">Optional — helps with quick identification</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Medicine Name */}
+        <div>
+          <label className="mb-1.5 block text-xs font-semibold tracking-wide text-navy">
+            Medicine Name <span className="text-red">*</span>
+          </label>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="e.g. Amoxicillin"
+              className="flex-1 rounded-xl border border-border bg-card px-4 py-3 text-sm text-navy outline-none focus:border-mint transition-colors"
+            />
+            <button
+              type="button"
+              onClick={() => setShowCamera(true)}
+              className="bg-mint text-white px-4 rounded-xl hover:bg-mint-mid transition-colors flex items-center gap-1.5 text-sm font-medium whitespace-nowrap"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                <circle cx="12" cy="13" r="4" />
               </svg>
-              <div className="text-sm text-muted">Add medicine photo</div>
-              <div className="text-xs text-faint">Optional, but helps with identification</div>
-            </>
-          )}
+              Scan
+            </button>
+          </div>
         </div>
-        <div className="text-xs text-muted mt-2 text-center">Safe storage in a cool, dry place is key to medication efficiency.</div>
-      </div>
 
-      {/* Medicine Name */}
-      <div>
-        <label className="mb-2 block text-xs font-semibold tracking-wide text-navy">
-          Medicine Name <span className="text-red">*</span>
-        </label>
-        <div className="flex gap-2">
-          <input
-            {...register('name')}
-            className="flex-1 rounded-xl border border-border bg-card px-4 py-3 text-sm text-navy outline-none transition-colors focus:border-mint"
-            placeholder="e.g. Lisinopril"
-          />
-          <button
-            type="button"
-            onClick={() => setShowCamera(true)}
-            className="bg-mint text-white px-4 py-2 rounded-xl hover:bg-mint-dark transition-colors flex items-center gap-2 whitespace-nowrap text-sm"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
-              <circle cx="12" cy="13" r="4" />
-            </svg>
-            Scan
-          </button>
+        {/* Form of Medicine */}
+        <div>
+          <label className="mb-3 block text-xs font-semibold tracking-wide text-navy">
+            Form of Medicine <span className="text-red">*</span>
+          </label>
+          <div className="grid grid-cols-2 gap-2.5">
+            {FORM_OPTIONS.map((opt) => (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => handleFormChange(opt.value)}
+                className={`flex items-center gap-3 p-3.5 rounded-2xl border-2 text-left transition-all ${
+                  medicineForm === opt.value
+                    ? 'border-mint bg-mint-light'
+                    : 'border-border bg-card hover:border-mint/30 hover:bg-faint'
+                }`}
+              >
+                <span className="text-2xl leading-none shrink-0">{opt.emoji}</span>
+                <div className="min-w-0">
+                  <p className={`text-xs font-semibold leading-snug ${medicineForm === opt.value ? 'text-mint' : 'text-navy'}`}>
+                    {opt.label}
+                  </p>
+                  <p className="text-[10px] text-muted truncate mt-0.5">{opt.desc}</p>
+                </div>
+              </button>
+            ))}
+          </div>
         </div>
-        <div className="text-xs text-muted mt-1">The name printed on your prescription or package.</div>
-        {errors.name && <div className="mt-1 text-xs font-semibold text-red">{errors.name.message}</div>}
-      </div>
 
-      {/* Strength */}
-      <div>
-        <label className="mb-2 block text-xs font-semibold tracking-wide text-navy">
-          Strength <span className="text-red">*</span>
-        </label>
-        <div className="flex gap-2">
-          <input
-            type="number"
-            step="any"
-            {...register('strengthNumber')}
-            className="flex-1 rounded-xl border border-border bg-card px-4 py-3 text-sm text-navy outline-none transition-colors focus:border-mint"
-            placeholder="e.g. 10"
-          />
-          <select
-            {...register('unit')}
-            className="w-24 rounded-xl border border-border bg-card px-4 py-3 text-sm text-navy outline-none transition-colors focus:border-mint"
-          >
-            <option value="mg">mg</option>
-            <option value="ml">ml</option>
-            <option value="IU">IU</option>
-            <option value="mcg">mcg</option>
-          </select>
+        {/* Strength */}
+        <div>
+          <div className="flex items-center gap-2 mb-1.5">
+            <label className="text-xs font-semibold tracking-wide text-navy">{strCfg.label}</label>
+            {strCfg.disabled && (
+              <span className="text-[10px] font-normal text-muted bg-faint px-2 py-0.5 rounded-full border border-border">
+                Not applicable
+              </span>
+            )}
+          </div>
+          <div className={`flex gap-2 ${strCfg.disabled ? 'opacity-50 pointer-events-none' : ''}`}>
+            <input
+              type={strCfg.disabled ? 'text' : 'number'}
+              step="any"
+              value={strCfg.disabled ? '' : strengthValue}
+              onChange={(e) => setStrengthValue(e.target.value)}
+              disabled={strCfg.disabled}
+              placeholder={strCfg.disabled ? 'Not applicable for creams' : strCfg.placeholder}
+              className="flex-1 rounded-xl border border-border bg-card px-4 py-3 text-sm text-navy outline-none focus:border-mint transition-colors disabled:bg-faint"
+            />
+            {!strCfg.disabled && strCfg.units.length > 1 && (
+              <select
+                value={strengthUnit}
+                onChange={(e) => setStrengthUnit(e.target.value)}
+                className="rounded-xl border border-border bg-card px-3 py-3 text-sm text-navy outline-none focus:border-mint transition-colors"
+              >
+                {strCfg.units.map((u) => <option key={u} value={u}>{u}</option>)}
+              </select>
+            )}
+            {!strCfg.disabled && strCfg.units.length === 1 && (
+              <div className="px-4 rounded-xl border border-border bg-faint text-sm font-semibold text-navy flex items-center whitespace-nowrap">
+                {strCfg.units[0]}
+              </div>
+            )}
+          </div>
         </div>
-        <div className="text-xs text-muted mt-1">Amount of active ingredient per dose.</div>
-        {errors.strengthNumber && <div className="mt-1 text-xs font-semibold text-red">{errors.strengthNumber.message}</div>}
       </div>
-    </div>
-  );
+    );
+  };
 
-  // Step 2: Inventory Details
-  const renderStep2 = () => (
-    <div className="space-y-5">
-      <div>
-        <label className="mb-2 block text-xs font-semibold tracking-wide text-navy">
-          Total Tablets / Pills <span className="text-red">*</span>
-        </label>
-        <input
-          type="number"
-          min={0}
-          {...register('currentStock')}
-          className="w-full rounded-xl border border-border bg-card px-4 py-3 text-sm text-navy outline-none transition-colors focus:border-mint"
-          placeholder="50"
-        />
-        <div className="text-xs text-muted mt-1">Enter the total count of individual units you have remaining.</div>
-        {errors.currentStock && <div className="mt-1 text-xs font-semibold text-red">{errors.currentStock.message}</div>}
-      </div>
+  // ── Step 2: Quantity & Schedule ───────────────────────────────────────────
 
-      <div>
-        <label className="mb-2 block text-xs font-semibold tracking-wide text-navy">
-          Alert Threshold (days)
-        </label>
-        <input
-          type="number"
-          min={1}
-          {...register('refillThreshold')}
-          className="w-full rounded-xl border border-border bg-card px-4 py-3 text-sm text-navy outline-none transition-colors focus:border-mint"
-          placeholder="7"
-        />
-        <div className="text-xs text-muted mt-1">Get notified when stock is low based on daily consumption.</div>
-        {errors.refillThreshold && <div className="mt-1 text-xs font-semibold text-red">{errors.refillThreshold.message}</div>}
-      </div>
+  const renderStep2 = () => {
+    const qtyCfg = QUANTITY_CONFIG[medicineForm];
+    return (
+      <div className="space-y-6">
+        {/* Quantity */}
+        <div>
+          <label className="mb-1.5 block text-xs font-semibold tracking-wide text-navy">
+            {qtyCfg.label} <span className="text-red">*</span>
+          </label>
+          <div className="flex gap-2">
+            <input
+              type="number"
+              step={qtyCfg.step}
+              min="0"
+              value={quantityValue}
+              onChange={(e) => setQuantityValue(e.target.value)}
+              placeholder={qtyCfg.placeholder}
+              className="flex-1 rounded-xl border border-border bg-card px-4 py-3 text-sm text-navy outline-none focus:border-mint transition-colors"
+            />
+            {qtyCfg.units ? (
+              <select
+                value={quantityUnit}
+                onChange={(e) => setQuantityUnit(e.target.value)}
+                className="rounded-xl border border-border bg-card px-3 py-3 text-sm text-navy outline-none focus:border-mint transition-colors"
+              >
+                {qtyCfg.units.map((u) => <option key={u} value={u}>{u}</option>)}
+              </select>
+            ) : (
+              <div className="px-4 rounded-xl border border-border bg-faint text-sm font-semibold text-navy flex items-center whitespace-nowrap">
+                {qtyCfg.defaultUnit}
+              </div>
+            )}
+          </div>
+          <p className="text-xs text-muted mt-1.5">{qtyCfg.hint}</p>
+        </div>
 
-      <div className="bg-mint-light rounded-xl p-4 border border-mint/20">
-        <div className="flex items-start gap-3">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="text-mint shrink-0 mt-0.5">
+        {/* Alert Threshold */}
+        <div>
+          <label className="mb-1.5 block text-xs font-semibold tracking-wide text-navy">
+            Alert Threshold <span className="text-red">*</span>
+          </label>
+          <div className="flex gap-2 items-center">
+            <input
+              type="number"
+              min={1}
+              value={alertThreshold}
+              onChange={(e) => setAlertThreshold(Number(e.target.value))}
+              className="flex-1 rounded-xl border border-border bg-card px-4 py-3 text-sm text-navy outline-none focus:border-mint transition-colors"
+            />
+            <div className="px-4 rounded-xl border border-border bg-faint text-sm font-semibold text-navy flex items-center whitespace-nowrap h-[46px]">
+              days
+            </div>
+          </div>
+          <p className="text-xs text-muted mt-1.5">
+            {medicineForm === 'cream'
+              ? 'Alert when fewer than this many days of the estimated duration remain.'
+              : 'Get an alert when you have roughly this many days of supply left.'}
+          </p>
+        </div>
+
+        {/* Times per Day */}
+        <div>
+          <label className="mb-4 block text-xs font-semibold tracking-wide text-navy">
+            Number of Times per Day <span className="text-red">*</span>
+          </label>
+          <div className="flex items-center gap-4">
+            <button
+              type="button"
+              onClick={() => setTimesPerDay((t) => Math.max(t - 1, 1))}
+              className="w-11 h-11 rounded-full bg-faint border border-border text-navy text-xl font-bold flex items-center justify-center hover:bg-border transition-colors"
+            >
+              −
+            </button>
+            <div className="flex-1 text-center py-3 rounded-2xl bg-card border border-border">
+              <span className="text-3xl font-bold text-navy">{timesPerDay}</span>
+              <p className="text-xs text-muted mt-0.5">
+                {timesPerDay === 1 ? 'once daily' : timesPerDay === 2 ? 'twice daily' : `${timesPerDay} times daily`}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setTimesPerDay((t) => Math.min(t + 1, 8))}
+              className="w-11 h-11 rounded-full bg-faint border border-border text-navy text-xl font-bold flex items-center justify-center hover:bg-border transition-colors"
+            >
+              +
+            </button>
+          </div>
+        </div>
+
+        {/* Hint */}
+        <div className="bg-mint-light rounded-2xl p-4 flex gap-3">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="text-mint shrink-0 mt-0.5">
             <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5" />
             <path d="M12 8v4M12 16h.01" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
           </svg>
-          <div>
-            <div className="text-xs font-semibold text-navy">Why do we need this?</div>
-            <div className="text-xs text-muted mt-1">Accurate inventory tracking helps us remind you when it's time to refill your prescription, ensuring you never miss a dose.</div>
-          </div>
+          <p className="text-xs text-mint font-medium leading-relaxed">
+            You'll set the exact time for each dose in the next step.
+            Total dose slots: <strong>{timesPerDay}</strong>.
+          </p>
         </div>
       </div>
+    );
+  };
+
+  // ── Step 3: Dose Times ────────────────────────────────────────────────────
+
+  const renderStep3 = () => (
+    <div className="space-y-4">
+      <p className="text-sm text-muted leading-relaxed">
+        Set the exact time for each of your{' '}
+        <strong className="text-navy">{timesPerDay}</strong> daily{' '}
+        {timesPerDay === 1 ? 'dose' : 'doses'}.
+      </p>
+      {doseTimes.map((time, i) => (
+        <div key={i} className="bg-card rounded-2xl border border-border p-5 shadow-sm">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-9 h-9 rounded-full bg-mint-light flex items-center justify-center shrink-0">
+              <span className="text-mint text-sm font-bold">{i + 1}</span>
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-navy">{ORDINALS[i] || `Dose ${i + 1}`} Dose</p>
+              <p className="text-xs text-muted">
+                When do you take your {(ORDINALS[i] || `${i + 1}th`).toLowerCase()} dose?
+              </p>
+            </div>
+          </div>
+          <input
+            type="time"
+            value={time}
+            onChange={(e) => {
+              const updated = [...doseTimes];
+              updated[i] = e.target.value;
+              setDoseTimes(updated);
+            }}
+            className="w-full rounded-xl border border-border bg-faint px-4 py-3.5 text-xl font-bold text-navy text-center outline-none focus:border-mint transition-colors"
+          />
+        </div>
+      ))}
     </div>
   );
 
-  // Step 3: Dosage & Schedule
-  const renderStep3 = () => (
-    <div className="space-y-6">
+  // ── Step 4: Prescription ──────────────────────────────────────────────────
+
+  const renderStep4 = () => (
+    <div className="space-y-5">
+      <p className="text-sm text-muted leading-relaxed">
+        Prescription details are optional but help with refill tracking and orders.
+      </p>
+
       <div>
-        <label className="mb-2 block text-xs font-semibold tracking-wide text-navy">
-          Number of Doses per Day <span className="text-red">*</span>
-        </label>
-        <div className="flex items-center gap-4">
-          <button
-            type="button"
-            onClick={() => {
-              const current = watch('frequencyPerDay');
-              if (current > 1) setValue('frequencyPerDay', current - 1);
-            }}
-            className="w-10 h-10 rounded-full bg-gray-100 text-navy text-xl font-semibold hover:bg-gray-200 transition-colors"
-          >
-            -
-          </button>
-          <span className="text-2xl font-bold text-navy w-8 text-center">{frequencyPerDay}</span>
-          <button
-            type="button"
-            onClick={() => {
-              const current = watch('frequencyPerDay');
-              if (current < 8) setValue('frequencyPerDay', current + 1);
-            }}
-            className="w-10 h-10 rounded-full bg-gray-100 text-navy text-xl font-semibold hover:bg-gray-200 transition-colors"
-          >
-            +
-          </button>
+        <label className="mb-1.5 block text-xs font-semibold tracking-wide text-navy">Doctor's Name</label>
+        <input
+          type="text"
+          value={doctorName}
+          onChange={(e) => setDoctorName(e.target.value)}
+          placeholder="Dr. Anita Sharma"
+          className="w-full rounded-xl border border-border bg-card px-4 py-3 text-sm text-navy outline-none focus:border-mint transition-colors"
+        />
+      </div>
+
+      <div>
+        <label className="mb-1.5 block text-xs font-semibold tracking-wide text-navy">Hospital / Clinic</label>
+        <input
+          type="text"
+          value={hospitalName}
+          onChange={(e) => setHospitalName(e.target.value)}
+          placeholder="City General Hospital"
+          className="w-full rounded-xl border border-border bg-card px-4 py-3 text-sm text-navy outline-none focus:border-mint transition-colors"
+        />
+      </div>
+
+      <div>
+        <label className="mb-1.5 block text-xs font-semibold tracking-wide text-navy">Prescription Date</label>
+        <input
+          type="date"
+          value={prescriptionDate}
+          onChange={(e) => setPrescriptionDate(e.target.value)}
+          max={new Date().toISOString().split('T')[0]}
+          className="w-full rounded-xl border border-border bg-card px-4 py-3 text-sm text-navy outline-none focus:border-mint transition-colors"
+        />
+        <p className="text-xs text-muted mt-1">Cannot be a future date.</p>
+      </div>
+
+      {/* Prescription Image */}
+      <div>
+        <div className="flex items-center gap-2 mb-1.5">
+          <label className="text-xs font-semibold tracking-wide text-navy">Prescription Image</label>
+          <span className="text-[10px] font-normal text-muted bg-faint px-2 py-0.5 rounded-full border border-border">
+            Optional
+          </span>
         </div>
-        {errors.frequencyPerDay && <div className="mt-1 text-xs font-semibold text-red">{errors.frequencyPerDay.message}</div>}
-      </div>
-
-      <div>
-        <label className="mb-2 block text-xs font-semibold tracking-wide text-navy">
-          Tablets per Dose <span className="text-red">*</span>
-        </label>
-        <input
-          type="number"
-          step="0.5"
-          min={0.5}
-          {...register('dosePerIntake')}
-          className="w-full rounded-xl border border-border bg-card px-4 py-3 text-sm text-navy outline-none transition-colors focus:border-mint"
-          placeholder="1"
-        />
-        {errors.dosePerIntake && <div className="mt-1 text-xs font-semibold text-red">{errors.dosePerIntake.message}</div>}
-      </div>
-
-      <div>
-        <label className="mb-2 block text-xs font-semibold tracking-wide text-navy">
-          First Dose Time
-        </label>
-        <input
-          type="time"
-          {...register('firstDoseTime')}
-          className="w-full rounded-xl border border-border bg-card px-4 py-3 text-sm text-navy outline-none transition-colors focus:border-mint"
-        />
-        <div className="text-xs text-muted mt-1">Tap to adjust medication time</div>
-      </div>
-
-      <div>
-        <label className="flex items-center gap-3 cursor-pointer">
+        <div
+          className="border-2 border-dashed border-border rounded-2xl p-5 text-center cursor-pointer hover:border-mint hover:bg-mint-light transition-all"
+          onClick={() => document.getElementById('prescription-file')?.click()}
+        >
           <input
-            type="checkbox"
-            {...register('remindersEnabled')}
-            className="w-4 h-4 rounded border-border text-mint focus:ring-mint"
+            id="prescription-file"
+            type="file"
+            accept="image/*,application/pdf"
+            className="hidden"
+            onChange={(e) => {
+              const f = e.target.files?.[0] || null;
+              setPrescriptionFile(f);
+              setPrescriptionPreviewUrl(f && f.type.startsWith('image/') ? URL.createObjectURL(f) : '');
+            }}
           />
-          <span className="text-xs font-semibold text-navy">Push notifications</span>
-        </label>
-        {remindersEnabled && firstDoseTime && (
-          <div className="mt-2 text-xs text-mint bg-mint-light p-2 rounded-lg inline-block">
-            🔔 Alarm set for {firstDoseTime}
-          </div>
-        )}
-      </div>
-
-      {/* Instructions */}
-      <div>
-        <label className="mb-2 block text-xs font-semibold tracking-wide text-navy">Instructions (Optional)</label>
-        <textarea
-          {...register('instructions')}
-          rows={3}
-          className="w-full rounded-xl border border-border bg-card px-4 py-3 text-sm text-navy outline-none transition-colors focus:border-mint resize-none"
-          placeholder="e.g., Take after meals, avoid alcohol, etc."
-        />
-      </div>
-
-      {/* Doctor & Prescription Section */}
-      <div className="border-t border-border pt-4 mt-2">
-        <div className="font-display text-sm font-bold text-navy mb-4">Prescription Details</div>
-        <div className="space-y-4">
-          <div>
-            <label className="mb-2 block text-xs font-semibold tracking-wide text-navy">Doctor's Name</label>
-            <input
-              {...register('doctorName')}
-              className="w-full rounded-xl border border-border bg-card px-4 py-3 text-sm text-navy outline-none transition-colors focus:border-mint"
-              placeholder="Dr. Sarah Johnson"
-            />
-          </div>
-          <div>
-            <label className="mb-2 block text-xs font-semibold tracking-wide text-navy">Hospital / Clinic</label>
-            <input
-              {...register('hospitalName')}
-              className="w-full rounded-xl border border-border bg-card px-4 py-3 text-sm text-navy outline-none transition-colors focus:border-mint"
-              placeholder="City General Hospital"
-            />
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="mb-2 block text-xs font-semibold tracking-wide text-navy">Prescription Date</label>
-              <input
-                type="date"
-                max={new Date().toISOString().split('T')[0]}
-                {...register('prescriptionDate')}
-                className="w-full rounded-xl border border-border bg-card px-4 py-3 text-sm text-navy outline-none transition-colors"
+          {prescriptionPreviewUrl ? (
+            <div className="space-y-2">
+              <img
+                src={prescriptionPreviewUrl}
+                alt="Prescription preview"
+                className="max-h-36 mx-auto rounded-xl border border-border"
               />
-              <p className="text-xs text-muted mt-1">Cannot be a future date</p>
-            </div>
-            <div>
-              <label className="mb-2 block text-xs font-semibold tracking-wide text-navy">Valid Until</label>
-              <input
-                type="date"
-                min={new Date().toISOString().split('T')[0]}
-                {...register('prescriptionValid')}
-                className="w-full rounded-xl border border-border bg-card px-4 py-3 text-sm text-navy outline-none transition-colors"
-              />
-              <p className="text-xs text-muted mt-1">Must be today or a future date</p>
-            </div>
-          </div>
-
-          {/* Prescription Image Upload */}
-          <div>
-            <label className="mb-2 block text-xs font-semibold tracking-wide text-navy">Prescription Image (Optional)</label>
-            <div
-              className="border-2 border-dashed border-border rounded-xl p-4 text-center cursor-pointer transition-all hover:border-mint hover:bg-mint-light"
-              onClick={() => document.getElementById('prescription-file')?.click()}
-            >
-              <input
-                id="prescription-file"
-                type="file"
-                accept="image/*,application/pdf"
-                className="hidden"
-                onChange={(e) => {
-                  const f = e.target.files?.[0] || null;
-                  setPrescriptionFile(f);
-                  if (f && f.type.startsWith('image/')) {
-                    setPrescriptionPreviewUrl(URL.createObjectURL(f));
-                  } else {
-                    setPrescriptionPreviewUrl('');
-                  }
+              <button
+                type="button"
+                className="text-xs text-red"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setPrescriptionFile(null);
+                  setPrescriptionPreviewUrl('');
                 }}
-              />
-              <svg width="30" height="30" viewBox="0 0 24 24" fill="none" className="mx-auto mb-2 text-muted">
+              >
+                Remove
+              </button>
+            </div>
+          ) : (
+            <div>
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" className="mx-auto mb-2 text-navIcon">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="currentColor" strokeWidth="1.5" />
                 <polyline points="17 8 12 3 7 8" stroke="currentColor" strokeWidth="1.5" />
                 <line x1="12" y1="3" x2="12" y2="15" stroke="currentColor" strokeWidth="1.5" />
               </svg>
-              <div className="text-xs text-muted">Click to upload or drag & drop</div>
-              <div className="text-xs text-faint mt-1">JPG, PNG, PDF — max 5MB</div>
-              {prescriptionPreviewUrl && (
-                <div className="mt-3">
-                  <img src={prescriptionPreviewUrl} alt="Preview" className="max-h-32 mx-auto rounded-lg" />
-                  <button
-                    type="button"
-                    className="text-xs text-red mt-2"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setPrescriptionFile(null);
-                      setPrescriptionPreviewUrl('');
-                    }}
-                  >
-                    Remove
-                  </button>
-                </div>
-              )}
+              <p className="text-sm text-muted font-medium">Upload prescription</p>
+              <p className="text-xs text-navIcon mt-0.5">JPG, PNG or PDF — max 5 MB</p>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </div>
   );
 
+  // ── Render ────────────────────────────────────────────────────────────────
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-lg mx-auto px-5 py-6">
+    <div className="min-h-screen bg-bg">
+      <div className="max-w-lg mx-auto px-5 py-6 pb-28">
         {renderStepIndicator()}
 
-        <form onSubmit={handleSubmit(onSubmit)}>
-          {currentStep === 1 && renderStep1()}
-          {currentStep === 2 && renderStep2()}
-          {currentStep === 3 && renderStep3()}
-
-          <div className="flex gap-3 justify-between mt-8">
-            {currentStep > 1 ? (
-              <button
-                type="button"
-                onClick={prevStep}
-                className="rounded-xl border border-border bg-white px-5 py-2.5 text-sm font-semibold text-navy hover:bg-gray-50 transition-colors"
-              >
-                Back
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={() => navigate('/dashboard')}
-                className="rounded-xl border border-border bg-white px-5 py-2.5 text-sm font-semibold text-navy hover:bg-gray-50 transition-colors"
-              >
-                Cancel
-              </button>
-            )}
-
-            {currentStep < 3 ? (
-              <button
-                key="next-button"
-                type="button"
-                onClick={nextStep}
-                className="rounded-xl bg-mint text-white px-6 py-2.5 text-sm font-semibold hover:bg-mint-dark transition-colors"
-              >
-                Next →
-              </button>
-            ) : (
-              <button
-                key="submit-button"
-                type="submit"
-                disabled={isSubmitting || !step3Ready}
-                className="rounded-xl bg-mint text-white px-6 py-2.5 text-sm font-semibold hover:bg-mint-dark transition-colors disabled:opacity-50 flex items-center gap-2"
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <polyline points="20 6 9 17 4 12" />
-                </svg>
-                {isEdit ? 'Update Medicine' : 'Save Medication'}
-              </button>
-            )}
-          </div>
-        </form>
+        {step === 1 && renderStep1()}
+        {step === 2 && renderStep2()}
+        {step === 3 && renderStep3()}
+        {step === 4 && renderStep4()}
       </div>
 
-      {/* Camera Modal */}
+      {/* Fixed bottom navigation */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-border px-5 py-4 flex gap-3 z-30">
+        {step > 1 ? (
+          <button
+            type="button"
+            onClick={prevStep}
+            className="flex-1 rounded-xl border border-border bg-white py-3 text-sm font-semibold text-navy hover:bg-faint transition-colors"
+          >
+            ← Back
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={() => navigate('/')}
+            className="flex-1 rounded-xl border border-border bg-white py-3 text-sm font-semibold text-navy hover:bg-faint transition-colors"
+          >
+            Cancel
+          </button>
+        )}
+
+        {step < 4 ? (
+          <button
+            type="button"
+            onClick={nextStep}
+            className="flex-1 rounded-xl bg-mint text-white py-3 text-sm font-semibold hover:bg-mint-mid transition-colors"
+          >
+            Next →
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={handleSubmit}
+            disabled={isSubmitting}
+            className="flex-1 rounded-xl bg-mint text-white py-3 text-sm font-semibold hover:bg-mint-mid transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
+          >
+            {isSubmitting ? (
+              <>
+                <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+                Saving…
+              </>
+            ) : (
+              <>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+                {isEdit ? 'Update Medicine' : 'Save Medicine'}
+              </>
+            )}
+          </button>
+        )}
+      </div>
+
       {showCamera && (
-        <SimpleCamera
-          onCapture={handleCameraCapture}
-          onClose={() => setShowCamera(false)}
-        />
+        <SimpleCamera onCapture={handleCameraCapture} onClose={() => setShowCamera(false)} />
       )}
     </div>
   );

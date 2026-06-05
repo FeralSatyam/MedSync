@@ -65,13 +65,21 @@ export const createMedicine = async (req, res, next) => {
       medicinePhotoId = file.public_id || file.filename || '';
     }
 
+    let doseTimes = ['08:00'];
+    if (req.body.doseTimes) {
+      try { doseTimes = JSON.parse(req.body.doseTimes); } catch { /* keep default */ }
+    }
+
     const medicine = await Medicine.create({
       patientId,
       name: req.body.name,
+      medicineForm: req.body.medicineForm || 'tablets',
       strength: req.body.strength,
       unit: req.body.unit || 'mg',
+      stockUnit: req.body.stockUnit || '',
+      durationEstimate: req.body.durationEstimate || '',
       frequencyPerDay: Number(req.body.frequencyPerDay),
-      dosePerIntake: Number(req.body.dosePerIntake),
+      dosePerIntake: req.body.dosePerIntake != null ? Number(req.body.dosePerIntake) : 1,
       currentStock: Number(req.body.currentStock),
       refillThreshold: req.body.refillThreshold != null ? Number(req.body.refillThreshold) : 7,
       instructions: req.body.instructions || '',
@@ -83,7 +91,8 @@ export const createMedicine = async (req, res, next) => {
       prescriptionImgId,
       medicinePhotoUrl,
       medicinePhotoId,
-      firstDoseTime: req.body.firstDoseTime || '08:00',
+      firstDoseTime: doseTimes[0] || req.body.firstDoseTime || '08:00',
+      doseTimes,
       remindersEnabled: req.body.remindersEnabled === 'false' || req.body.remindersEnabled === false ? false : true,
     });
     res.status(201).json(medicine);
@@ -99,8 +108,11 @@ export const updateMedicine = async (req, res, next) => {
 
     const fields = [
       'name',
+      'medicineForm',
       'strength',
       'unit',
+      'stockUnit',
+      'durationEstimate',
       'frequencyPerDay',
       'dosePerIntake',
       'currentStock',
@@ -127,7 +139,13 @@ export const updateMedicine = async (req, res, next) => {
     if (req.body.prescriptionValid !== undefined) {
       medicine.prescriptionValid = req.body.prescriptionValid ? new Date(req.body.prescriptionValid) : null;
     }
-    if (req.body.firstDoseTime !== undefined) {
+    if (req.body.doseTimes !== undefined) {
+      try {
+        const times = JSON.parse(req.body.doseTimes);
+        medicine.doseTimes = times;
+        medicine.firstDoseTime = times[0] || '08:00';
+      } catch { /* keep existing */ }
+    } else if (req.body.firstDoseTime !== undefined) {
       medicine.firstDoseTime = req.body.firstDoseTime;
     }
     if (req.body.remindersEnabled !== undefined) {
