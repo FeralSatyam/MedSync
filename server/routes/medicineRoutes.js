@@ -18,7 +18,7 @@ const medicineFields = [
   body('patientId').notEmpty().withMessage('patientId required'),
   body('name').trim().notEmpty(),
   body('strength').trim().notEmpty(),
-  body('unit').optional().isIn(['mg', 'ml', 'IU', 'mcg']),
+  body('unit').optional().isIn(['mg', 'mcg', 'g', 'ml', 'IU', 'mg/ml', 'mg/5ml', 'mcg/puff', 'mcg/ml', 'IU/ml', 'g/ml', 'mg/dose', 'N/A']),
   body('frequencyPerDay').isFloat({ min: 1, max: 24 }),
   body('dosePerIntake').isFloat({ min: 0.5 }),
   body('currentStock').isFloat({ min: 0 }),
