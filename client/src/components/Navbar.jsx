@@ -29,6 +29,14 @@ export default function Navbar({ hasAlerts = false }) {
   }, [rootUserId]);
 
   useEffect(() => {
+    function handlePicUpdated(e) {
+      if (e.detail?.uid === rootUserId) setProfilePic(e.detail.base64);
+    }
+    window.addEventListener('medsync:profilePicUpdated', handlePicUpdated);
+    return () => window.removeEventListener('medsync:profilePicUpdated', handlePicUpdated);
+  }, [rootUserId]);
+
+  useEffect(() => {
     let cancelled = false;
     async function fetchAlerts() {
       try {
@@ -216,12 +224,6 @@ export default function Navbar({ hasAlerts = false }) {
             ) : (
               initials
             )}
-          </div>
-          <div className="hidden sm:block text-left min-w-0">
-            <div className="text-[11px] text-muted leading-tight">Account</div>
-            <div className="text-[13px] font-semibold text-navy font-body truncate max-w-[140px]">
-              {rootUser?.name || 'User'}
-            </div>
           </div>
         </button>
 

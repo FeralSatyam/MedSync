@@ -420,7 +420,10 @@ export default function ProfilePage() {
       const base64 = reader.result;
       setProfilePic(base64);
       const uid = authUser?.id || authUser?._id;
-      if (uid) localStorage.setItem(`medsync_pfp_${uid}`, base64);
+      if (uid) {
+        localStorage.setItem(`medsync_pfp_${uid}`, base64);
+        window.dispatchEvent(new CustomEvent('medsync:profilePicUpdated', { detail: { uid, base64 } }));
+      }
       toast.success('Profile picture updated');
     };
     reader.readAsDataURL(file);

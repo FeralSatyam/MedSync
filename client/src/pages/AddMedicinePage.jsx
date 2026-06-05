@@ -167,8 +167,9 @@ export default function AddMedicinePage() {
   const validate = () => {
     if (step === 1) {
       if (!name.trim()) { toast.error('Medicine name is required'); return false; }
-      if (!STRENGTH_CONFIG[medicineForm].disabled && !strengthValue) {
-        toast.error('Please enter the strength'); return false;
+      if (!STRENGTH_CONFIG[medicineForm].disabled) {
+        if (!strengthValue) { toast.error('Please enter the strength'); return false; }
+        if (Number(strengthValue) < 0) { toast.error('Strength cannot be negative'); return false; }
       }
       return true;
     }
@@ -179,6 +180,7 @@ export default function AddMedicinePage() {
           : 'Please enter the quantity');
         return false;
       }
+      if (Number(quantityValue) < 0) { toast.error('Quantity cannot be negative'); return false; }
       if (!alertThreshold || alertThreshold < 1) { toast.error('Alert threshold must be at least 1'); return false; }
       return true;
     }
@@ -398,8 +400,13 @@ export default function AddMedicinePage() {
             <input
               type={strCfg.disabled ? 'text' : 'number'}
               step="any"
+              min="0"
               value={strCfg.disabled ? '' : strengthValue}
-              onChange={(e) => setStrengthValue(e.target.value)}
+              onChange={(e) => {
+                const val = e.target.value;
+                if (val === '' || Number(val) >= 0) setStrengthValue(val);
+              }}
+              onKeyDown={(e) => { if (e.key === '-' || e.key === 'e') e.preventDefault(); }}
               disabled={strCfg.disabled}
               placeholder={strCfg.disabled ? 'Not applicable for creams' : strCfg.placeholder}
               className="flex-1 rounded-xl border border-border bg-faint px-4 py-3 text-sm text-navy focus:outline-none focus:border-mint transition-colors disabled:opacity-50 disabled:pointer-events-none"
@@ -441,7 +448,11 @@ export default function AddMedicinePage() {
               step={qtyCfg.step}
               min="0"
               value={quantityValue}
-              onChange={(e) => setQuantityValue(e.target.value)}
+              onChange={(e) => {
+                const val = e.target.value;
+                if (val === '' || Number(val) >= 0) setQuantityValue(val);
+              }}
+              onKeyDown={(e) => { if (e.key === '-' || e.key === 'e') e.preventDefault(); }}
               placeholder={qtyCfg.placeholder}
               className="flex-1 rounded-xl border border-border bg-faint px-4 py-3 text-sm text-navy focus:outline-none focus:border-mint transition-colors"
             />
@@ -472,7 +483,11 @@ export default function AddMedicinePage() {
               type="number"
               min={1}
               value={alertThreshold}
-              onChange={(e) => setAlertThreshold(Number(e.target.value))}
+              onChange={(e) => {
+                const val = Number(e.target.value);
+                if (val >= 1) setAlertThreshold(val);
+              }}
+              onKeyDown={(e) => { if (e.key === '-' || e.key === 'e') e.preventDefault(); }}
               className="flex-1 rounded-xl border border-border bg-faint px-4 py-3 text-sm text-navy focus:outline-none focus:border-mint transition-colors"
             />
             <div className="px-4 rounded-xl border border-border bg-faint text-sm font-semibold text-navy flex items-center whitespace-nowrap h-[46px]">

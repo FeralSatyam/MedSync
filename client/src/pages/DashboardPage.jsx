@@ -312,7 +312,7 @@ function DesktopSidebar({ activeTab, onTabChange, onQRPress, navigate }) {
       <div className="flex-1 flex flex-col min-h-0">
         <div className="flex items-center justify-center h-16 px-4 border-b border-border">
           <div className="flex items-center gap-2">
-            <img src="/logo-b.png" alt="MedSync" className="w-8 h-8" />
+            <img src="/logo.png" alt="MedSync" className="w-8 h-8" />
             <span className="font-bold text-navy text-xl tracking-tight">MedSync</span>
           </div>
         </div>
@@ -864,7 +864,7 @@ export default function DashboardPage() {
         <div className="lg:hidden bg-white border-b border-border sticky top-0 z-40">
           <div className="flex justify-between items-center px-4 h-16">
             <div className="flex items-center gap-2">
-              <img src="/logo-b.png" alt="MedSync" className="w-8 h-8" />
+              <img src="/logo.png" alt="MedSync" className="w-8 h-8" />
               <span className="font-bold text-navy text-xl tracking-tight">MedSync</span>
             </div>
             <div className="flex items-center gap-3">
