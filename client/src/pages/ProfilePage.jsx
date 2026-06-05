@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import MobileBottomNav from '../components/MobileBottomNav';
 import toast from 'react-hot-toast';
 import { useAppStore } from '../store/appStore';
 import { useAuthStore } from '../store/authStore';
@@ -1056,6 +1057,7 @@ export default function ProfilePage() {
           </div>
         </div>
       )}
+      <MobileBottomNav />
     </div>
   );
 }

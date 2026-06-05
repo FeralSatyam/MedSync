@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import MobileBottomNav from '../components/MobileBottomNav';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import toast from 'react-hot-toast';
@@ -1648,6 +1649,7 @@ export default function PharmacyPage() {
           </div>
         </div>
       )}
+      <MobileBottomNav />
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, useRef, useCallback, memo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import MobileBottomNav from '../components/MobileBottomNav';
 
 import { createPatient, getPatients, generatePatientOtp } from '../api/patientApi';
 import { deleteMedicine, getMedicinesForPatient, restockMedicine, updateMedicine } from '../api/medicineApi';
@@ -382,57 +383,6 @@ function DesktopSidebar({ activeTab, onTabChange, onQRPress, navigate }) {
         </div>
       </div>
     </aside>
-  );
-}
-
-// Mobile Bottom Navigation with Floating QR Button
-function MobileBottomNav({ activeTab, onTabChange, onQRPress, navigate }) {
-  const tabs = [
-    { id: 'home', label: 'Home', icon: Icons.Home },
-    { id: 'ai-health', label: 'AI Health', icon: Icons.AIHealth },
-    { id: 'qr', label: '', icon: Icons.QR, isQR: true, isSpecial: true },
-    { id: 'orders', label: 'Orders', icon: Icons.Orders },
-    { id: 'profile', label: 'Profile', icon: Icons.Profile },
-  ];
-
-  return (
-    <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-2 pt-4 pb-3 shadow-lg z-40">
-      <div className="flex justify-around items-center relative">
-        {tabs.map((tab) => {
-          const Icon = tab.icon;
-          const isActive = activeTab === tab.id;
-
-          if (tab.isSpecial) {
-            return (
-              <button
-                key={tab.id}
-                onClick={() => onQRPress()}
-                className="absolute -top-6 left-1/2 transform -translate-x-1/2 w-14 h-14 rounded-full bg-teal-500 shadow-lg flex items-center justify-center hover:bg-teal-600 transition-all duration-200 active:scale-95 border-4 border-white z-50"
-              >
-                <Icons.QRWhite />
-              </button>
-            );
-          }
-
-          return (
-            <button key={tab.id} onClick={() => {
-              if (tab.id === 'profile') {
-                navigate('/profile');
-              } else if (tab.id === 'orders') {
-                navigate('/pharmacy');
-              } else if (tab.id === 'ai-health') {
-                navigate('/ai-health');
-              } else {
-                onTabChange(tab.id);
-              }
-            }} className={`flex flex-col items-center gap-1 py-2 px-3 rounded-xl transition-all ${isActive ? 'text-teal-500' : 'text-gray-500 hover:text-gray-700'}`}>
-              <Icon active={isActive} />
-              <span className="text-xs font-medium">{tab.label}</span>
-            </button>
-          );
-        })}
-      </div>
-    </div>
   );
 }
 
@@ -1049,12 +999,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Mobile Bottom Navigation */}
-      <MobileBottomNav
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-        onQRPress={() => navigate('/qr')}
-        navigate={navigate}
-      />
+      <MobileBottomNav showQR onQRPress={() => navigate('/qr')} />
 
       {/* Add Patient Profile Modal */}
       {addProfileOpen && (

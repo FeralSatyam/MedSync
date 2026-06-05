@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import MobileBottomNav from '../components/MobileBottomNav';
 import * as tf from '@tensorflow/tfjs';
 import toast from 'react-hot-toast';
 import { useAppStore } from '../store/appStore';
@@ -1353,6 +1354,7 @@ export default function AIHealthPage() {
           </>
         )}
       </div>
+      <MobileBottomNav />
     </div>
   );
 }
