@@ -9,7 +9,6 @@ import { getMedicinesForPatient } from '../api/medicineApi';
 import { createOrder, getUserOrders, cancelOrder } from '../api/orderApi';
 import { getNotifications, markNotificationAsRead } from '../api/notificationApi';
 import { useAuthStore } from '../store/authStore';
-import QRCode from 'qrcode';
 
 // Fix for default marker icons
 delete L.Icon.Default.prototype._getIconUrl;
@@ -118,6 +117,16 @@ const Icons = {
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
       <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
       <circle cx="12" cy="12" r="3"/>
+    </svg>
+  ),
+  Check: () => (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+      <path d="M20 6L9 17L4 12"/>
+    </svg>
+  ),
+  Truck: () => (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
     </svg>
   ),
 };
@@ -243,29 +252,32 @@ function PharmacyCard({ pharmacy, onSelect, onOrder, isSelected }) {
   );
 }
 
+const STATUS_STEPS = [
+  { key: 'pending',          label: 'Order Placed',     desc: 'Your order has been received',        Icon: Icons.Clock   },
+  { key: 'confirmed',        label: 'Confirmed',         desc: 'Pharmacy confirmed your order',       Icon: Icons.Check   },
+  { key: 'preparing',        label: 'Preparing',         desc: 'Pharmacy is packing your medicines',  Icon: Icons.Package },
+  { key: 'out_for_delivery', label: 'Out for Delivery',  desc: 'Your order is on the way',            Icon: Icons.Truck   },
+  { key: 'delivered',        label: 'Delivered',         desc: 'Your order has been delivered',       Icon: Icons.Check   },
+];
+
+const STATUS_LABEL = {
+  pending:          { text: 'Pending',         cls: 'bg-amber-light text-amber' },
+  confirmed:        { text: 'Confirmed',        cls: 'bg-mint-light text-mint'   },
+  preparing:        { text: 'Preparing',        cls: 'bg-mint-light text-mint'   },
+  out_for_delivery: { text: 'Out for Delivery', cls: 'bg-amber-light text-amber' },
+  delivered:        { text: 'Delivered',        cls: 'bg-mint-light text-mint'   },
+  cancelled:        { text: 'Cancelled',        cls: 'bg-red-light text-red'     },
+};
+
 // Order Details Modal Component
 function OrderDetailsModal({ order, onClose, onCancel }) {
-  const [qrCodeUrl, setQrCodeUrl] = useState('');
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [cancelReason, setCancelReason] = useState('');
-  const orderUrl = `${window.location.origin}/order-tracking/${order.orderId}`;
 
-  useEffect(() => {
-    QRCode.toDataURL(orderUrl, { width: 200, margin: 1 }, (err, url) => {
-      if (!err) {
-        setQrCodeUrl(url);
-      }
-    });
-  }, [orderUrl]);
-
-  const statusColors = {
-    pending: 'bg-amber-light text-amber border border-border',
-    confirmed: 'bg-faint text-muted border border-border',
-    preparing: 'bg-faint text-muted border border-border',
-    out_for_delivery: 'bg-faint text-muted border border-border',
-    delivered: 'bg-mint-light text-mint',
-    cancelled: 'bg-red-light text-red',
-  };
+  const isCancelled = order.status === 'cancelled';
+  const isCancellable = !isCancelled && order.status !== 'delivered';
+  const currentStep = STATUS_STEPS.findIndex((s) => s.key === order.status);
+  const sl = STATUS_LABEL[order.status] || { text: order.status, cls: 'bg-faint text-muted' };
 
   const handleCancelConfirm = () => {
     if (!cancelReason.trim()) {
@@ -277,99 +289,141 @@ function OrderDetailsModal({ order, onClose, onCancel }) {
     onClose();
   };
 
-  const isCancellable = order.status !== 'delivered' && order.status !== 'cancelled';
-
   return (
     <>
       <div className="fixed inset-0 bg-navy/30 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={onClose}>
         <div className="bg-white rounded-2xl border border-border max-w-md w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-          <div className="sticky top-0 bg-white border-b border-border p-4 flex justify-between items-center">
-            <h2 className="text-xl font-bold text-navy">Order Details</h2>
-            <button onClick={onClose} className="text-muted hover:text-navy">
+
+          {/* Header */}
+          <div className="sticky top-0 bg-white border-b border-border px-5 py-4 flex justify-between items-center">
+            <div>
+              <h2 className="text-lg font-bold text-navy">Order Details</h2>
+              <p className="text-xs text-muted mt-0.5">{order.orderId}</p>
+            </div>
+            <button onClick={onClose} className="p-1 text-muted hover:text-navy rounded-lg">
               <Icons.Close />
             </button>
           </div>
 
-          <div className="p-4 space-y-4">
-            {order.status === 'cancelled' && (
-              <div className="bg-red-light border border-red rounded-lg p-3">
-                <p className="text-sm font-medium text-red">Order Cancelled</p>
-                <p className="text-xs text-red mt-1">Reason: {order.cancelledReason || 'User requested cancellation'}</p>
+          <div className="p-5 space-y-5">
+
+            {/* Current Status Banner */}
+            {isCancelled ? (
+              <div className="bg-red-light border border-red rounded-xl p-4">
+                <div className="flex items-center gap-2 mb-1">
+                  <svg className="w-4 h-4 text-red shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                  <p className="font-semibold text-red text-sm">Order Cancelled</p>
+                </div>
+                {order.cancelledReason && (
+                  <p className="text-xs text-red ml-6">Reason: {order.cancelledReason}</p>
+                )}
+                {order.cancelledAt && (
+                  <p className="text-xs text-red ml-6 mt-0.5">On {new Date(order.cancelledAt).toLocaleString()}</p>
+                )}
+              </div>
+            ) : (
+              <div className="bg-faint rounded-xl p-4 flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-muted mb-1">Current Status</p>
+                  <span className={`text-sm font-bold px-3 py-1 rounded-full ${sl.cls}`}>{sl.text}</span>
+                </div>
+                <div className="text-right">
+                  <p className="text-xs text-muted">Updated by pharmacy</p>
+                  <p className="text-xs text-navy font-medium mt-0.5">{order.pharmacyName}</p>
+                </div>
               </div>
             )}
 
-            <div className="bg-faint rounded-lg p-4 text-center">
-              <p className="text-sm font-medium text-navy mb-2">Order QR Code</p>
-              {qrCodeUrl && (
-                <img src={qrCodeUrl} alt="Order QR Code" className="w-40 h-40 mx-auto mb-2" />
-              )}
-              <p className="text-xs text-muted">Scan to track your order</p>
-            </div>
+            {/* Status Timeline */}
+            {!isCancelled && (
+              <div className="bg-white rounded-xl border border-border p-4">
+                <p className="text-sm font-semibold text-navy mb-4">Order Progress</p>
+                <div className="space-y-0">
+                  {STATUS_STEPS.map((step, idx) => {
+                    const isCompleted = idx <= currentStep;
+                    const isCurrent = idx === currentStep;
+                    const { Icon } = step;
+                    return (
+                      <div key={step.key} className="flex items-start gap-3">
+                        <div className="flex flex-col items-center">
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-all ${
+                            isCompleted ? 'bg-mint text-white' : 'bg-faint text-muted'
+                          } ${isCurrent ? 'ring-4 ring-mint/20' : ''}`}>
+                            <Icon />
+                          </div>
+                          {idx < STATUS_STEPS.length - 1 && (
+                            <div className={`w-0.5 h-8 mt-0.5 ${idx < currentStep ? 'bg-mint' : 'bg-border'}`} />
+                          )}
+                        </div>
+                        <div className="pb-3 pt-1 flex-1 min-w-0">
+                          <p className={`text-sm font-semibold leading-tight ${isCompleted ? 'text-navy' : 'text-muted'}`}>
+                            {step.label}
+                            {isCurrent && (
+                              <span className="ml-2 text-[10px] font-bold text-mint bg-mint-light px-2 py-0.5 rounded-full align-middle">Now</span>
+                            )}
+                          </p>
+                          <p className="text-xs text-muted mt-0.5">{step.desc}</p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
-            <div>
-              <p className="text-sm font-medium text-navy mb-2">Order Information</p>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-muted">Order ID:</span>
-                  <span className="font-medium">{order.orderId}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted">Status:</span>
-                  <span className={`rounded-full text-xs font-semibold px-2.5 py-0.5 ${statusColors[order.status]}`}>
-                    {order.status.replace('_', ' ')}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted">Pharmacy:</span>
-                  <span className="font-medium">{order.pharmacyName}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted">Patient:</span>
-                  <span className="font-medium">{order.patientName}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted">Date:</span>
-                  <span>{new Date(order.orderDate).toLocaleString()}</span>
-                </div>
+            {/* Order Info */}
+            <div className="bg-faint rounded-xl p-4 space-y-2 text-sm">
+              <p className="font-semibold text-navy mb-1">Order Information</p>
+              <div className="flex justify-between">
+                <span className="text-muted">Pharmacy</span>
+                <span className="font-medium text-navy">{order.pharmacyName}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted">Patient</span>
+                <span className="font-medium text-navy">{order.patientName}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted">Placed on</span>
+                <span className="text-navy">{new Date(order.orderDate).toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted">Delivery fee</span>
+                <span className="font-medium text-navy">{order.deliveryFee}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted">Est. delivery</span>
+                <span className="text-navy">{order.estimatedDelivery}</span>
               </div>
             </div>
 
+            {/* Medicines */}
             <div>
-              <p className="text-sm font-medium text-navy mb-2">Medicines ({order.totalItems} items)</p>
-              <div className="space-y-2 max-h-48 overflow-y-auto">
+              <p className="text-sm font-semibold text-navy mb-2">Medicines ({order.totalItems} {order.totalItems === 1 ? 'item' : 'items'})</p>
+              <div className="space-y-2">
                 {order.medicines.map((item, idx) => (
-                  <div key={idx} className="flex justify-between items-center py-2 border-b last:border-0">
+                  <div key={idx} className="flex justify-between items-center py-2 px-3 bg-faint rounded-xl">
                     <div>
-                      <p className="font-medium text-navy">{item.name}</p>
-                      <p className="text-xs text-muted">Quantity: {item.quantity}</p>
+                      <p className="text-sm font-medium text-navy">{item.name}</p>
+                      {item.strength && <p className="text-xs text-muted">{item.strength} {item.unit}</p>}
                     </div>
+                    <span className="text-xs font-semibold text-mint bg-mint-light px-2 py-0.5 rounded-full">×{item.quantity}</span>
                   </div>
                 ))}
               </div>
             </div>
 
-            <div className="bg-faint rounded-lg p-3">
-              <p className="text-sm font-medium text-navy mb-2">Delivery Information</p>
-              <div className="space-y-1 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-muted">Delivery Fee:</span>
-                  <span className="font-medium">{order.deliveryFee}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted">Est. Delivery:</span>
-                  <span>{order.estimatedDelivery}</span>
-                </div>
-              </div>
-            </div>
-
+            {/* Notes */}
             {order.notes && (
               <div>
-                <p className="text-sm font-medium text-navy mb-1">Special Instructions</p>
-                <p className="text-sm text-muted bg-faint p-2 rounded-lg">{order.notes}</p>
+                <p className="text-sm font-semibold text-navy mb-1">Special Instructions</p>
+                <p className="text-sm text-muted bg-faint p-3 rounded-xl">{order.notes}</p>
               </div>
             )}
 
-            <div className="flex gap-3 pt-2">
+            {/* Action Buttons */}
+            <div className="flex gap-3 pt-1">
               {isCancellable && (
                 <button
                   onClick={() => setShowCancelConfirm(true)}
