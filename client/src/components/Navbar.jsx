@@ -100,7 +100,7 @@ export default function Navbar({ hasAlerts = false }) {
   }
 
   return (
-    <header className="sticky top-0 z-[100] flex h-[64px] items-center justify-between border-b border-border bg-card px-[24px]">
+    <header className="sticky top-0 z-[100] flex h-[64px] items-center justify-between bg-white border-b border-border px-[24px]">
       <div className="flex items-center gap-[12px]">
         <div className="flex h-[36px] w-[36px] items-center justify-center">
           <svg width="36" height="36" viewBox="0 0 100 100" fill="none" aria-hidden="true" className="text-[#0d816a]">

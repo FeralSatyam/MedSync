@@ -88,32 +88,32 @@ function EditMemberModal({ member, onClose, onSave }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={onClose}>
-      <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 bg-navy/30 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={onClose}>
+      <div className="bg-white rounded-2xl border border-border max-w-md w-full p-6" onClick={(e) => e.stopPropagation()}>
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-xl font-bold text-gray-800">Edit Family Member</h3>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+          <h3 className="text-xl font-bold text-navy">Edit Family Member</h3>
+          <button onClick={onClose} className="text-muted hover:text-navy">
             <Icons.Close />
           </button>
         </div>
-        
+
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Full Name *</label>
+            <label className="block text-sm font-medium text-navy mb-1">Full Name *</label>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500"
+              className="w-full rounded-xl border border-border bg-faint px-4 py-3 text-sm text-navy focus:outline-none focus:border-mint"
             />
           </div>
-          
+
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Relation</label>
+            <label className="block text-sm font-medium text-navy mb-1">Relation</label>
             <select
               value={relation}
               onChange={(e) => setRelation(e.target.value)}
-              className="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500"
+              className="w-full rounded-xl border border-border bg-faint px-4 py-3 text-sm text-navy focus:outline-none focus:border-mint"
             >
               <option value="self">Self</option>
               <option value="mother">Mother</option>
@@ -124,36 +124,36 @@ function EditMemberModal({ member, onClose, onSave }) {
               <option value="other">Other</option>
             </select>
           </div>
-          
+
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Date of Birth</label>
+            <label className="block text-sm font-medium text-navy mb-1">Date of Birth</label>
             <input
               type="date"
               value={dateOfBirth}
               min={minDOBStr()}
               max={maxDOBStr()}
               onChange={(e) => setDateOfBirth(e.target.value)}
-              className="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500"
+              className="w-full rounded-xl border border-border bg-faint px-4 py-3 text-sm text-navy focus:outline-none focus:border-mint"
             />
-            <p className="text-xs text-gray-400 mt-1">Patient must be between 6 and 120 years old</p>
+            <p className="text-xs text-muted mt-1">Patient must be between 6 and 120 years old</p>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Allergies / Notes</label>
+            <label className="block text-sm font-medium text-navy mb-1">Allergies / Notes</label>
             <textarea
               value={allergies}
               onChange={(e) => setAllergies(e.target.value)}
               rows={3}
-              className="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500"
+              className="w-full rounded-xl border border-border bg-faint px-4 py-3 text-sm text-navy focus:outline-none focus:border-mint"
               placeholder="e.g., Allergic to penicillin"
             />
           </div>
 
           <div className="flex gap-3 pt-2">
-            <button onClick={onClose} className="flex-1 border border-gray-200 rounded-lg py-2.5 text-gray-700 font-medium hover:bg-gray-50">
+            <button onClick={onClose} className="flex-1 border border-border bg-white text-navy rounded-full py-2.5 text-sm font-semibold hover:bg-faint">
               Cancel
             </button>
-            <button onClick={handleSubmit} disabled={saving} className="flex-1 bg-teal-500 text-white rounded-lg py-2.5 font-medium hover:bg-teal-600 disabled:opacity-60">
+            <button onClick={handleSubmit} disabled={saving} className="flex-1 bg-mint text-white rounded-full py-2.5 text-sm font-semibold hover:opacity-90 disabled:opacity-60">
               {saving ? 'Saving...' : 'Save Changes'}
             </button>
           </div>
@@ -166,25 +166,25 @@ function EditMemberModal({ member, onClose, onSave }) {
 // Delete Confirmation Modal
 function DeleteMemberModal({ member, onClose, onConfirm }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={onClose}>
-      <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 bg-navy/30 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={onClose}>
+      <div className="bg-white rounded-2xl border border-border max-w-md w-full p-6" onClick={(e) => e.stopPropagation()}>
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-xl font-bold text-gray-800">Delete Family Member</h3>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+          <h3 className="text-xl font-bold text-navy">Delete Family Member</h3>
+          <button onClick={onClose} className="text-muted hover:text-navy">
             <Icons.Close />
           </button>
         </div>
-        
-        <p className="text-gray-600 mb-4">
-          Are you sure you want to delete <strong className="text-gray-800">{member.name}</strong>?
+
+        <p className="text-muted mb-4">
+          Are you sure you want to delete <strong className="text-navy">{member.name}</strong>?
           This action cannot be undone and will remove all associated medicines.
         </p>
-        
+
         <div className="flex gap-3">
-          <button onClick={onClose} className="flex-1 border border-gray-200 rounded-lg py-2.5 text-gray-700 font-medium hover:bg-gray-50">
+          <button onClick={onClose} className="flex-1 border border-border bg-white text-navy rounded-full py-2.5 text-sm font-semibold hover:bg-faint">
             Cancel
           </button>
-          <button onClick={onConfirm} className="flex-1 bg-red-500 text-white rounded-lg py-2.5 font-medium hover:bg-red-600">
+          <button onClick={onConfirm} className="flex-1 border border-red text-red rounded-full py-2.5 text-sm font-semibold hover:bg-red-light">
             Delete
           </button>
         </div>
@@ -220,32 +220,32 @@ function AddMemberModal({ onClose, onAdd }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={onClose}>
-      <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 bg-navy/30 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={onClose}>
+      <div className="bg-white rounded-2xl border border-border max-w-md w-full p-6" onClick={(e) => e.stopPropagation()}>
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-xl font-bold text-gray-800">Add Family Member</h3>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+          <h3 className="text-xl font-bold text-navy">Add Family Member</h3>
+          <button onClick={onClose} className="text-muted hover:text-navy">
             <Icons.Close />
           </button>
         </div>
-        
+
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Full Name *</label>
+            <label className="block text-sm font-medium text-navy mb-1">Full Name *</label>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500"
+              className="w-full rounded-xl border border-border bg-faint px-4 py-3 text-sm text-navy focus:outline-none focus:border-mint"
             />
           </div>
-          
+
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Relation</label>
+            <label className="block text-sm font-medium text-navy mb-1">Relation</label>
             <select
               value={relation}
               onChange={(e) => setRelation(e.target.value)}
-              className="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500"
+              className="w-full rounded-xl border border-border bg-faint px-4 py-3 text-sm text-navy focus:outline-none focus:border-mint"
             >
               <option value="self">Self</option>
               <option value="mother">Mother</option>
@@ -256,47 +256,47 @@ function AddMemberModal({ onClose, onAdd }) {
               <option value="other">Other</option>
             </select>
           </div>
-          
+
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Date of Birth</label>
+            <label className="block text-sm font-medium text-navy mb-1">Date of Birth</label>
             <input
               type="date"
               value={dateOfBirth}
               min={minDOBStr()}
               max={maxDOBStr()}
               onChange={(e) => setDateOfBirth(e.target.value)}
-              className="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500"
+              className="w-full rounded-xl border border-border bg-faint px-4 py-3 text-sm text-navy focus:outline-none focus:border-mint"
             />
-            <p className="text-xs text-gray-400 mt-1">Patient must be between 6 and 120 years old</p>
+            <p className="text-xs text-muted mt-1">Patient must be between 6 and 120 years old</p>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Allergies / Notes</label>
+            <label className="block text-sm font-medium text-navy mb-1">Allergies / Notes</label>
             <textarea
               value={allergies}
               onChange={(e) => setAllergies(e.target.value)}
               rows={2}
-              className="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500"
+              className="w-full rounded-xl border border-border bg-faint px-4 py-3 text-sm text-navy focus:outline-none focus:border-mint"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Pharmacy PIN (4-digit) *</label>
+            <label className="block text-sm font-medium text-navy mb-1">Pharmacy PIN (4-digit) *</label>
             <input
               type="text"
               maxLength={4}
               value={pharmacyPin}
               onChange={(e) => setPharmacyPin(e.target.value.replace(/\D/g, ''))}
-              className="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500"
+              className="w-full rounded-xl border border-border bg-faint px-4 py-3 text-sm text-navy focus:outline-none focus:border-mint"
             />
-            <p className="text-xs text-gray-400 mt-1">Required for pharmacy verification</p>
+            <p className="text-xs text-muted mt-1">Required for pharmacy verification</p>
           </div>
 
           <div className="flex gap-3 pt-2">
-            <button onClick={onClose} className="flex-1 border border-gray-200 rounded-lg py-2.5 text-gray-700 font-medium hover:bg-gray-50">
+            <button onClick={onClose} className="flex-1 border border-border bg-white text-navy rounded-full py-2.5 text-sm font-semibold hover:bg-faint">
               Cancel
             </button>
-            <button onClick={handleSubmit} disabled={saving} className="flex-1 bg-teal-500 text-white rounded-lg py-2.5 font-medium hover:bg-teal-600 disabled:opacity-60">
+            <button onClick={handleSubmit} disabled={saving} className="flex-1 bg-mint text-white rounded-full py-2.5 text-sm font-semibold hover:opacity-90 disabled:opacity-60">
               {saving ? 'Adding...' : 'Add Member'}
             </button>
           </div>
@@ -365,21 +365,21 @@ export default function FamilyMembersPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-500"></div>
+      <div className="min-h-screen bg-bg flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-mint"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
+    <div className="min-h-screen bg-bg pb-24">
       {/* Header */}
-      <div className="bg-white border-b border-gray-100 sticky top-0 z-40">
+      <div className="bg-white border-b border-border sticky top-0 z-30">
         <div className="flex items-center gap-3 px-4 h-16">
-          <button onClick={() => navigate('/profile')} className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg">
+          <button onClick={() => navigate('/profile')} className="p-2 text-muted hover:bg-faint rounded-lg">
             <Icons.ArrowLeft />
           </button>
-          <h1 className="text-xl font-bold text-gray-800">Family Members</h1>
+          <h1 className="text-xl font-bold text-navy">Family Members</h1>
         </div>
       </div>
 
@@ -387,7 +387,7 @@ export default function FamilyMembersPage() {
         {/* Add Member Button */}
         <button
           onClick={() => setAddingMember(true)}
-          className="w-full mb-6 flex items-center justify-center gap-2 bg-teal-500 text-white py-3 rounded-lg font-medium hover:bg-teal-600 transition-colors"
+          className="w-full mb-6 flex items-center justify-center gap-2 bg-mint text-white rounded-full px-5 py-2.5 text-sm font-semibold hover:opacity-90 transition-colors"
         >
           <Icons.Add />
           Add Family Member
@@ -396,30 +396,30 @@ export default function FamilyMembersPage() {
         {/* Members List */}
         <div className="space-y-3">
           {members.map((member) => (
-            <div key={member._id} className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+            <div key={member._id} className="bg-white rounded-2xl border border-border p-5">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-gradient-to-br from-teal-400 to-teal-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
+                  <div className="w-12 h-12 bg-mint rounded-full flex items-center justify-center text-white font-bold text-lg">
                     {member.name.charAt(0).toUpperCase()}
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-800">{member.name}</h3>
-                    <p className="text-xs text-gray-500 capitalize">{member.relation}</p>
+                    <h3 className="font-semibold text-navy">{member.name}</h3>
+                    <p className="text-xs text-muted capitalize">{member.relation}</p>
                     {member.dateOfBirth && (
-                      <p className="text-xs text-gray-400">{new Date(member.dateOfBirth).toLocaleDateString()}</p>
+                      <p className="text-xs text-muted">{new Date(member.dateOfBirth).toLocaleDateString()}</p>
                     )}
                   </div>
                 </div>
                 <div className="flex gap-2">
                   <button
                     onClick={() => setEditingMember(member)}
-                    className="p-2 text-gray-500 hover:text-teal-500 hover:bg-teal-50 rounded-lg transition-colors"
+                    className="p-2 text-muted hover:text-mint hover:bg-mint-light rounded-lg transition-colors"
                   >
                     <Icons.Edit />
                   </button>
                   <button
                     onClick={() => setDeletingMember(member)}
-                    className="p-2 text-gray-500 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                    className="p-2 text-muted hover:text-red hover:bg-red-light rounded-lg transition-colors"
                   >
                     <Icons.Delete />
                   </button>
@@ -430,10 +430,10 @@ export default function FamilyMembersPage() {
         </div>
 
         {members.length === 0 && (
-          <div className="text-center py-12 bg-white rounded-xl">
+          <div className="text-center py-12 bg-white rounded-2xl border border-border p-5">
             <Icons.User />
-            <p className="text-gray-500 mt-2">No family members added yet</p>
-            <p className="text-xs text-gray-400 mt-1">Click "Add Family Member" to get started</p>
+            <p className="text-muted mt-2">No family members added yet</p>
+            <p className="text-xs text-muted mt-1">Click "Add Family Member" to get started</p>
           </div>
         )}
       </div>

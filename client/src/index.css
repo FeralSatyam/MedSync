@@ -3,41 +3,67 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── Design-system CSS variables ──────────────────────────────────────────── */
+:root {
+  --color-primary:        #0D1B2A;
+  --color-primary-soft:   #1A2B3C;
+  --color-accent:         #00A878;
+  --color-accent-light:   #E6F7F3;
+  --color-bg:             #F0F2F5;
+  --color-surface:        #FFFFFF;
+  --color-surface-alt:    #F8F9FA;
+  --color-success:        #00A878;
+  --color-warning:        #F59E0B;
+  --color-danger:         #EF4444;
+  --color-danger-bg:      #FEF2F2;
+  --color-text-primary:   #0D1B2A;
+  --color-text-secondary: #6B7280;
+  --color-text-muted:     #9CA3AF;
+  --color-text-inverse:   #FFFFFF;
+  --color-border:         #E5E7EB;
+  --color-border-focus:   #00A878;
+
+  --radius-sm:   8px;
+  --radius-md:   12px;
+  --radius-lg:   16px;
+  --radius-xl:   20px;
+  --radius-full: 9999px;
+}
+
+/* ── Base reset ───────────────────────────────────────────────────────────── */
 @layer base {
   * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
   }
+
   body {
-    font-family: 'Plus Jakarta Sans', sans-serif;
-    background: #f4f7fb;
-    color: #1a2540;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background: var(--color-bg);
+    color: var(--color-text-primary);
     min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
-  h1,
-  h2,
-  h3,
-  h4,
-  h5,
-  h6 {
-    font-family: 'Plus Jakarta Sans', sans-serif;
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    color: var(--color-text-primary);
+  }
+
+  input, select, textarea, button {
+    font-family: inherit;
   }
 }
 
+/* ── Utilities ────────────────────────────────────────────────────────────── */
 @layer utilities {
-  .font-display {
-    font-family: 'Plus Jakarta Sans', sans-serif;
-  }
-  .font-body {
-    font-family: 'Plus Jakarta Sans', sans-serif;
-  }
-  .font-alt {
-    font-family: 'Manrope', sans-serif;
-  }
-  .hide-scrollbar::-webkit-scrollbar {
-    display: none;
-  }
+  .font-display { font-family: 'Inter', system-ui, sans-serif; }
+  .font-body    { font-family: 'Inter', system-ui, sans-serif; }
+  .font-alt     { font-family: 'Inter', system-ui, sans-serif; }
+
+  .hide-scrollbar::-webkit-scrollbar { display: none; }
   .hide-scrollbar {
     -ms-overflow-style: none;
     scrollbar-width: none;

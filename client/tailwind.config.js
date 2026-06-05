@@ -4,33 +4,44 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        display: ['"Plus Jakarta Sans"', 'sans-serif'],
-        body: ['"Plus Jakarta Sans"', 'sans-serif'],
-        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
-        alt: ['"Manrope"', 'sans-serif'],
+        display: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+        body:    ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+        sans:    ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+        alt:     ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
       },
       colors: {
-        navy: { DEFAULT: '#1a2540', mid: '#1a3260' },
-        mint: { DEFAULT: '#0f6e56', mid: '#00685f', light: '#e1f5ee' },
-        red: { DEFAULT: '#e24b4a', light: '#fcebeb', text: '#a32d2d', tag: '#6e0f0f', tagBg: '#f5e1e1' },
-        amber: { DEFAULT: '#ef9f27', light: '#faeeda', text: '#854f0b' },
-        green: { DEFAULT: '#1d9e75', light: '#e1f5ee' },
-        bg: '#f4f7fb',
-        card: '#ffffff',
-        border: '#dce3ef',
-        muted: '#7c8fa6',
-        faint: '#eef1f7',
-        primary: '#1a2540',
-        navIcon: '#aab8c9',
+        // ── Brand ────────────────────────────────────────────────────────
+        navy:    { DEFAULT: '#0D1B2A', mid: '#1A2B3C' },
+        mint:    { DEFAULT: '#00A878', mid: '#009B6E', light: '#E6F7F3' },
+
+        // ── Status ───────────────────────────────────────────────────────
+        red:   { DEFAULT: '#EF4444', light: '#FEF2F2', text: '#B91C1C', tag: '#B91C1C', tagBg: '#FEF2F2' },
+        amber: { DEFAULT: '#F59E0B', light: '#FEF3C7', text: '#92400E' },
+        green: { DEFAULT: '#00A878', light: '#E6F7F3' },
+
+        // ── Surface ──────────────────────────────────────────────────────
+        bg:      '#F0F2F5',   // page background
+        card:    '#FFFFFF',   // card / modal surface
+        border:  '#E5E7EB',   // default border
+
+        // ── Text ─────────────────────────────────────────────────────────
+        muted:   '#6B7280',   // secondary / label text
+        faint:   '#F8F9FA',   // alternate surface (inputs, tags)
+        navIcon: '#9CA3AF',   // inactive nav icons / placeholders
+
+        // ── Aliases ──────────────────────────────────────────────────────
+        primary: '#0D1B2A',
       },
       borderRadius: {
-        card: '20px',
-        btn: '20px',
+        card:  '16px',    // medicine cards, panels
+        btn:   '9999px',  // pill buttons (primary / accent / secondary)
+        modal: '20px',    // modals, hero banners
       },
       boxShadow: {
-        card: '0 2px 16px rgba(15,31,61,0.08)',
-        modal: '0 8px 40px rgba(15,31,61,0.14)',
-        qr: '0 4px 22px rgba(15,31,61,0.2)',
+        // Design spec: no drop shadows on cards — borders only
+        card:  'none',
+        modal: '0 8px 32px rgba(13,27,42,0.12)',
+        qr:    '0 4px 20px rgba(13,27,42,0.18)',
       },
     },
   },

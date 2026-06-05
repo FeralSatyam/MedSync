@@ -84,13 +84,13 @@ const Icons = {
 // Feature Card for Pro
 function FeatureCard({ title, description, included }) {
   return (
-    <div className="flex items-start gap-3 p-3 rounded-lg bg-gray-50">
-      <div className={`mt-0.5 w-5 h-5 rounded-full flex items-center justify-center ${included ? 'bg-teal-500' : 'bg-gray-300'}`}>
+    <div className="flex items-start gap-3 p-3 rounded-lg bg-faint">
+      <div className={`mt-0.5 w-5 h-5 rounded-full flex items-center justify-center ${included ? 'bg-mint' : 'bg-gray-300'}`}>
         {included && <Icons.Check />}
       </div>
       <div>
-        <h4 className="font-medium text-gray-800 text-sm">{title}</h4>
-        <p className="text-xs text-gray-500">{description}</p>
+        <h4 className="font-medium text-navy text-sm">{title}</h4>
+        <p className="text-xs text-muted">{description}</p>
       </div>
     </div>
   );
@@ -132,53 +132,53 @@ function ChangePasswordModal({ onClose, onSuccess }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={onClose}>
-      <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 bg-navy/30 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={onClose}>
+      <div className="bg-white rounded-2xl border border-border p-6 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-xl font-bold text-gray-800">Change Password</h3>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+          <h3 className="text-xl font-bold text-navy">Change Password</h3>
+          <button onClick={onClose} className="text-muted hover:text-navy">
             <Icons.Close />
           </button>
         </div>
-        
+
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Current Password</label>
+            <label className="block text-xs font-semibold tracking-widest text-muted uppercase mb-3">Current Password</label>
             <input
               type="password"
               value={currentPassword}
               onChange={(e) => setCurrentPassword(e.target.value)}
-              className="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500"
+              className="w-full rounded-xl border border-border bg-faint px-4 py-3 text-sm text-navy focus:outline-none focus:border-mint"
               placeholder="Enter current password"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">New Password</label>
+            <label className="block text-xs font-semibold tracking-widest text-muted uppercase mb-3">New Password</label>
             <input
               type="password"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
-              className="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500"
+              className="w-full rounded-xl border border-border bg-faint px-4 py-3 text-sm text-navy focus:outline-none focus:border-mint"
               placeholder="Enter new password"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Confirm New Password</label>
+            <label className="block text-xs font-semibold tracking-widest text-muted uppercase mb-3">Confirm New Password</label>
             <input
               type="password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              className="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500"
+              className="w-full rounded-xl border border-border bg-faint px-4 py-3 text-sm text-navy focus:outline-none focus:border-mint"
               placeholder="Confirm new password"
             />
           </div>
         </div>
 
         <div className="flex gap-3 mt-6">
-          <button onClick={onClose} className="flex-1 border border-gray-200 rounded-lg py-2.5 text-gray-700 font-medium hover:bg-gray-50">
+          <button onClick={onClose} className="flex-1 border border-border bg-white text-navy rounded-full px-5 py-2.5 text-sm font-semibold hover:bg-faint">
             Cancel
           </button>
-          <button onClick={handleSubmit} disabled={loading} className="flex-1 bg-teal-500 text-white rounded-lg py-2.5 font-medium hover:bg-teal-600">
+          <button onClick={handleSubmit} disabled={loading} className="flex-1 bg-mint text-white rounded-full px-5 py-2.5 text-sm font-semibold hover:opacity-90">
             {loading ? 'Updating...' : 'Update Password'}
           </button>
         </div>
@@ -250,33 +250,33 @@ function ResetPasswordModal({ onClose }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={onClose}>
-      <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 bg-navy/30 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={onClose}>
+      <div className="bg-white rounded-2xl border border-border p-6 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-xl font-bold text-gray-800">Reset Password</h3>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+          <h3 className="text-xl font-bold text-navy">Reset Password</h3>
+          <button onClick={onClose} className="text-muted hover:text-navy">
             <Icons.Close />
           </button>
         </div>
 
         {step === 'email' && (
           <div className="space-y-4">
-            <p className="text-sm text-gray-600">Enter your email address to receive a password reset OTP.</p>
+            <p className="text-sm text-muted">Enter your email address to receive a password reset OTP.</p>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+              <label className="block text-xs font-semibold tracking-widest text-muted uppercase mb-3">Email Address</label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                className="w-full rounded-xl border border-border bg-faint px-4 py-3 text-sm text-navy focus:outline-none focus:border-mint"
                 placeholder="you@example.com"
               />
             </div>
             <div className="flex gap-3">
-              <button onClick={onClose} className="flex-1 border border-gray-200 rounded-lg py-2.5 text-gray-700 font-medium hover:bg-gray-50">
+              <button onClick={onClose} className="flex-1 border border-border bg-white text-navy rounded-full px-5 py-2.5 text-sm font-semibold hover:bg-faint">
                 Cancel
               </button>
-              <button onClick={handleSendOtp} disabled={loading} className="flex-1 bg-teal-500 text-white rounded-lg py-2.5 font-medium hover:bg-teal-600">
+              <button onClick={handleSendOtp} disabled={loading} className="flex-1 bg-mint text-white rounded-full px-5 py-2.5 text-sm font-semibold hover:opacity-90">
                 {loading ? 'Sending...' : 'Send OTP'}
               </button>
             </div>
@@ -285,23 +285,23 @@ function ResetPasswordModal({ onClose }) {
 
         {step === 'otp' && (
           <div className="space-y-4">
-            <p className="text-sm text-gray-600">Enter the 6-digit OTP sent to your email.</p>
+            <p className="text-sm text-muted">Enter the 6-digit OTP sent to your email.</p>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">OTP Code</label>
+              <label className="block text-xs font-semibold tracking-widest text-muted uppercase mb-3">OTP Code</label>
               <input
                 type="text"
                 maxLength={6}
                 value={otp}
                 onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
-                className="w-full text-center text-2xl tracking-widest border border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                className="w-full text-center text-2xl tracking-widest rounded-xl border border-border bg-faint px-4 py-3 text-navy focus:outline-none focus:border-mint"
                 placeholder="000000"
               />
             </div>
             <div className="flex gap-3">
-              <button onClick={() => setStep('email')} className="flex-1 border border-gray-200 rounded-lg py-2.5 text-gray-700 font-medium hover:bg-gray-50">
+              <button onClick={() => setStep('email')} className="flex-1 border border-border bg-white text-navy rounded-full px-5 py-2.5 text-sm font-semibold hover:bg-faint">
                 Back
               </button>
-              <button onClick={handleVerifyOtp} className="flex-1 bg-teal-500 text-white rounded-lg py-2.5 font-medium hover:bg-teal-600">
+              <button onClick={handleVerifyOtp} className="flex-1 bg-mint text-white rounded-full px-5 py-2.5 text-sm font-semibold hover:opacity-90">
                 Verify
               </button>
             </div>
@@ -310,32 +310,32 @@ function ResetPasswordModal({ onClose }) {
 
         {step === 'reset' && (
           <div className="space-y-4">
-            <p className="text-sm text-gray-600">Create a new password for your account.</p>
+            <p className="text-sm text-muted">Create a new password for your account.</p>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">New Password</label>
+              <label className="block text-xs font-semibold tracking-widest text-muted uppercase mb-3">New Password</label>
               <input
                 type="password"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                className="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                className="w-full rounded-xl border border-border bg-faint px-4 py-3 text-sm text-navy focus:outline-none focus:border-mint"
                 placeholder="Enter new password"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Confirm New Password</label>
+              <label className="block text-xs font-semibold tracking-widest text-muted uppercase mb-3">Confirm New Password</label>
               <input
                 type="password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                className="w-full rounded-xl border border-border bg-faint px-4 py-3 text-sm text-navy focus:outline-none focus:border-mint"
                 placeholder="Confirm new password"
               />
             </div>
             <div className="flex gap-3">
-              <button onClick={() => setStep('otp')} className="flex-1 border border-gray-200 rounded-lg py-2.5 text-gray-700 font-medium hover:bg-gray-50">
+              <button onClick={() => setStep('otp')} className="flex-1 border border-border bg-white text-navy rounded-full px-5 py-2.5 text-sm font-semibold hover:bg-faint">
                 Back
               </button>
-              <button onClick={handleResetPassword} disabled={loading} className="flex-1 bg-teal-500 text-white rounded-lg py-2.5 font-medium hover:bg-teal-600">
+              <button onClick={handleResetPassword} disabled={loading} className="flex-1 bg-mint text-white rounded-full px-5 py-2.5 text-sm font-semibold hover:opacity-90">
                 {loading ? 'Resetting...' : 'Reset Password'}
               </button>
             </div>
@@ -384,8 +384,8 @@ export default function ProfilePage() {
     if (authUser) {
       const savedPic = localStorage.getItem(`medsync_pfp_${authUser.id || authUser._id}`);
       if (savedPic) setProfilePic(savedPic);
-      setUserForm({ 
-        name: authUser.name || '', 
+      setUserForm({
+        name: authUser.name || '',
         email: authUser.email || '',
         contactNumber: authUser.contactNumber ? authUser.contactNumber.replace(/^\+977/, '') : ''
       });
@@ -437,8 +437,8 @@ export default function ProfilePage() {
     setSavingUser(true);
     try {
       const contactVal = `+977${userForm.contactNumber.trim()}`;
-      const res = await updateMe({ 
-        name: userForm.name.trim(), 
+      const res = await updateMe({
+        name: userForm.name.trim(),
         email: userForm.email.trim(),
         contactNumber: contactVal
       });
@@ -564,26 +564,26 @@ export default function ProfilePage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
+    <div className="min-h-screen bg-bg pb-24">
       {/* Header */}
-      <div className="bg-white border-b border-gray-100 sticky top-0 z-40">
+      <div className="bg-white border-b border-border sticky top-0 z-30">
         <div className="flex items-center gap-3 px-4 h-16 max-w-2xl mx-auto">
-          <button onClick={() => navigate(-1)} className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
+          <button onClick={() => navigate(-1)} className="p-2 text-navy hover:bg-faint rounded-lg transition-colors">
             <Icons.ArrowLeft />
           </button>
-          <h1 className="text-xl font-bold text-gray-800">My Profile</h1>
+          <h1 className="text-xl font-bold text-navy">My Profile</h1>
         </div>
       </div>
 
       <div className="max-w-2xl mx-auto px-4 py-6 space-y-6">
 
         {/* ══════════════ PRIMARY USER PROFILE ══════════════ */}
-        <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-          {/* Banner gradient */}
-          <div className="h-24 bg-gradient-to-r from-teal-500 via-teal-400 to-emerald-400 relative">
+        <div className="bg-white rounded-2xl border border-border overflow-hidden">
+          {/* Banner */}
+          <div className="h-24 bg-navy relative">
             <div className="absolute -bottom-12 left-1/2 -translate-x-1/2">
               <div className="relative group">
-                <div className="w-24 h-24 rounded-full border-4 border-white shadow-lg overflow-hidden bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center text-white font-bold text-2xl">
+                <div className="w-24 h-24 rounded-full border-4 border-white overflow-hidden bg-navy flex items-center justify-center text-white font-bold text-2xl">
                   {profilePic ? (
                     <img src={profilePic} alt="Profile" className="w-full h-full object-cover" />
                   ) : (
@@ -592,7 +592,7 @@ export default function ProfilePage() {
                 </div>
                 <button
                   onClick={() => profilePicRef.current?.click()}
-                  className="absolute bottom-0 right-0 w-8 h-8 bg-teal-500 rounded-full border-2 border-white shadow flex items-center justify-center text-white hover:bg-teal-600 transition-colors cursor-pointer"
+                  className="absolute bottom-0 right-0 w-8 h-8 bg-mint rounded-full border-2 border-white flex items-center justify-center text-white hover:opacity-90 transition-colors cursor-pointer"
                 >
                   <Icons.Camera />
                 </button>
@@ -604,21 +604,21 @@ export default function ProfilePage() {
           <div className="pt-16 pb-6 px-6">
             {!editingUser ? (
               <div className="text-center">
-                <h2 className="text-xl font-bold text-gray-800">{authUser?.name || 'User'}</h2>
-                <p className="text-sm text-gray-500 mt-0.5">{authUser?.email || ''}</p>
+                <h2 className="text-xl font-bold text-navy">{authUser?.name || 'User'}</h2>
+                <p className="text-sm text-muted mt-0.5">{authUser?.email || ''}</p>
                 {authUser?.contactNumber && (
-                  <p className="text-sm text-gray-500 mt-0.5">{authUser.contactNumber}</p>
+                  <p className="text-sm text-muted mt-0.5">{authUser.contactNumber}</p>
                 )}
                 <button
-                  onClick={() => { 
-                    setUserForm({ 
-                      name: authUser?.name || '', 
+                  onClick={() => {
+                    setUserForm({
+                      name: authUser?.name || '',
                       email: authUser?.email || '',
                       contactNumber: authUser?.contactNumber ? authUser.contactNumber.replace(/^\+977/, '') : ''
-                    }); 
-                    setEditingUser(true); 
+                    });
+                    setEditingUser(true);
                   }}
-                  className="mt-4 inline-flex items-center gap-2 px-4 py-2 border border-teal-200 text-teal-600 rounded-xl text-sm font-medium hover:bg-teal-50 transition-colors cursor-pointer"
+                  className="mt-4 inline-flex items-center gap-2 border border-border bg-white text-navy rounded-full px-5 py-2.5 text-sm font-semibold hover:bg-faint cursor-pointer"
                 >
                   <Icons.Edit />
                   Edit Profile
@@ -627,27 +627,27 @@ export default function ProfilePage() {
             ) : (
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                  <label className="block text-xs font-semibold tracking-widest text-muted uppercase mb-3">Full Name</label>
                   <input
                     type="text"
                     value={userForm.name}
                     onChange={(e) => setUserForm({ ...userForm, name: e.target.value })}
-                    className="w-full border border-gray-200 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500 text-gray-800"
+                    className="w-full rounded-xl border border-border bg-faint px-4 py-3 text-sm text-navy focus:outline-none focus:border-mint"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                  <label className="block text-xs font-semibold tracking-widest text-muted uppercase mb-3">Email Address</label>
                   <input
                     type="email"
                     value={userForm.email}
                     onChange={(e) => setUserForm({ ...userForm, email: e.target.value })}
-                    className="w-full border border-gray-200 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500 text-gray-800"
+                    className="w-full rounded-xl border border-border bg-faint px-4 py-3 text-sm text-navy focus:outline-none focus:border-mint"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Contact Number</label>
-                  <div className="flex items-center border border-gray-200 rounded-xl bg-white overflow-hidden focus-within:ring-2 focus-within:ring-teal-500 focus-within:border-teal-500 transition-all">
-                    <span className="inline-flex items-center px-3 py-2.5 bg-gray-50 border-r border-gray-200 text-gray-500 text-sm font-semibold select-none">
+                  <label className="block text-xs font-semibold tracking-widest text-muted uppercase mb-3">Contact Number</label>
+                  <div className="flex items-center border border-border rounded-xl bg-faint overflow-hidden focus-within:border-mint transition-all">
+                    <span className="inline-flex items-center px-3 py-3 bg-faint border-r border-border text-muted text-sm font-semibold select-none">
                       +977
                     </span>
                     <input
@@ -659,15 +659,15 @@ export default function ProfilePage() {
                         const val = e.target.value.replace(/\D/g, '');
                         setUserForm({ ...userForm, contactNumber: val });
                       }}
-                      className="flex-1 px-4 py-2.5 bg-transparent focus:outline-none text-gray-800 text-sm"
+                      className="flex-1 px-4 py-3 bg-transparent focus:outline-none text-navy text-sm"
                     />
                   </div>
                 </div>
                 <div className="flex gap-3 pt-1">
-                  <button onClick={() => setEditingUser(false)} className="flex-1 border border-gray-200 rounded-xl py-2.5 text-gray-700 font-medium hover:bg-gray-50 cursor-pointer">
+                  <button onClick={() => setEditingUser(false)} className="flex-1 border border-border bg-white text-navy rounded-full px-5 py-2.5 text-sm font-semibold hover:bg-faint cursor-pointer">
                     Cancel
                   </button>
-                  <button onClick={handleSaveUser} disabled={savingUser} className="flex-1 bg-teal-500 text-white rounded-xl py-2.5 font-medium hover:bg-teal-600 disabled:opacity-50 cursor-pointer">
+                  <button onClick={handleSaveUser} disabled={savingUser} className="flex-1 bg-mint text-white rounded-full px-5 py-2.5 text-sm font-semibold hover:opacity-90 disabled:opacity-50 cursor-pointer">
                     {savingUser ? 'Saving...' : 'Save Changes'}
                   </button>
                 </div>
@@ -677,22 +677,22 @@ export default function ProfilePage() {
         </div>
 
         {/* ══════════════ FAMILY PROFILES MANAGEMENT ══════════════ */}
-        <div className="bg-white rounded-2xl p-5 shadow-sm">
+        <div className="bg-white rounded-2xl border border-border p-5">
           <div className="flex justify-between items-center mb-4">
             <div>
-              <h2 className="font-semibold text-gray-800 text-lg">Family Members</h2>
-              <p className="text-xs text-gray-400 mt-0.5">Manage your family medication profiles</p>
+              <h2 className="font-semibold text-navy text-lg">Family Members</h2>
+              <p className="text-xs text-muted mt-0.5">Manage your family medication profiles</p>
             </div>
-            <span className="text-xs font-bold bg-teal-50 text-teal-600 px-2.5 py-1 rounded-full">{patients.length} {patients.length === 1 ? 'member' : 'members'}</span>
+            <span className="text-xs font-bold bg-mint-light text-mint px-2.5 py-1 rounded-full">{patients.length} {patients.length === 1 ? 'member' : 'members'}</span>
           </div>
 
           {patients.length === 0 ? (
             <div className="text-center py-8">
-              <div className="w-14 h-14 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+              <div className="w-14 h-14 bg-faint rounded-full flex items-center justify-center mx-auto mb-3">
                 <Icons.User />
               </div>
-              <p className="text-gray-500 text-sm font-medium">No family profiles yet</p>
-              <p className="text-xs text-gray-400 mt-1">Add a family member from the Dashboard</p>
+              <p className="text-muted text-sm font-medium">No family profiles yet</p>
+              <p className="text-xs text-muted mt-1">Add a family member from the Dashboard</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -702,19 +702,19 @@ export default function ProfilePage() {
                 return (
                   <div
                     key={member._id || member.id}
-                    className={`flex items-center gap-4 p-4 rounded-xl border transition-all ${isActive ? 'bg-teal-50/50 border-teal-200' : 'bg-gray-50/50 border-gray-100 hover:border-gray-200'}`}
+                    className={`flex items-center gap-4 p-4 rounded-2xl border border-border transition-all ${isActive ? 'bg-mint-light' : 'bg-white hover:bg-faint'}`}
                   >
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center text-white font-bold text-base shrink-0 shadow-sm">
+                    <div className="w-12 h-12 rounded-full bg-navy flex items-center justify-center text-white font-bold text-base shrink-0">
                       {initials}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <h3 className="font-semibold text-gray-800 text-sm truncate">{member.name}</h3>
+                        <h3 className="font-semibold text-navy text-sm truncate">{member.name}</h3>
                         {isActive && (
-                          <span className="text-[10px] font-bold bg-teal-500 text-white px-1.5 py-0.5 rounded-md shrink-0">ACTIVE</span>
+                          <span className="text-[10px] font-bold bg-mint text-white px-1.5 py-0.5 rounded-md shrink-0">ACTIVE</span>
                         )}
                       </div>
-                      <p className="text-xs text-gray-500 capitalize">{member.relation}</p>
+                      <p className="text-xs text-muted capitalize">{member.relation}</p>
                       {member.allergies && (
                         <p className="text-[11px] text-amber-600 mt-0.5 truncate">⚠ {member.allergies}</p>
                       )}
@@ -722,14 +722,14 @@ export default function ProfilePage() {
                     <div className="flex items-center gap-1 shrink-0">
                       <button
                         onClick={() => openEditFamily(member)}
-                        className="p-2 text-gray-400 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition-colors cursor-pointer"
+                        className="p-2 text-muted hover:text-mint hover:bg-mint-light rounded-lg transition-colors cursor-pointer"
                         title="Edit"
                       >
                         <Icons.Edit />
                       </button>
                       <button
                         onClick={() => setDeleteFamilyTarget(member)}
-                        className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                        className="p-2 text-muted hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
                         title="Delete"
                       >
                         <Icons.Delete />
@@ -743,16 +743,16 @@ export default function ProfilePage() {
         </div>
 
         {/* ══════════════ PHARMACIST LINKING ══════════════ */}
-        <div className="bg-white rounded-2xl p-5 shadow-sm">
-          <h2 className="font-semibold text-gray-800 mb-3">Pharmacist Linking</h2>
-          <p className="text-sm text-gray-600 mb-4">Link your account to multiple pharmacists securely.</p>
+        <div className="bg-white rounded-2xl border border-border p-5">
+          <h2 className="font-semibold text-navy mb-3">Pharmacist Linking</h2>
+          <p className="text-sm text-muted mb-4">Link your account to multiple pharmacists securely.</p>
           <div className="space-y-3">
             <button
               onClick={() => navigate('/pharmacist-link')}
-              className="w-full flex items-center justify-between p-3 rounded-lg bg-teal-50 hover:bg-teal-100 transition-colors cursor-pointer"
+              className="w-full flex items-center justify-between p-3 rounded-lg bg-mint-light hover:opacity-90 transition-colors cursor-pointer"
             >
               <div className="flex items-center gap-3">
-                <div className="text-teal-600">
+                <div className="text-mint">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M12 2V22M5 12H19" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
                     <path d="M9 4H15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
@@ -761,74 +761,74 @@ export default function ProfilePage() {
                     <path d="M9 20H15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
                   </svg>
                 </div>
-                <span className="text-teal-800 font-medium">Link a Pharmacist</span>
+                <span className="text-navy font-medium">Link a Pharmacist</span>
               </div>
-              <span className="text-teal-500 text-sm">→</span>
+              <span className="text-mint text-sm">→</span>
             </button>
           </div>
         </div>
 
         {/* ══════════════ SECURITY ══════════════ */}
-        <div className="bg-white rounded-2xl p-5 shadow-sm">
-          <h2 className="font-semibold text-gray-800 mb-3">Security</h2>
+        <div className="bg-white rounded-2xl border border-border p-5">
+          <h2 className="font-semibold text-navy mb-3">Security</h2>
           <div className="space-y-3">
             <button
               onClick={() => setShowChangePassword(true)}
-              className="w-full flex items-center justify-between p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer"
+              className="w-full flex items-center justify-between p-3 rounded-lg bg-faint hover:bg-bg transition-colors cursor-pointer"
             >
               <div className="flex items-center gap-3">
                 <Icons.Lock />
-                <span className="text-gray-700">Change Password</span>
+                <span className="text-navy">Change Password</span>
               </div>
-              <span className="text-gray-400 text-sm">→</span>
+              <span className="text-muted text-sm">→</span>
             </button>
 
             <button
               onClick={handleResetPassword}
-              className="w-full flex items-center justify-between p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer"
+              className="w-full flex items-center justify-between p-3 rounded-lg bg-faint hover:bg-bg transition-colors cursor-pointer"
             >
               <div className="flex items-center gap-3">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                   <path d="M1 12C1 12 4 4 12 4C20 4 23 12 23 12C23 12 20 20 12 20C4 20 1 12 1 12Z" />
                   <circle cx="12" cy="12" r="3" />
                 </svg>
-                <span className="text-gray-700">Reset Password</span>
+                <span className="text-navy">Reset Password</span>
               </div>
-              <span className="text-gray-400 text-sm">→</span>
+              <span className="text-muted text-sm">→</span>
             </button>
 
             <button
               onClick={toggleBiometric}
-              className="w-full flex items-center justify-between p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer"
+              className="w-full flex items-center justify-between p-3 rounded-lg bg-faint hover:bg-bg transition-colors cursor-pointer"
             >
               <div className="flex items-center gap-3">
                 <Icons.Fingerprint />
-                <span className="text-gray-700">Biometric Login</span>
+                <span className="text-navy">Biometric Login</span>
               </div>
-              <div className={`w-10 h-6 rounded-full transition-colors ${biometricEnabled ? 'bg-teal-500' : 'bg-gray-300'}`}>
-                <div className={`w-5 h-5 rounded-full bg-white shadow-md transform transition-transform mt-0.5 ${biometricEnabled ? 'translate-x-4' : 'translate-x-0.5'}`} />
+              <div className={`w-10 h-6 rounded-full transition-colors ${biometricEnabled ? 'bg-mint' : 'bg-gray-300'}`}>
+                <div className={`w-5 h-5 rounded-full bg-white transform transition-transform mt-0.5 ${biometricEnabled ? 'translate-x-4' : 'translate-x-0.5'}`} />
               </div>
             </button>
           </div>
         </div>
 
         {/* ══════════════ SUBSCRIPTION ══════════════ */}
-        <div className={`rounded-2xl p-5 shadow-sm ${isPro ? 'bg-gradient-to-r from-amber-50 to-yellow-50 border-2 border-amber-400' : 'bg-white'}`}>
+        <div className={`rounded-2xl border border-border p-5 ${isPro ? 'bg-amber-50 border-amber-400' : 'bg-white'}`}>
           <div className="flex justify-between items-start mb-3">
             <div className="flex items-center gap-2">
               <Icons.Crown />
-              <h2 className="font-semibold text-gray-800">MedSync {isPro ? 'Pro' : 'Free'}</h2>
+              <h2 className="font-semibold text-navy">MedSync {isPro ? 'Pro' : 'Free'}</h2>
             </div>
             {isPro && (
-              <button onClick={handleRemovePro} className="text-xs text-red-500 hover:text-red-600 cursor-pointer">Remove Pro</button>
+              <button onClick={handleRemovePro} className="text-xs border border-red text-red rounded-full px-3 py-1 font-semibold hover:bg-red-light cursor-pointer">Remove Pro</button>
             )}
           </div>
           <div className="space-y-3 mb-4">
-            <p className="text-sm text-gray-600">Current Plan Features:</p>
+            <p className="text-sm text-muted">Current Plan Features:</p>
             {freeFeatures.map((feature, idx) => (
               <FeatureCard key={idx} {...feature} />
             ))}
-            <div className="h-px bg-gray-200 my-2" />
+            <div className="h-px bg-border my-2" />
             {proFeatures.map((feature, idx) => (
               <FeatureCard key={idx} {...feature} />
             ))}
@@ -836,13 +836,13 @@ export default function ProfilePage() {
           {!isPro && (
             <button
               onClick={handleUpgradeToPro}
-              className="w-full bg-gradient-to-r from-amber-500 to-yellow-500 text-white py-3 rounded-lg font-semibold hover:from-amber-600 hover:to-yellow-600 transition-colors cursor-pointer"
+              className="w-full bg-navy text-white py-3 rounded-full font-semibold hover:opacity-90 transition-colors cursor-pointer"
             >
               Upgrade to Pro - $4.99/month
             </button>
           )}
           {isPro && (
-            <div className="text-center p-3 bg-amber-100 rounded-lg">
+            <div className="text-center p-3 bg-amber-100 rounded-xl">
               <p className="text-sm text-amber-800">✨ You're a Pro member! Enjoy all premium features.</p>
             </div>
           )}
@@ -852,7 +852,7 @@ export default function ProfilePage() {
         <div className="pt-2">
           <button
             onClick={handleLogout}
-            className="w-full flex items-center justify-center gap-3 bg-red-50 border border-red-200 rounded-xl px-4 py-4 text-red-600 font-semibold hover:bg-red-100 transition-colors cursor-pointer"
+            className="w-full flex items-center justify-center gap-3 border border-red text-red rounded-full px-5 py-2.5 text-sm font-semibold hover:bg-red-light transition-colors cursor-pointer"
           >
             <Icons.Logout />
             Sign Out
@@ -860,45 +860,45 @@ export default function ProfilePage() {
         </div>
 
         <div className="text-center py-2">
-          <p className="text-xs text-gray-400">MedSync v1.0.0</p>
+          <p className="text-xs text-muted">MedSync v1.0.0</p>
         </div>
       </div>
 
       {/* ══════════════ EDIT FAMILY MODAL ══════════════ */}
       {editFamilyTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={() => setEditFamilyTarget(null)}>
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-navy/30 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setEditFamilyTarget(null)}>
+          <div className="bg-white rounded-2xl border border-border p-6 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
             <div className="flex justify-between items-center mb-5">
-              <h3 className="text-lg font-bold text-gray-800">Edit Family Profile</h3>
-              <button onClick={() => setEditFamilyTarget(null)} className="text-gray-400 hover:text-gray-600 cursor-pointer"><Icons.Close /></button>
+              <h3 className="text-lg font-bold text-navy">Edit Family Profile</h3>
+              <button onClick={() => setEditFamilyTarget(null)} className="text-muted hover:text-navy cursor-pointer"><Icons.Close /></button>
             </div>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Full Name *</label>
+                <label className="block text-xs font-semibold tracking-widest text-muted uppercase mb-3">Full Name *</label>
                 <input
                   type="text"
                   value={editFamilyForm.name}
                   onChange={(e) => setEditFamilyForm({ ...editFamilyForm, name: e.target.value })}
-                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                  className="w-full rounded-xl border border-border bg-faint px-4 py-3 text-sm text-navy focus:outline-none focus:border-mint"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Date of Birth</label>
+                <label className="block text-xs font-semibold tracking-widest text-muted uppercase mb-3">Date of Birth</label>
                 <input
                   type="date"
                   value={editFamilyForm.dateOfBirth}
                   max={(() => { const d = new Date(); d.setFullYear(d.getFullYear() - 6); return d.toISOString().split('T')[0]; })()}
                   min={(() => { const d = new Date(); d.setFullYear(d.getFullYear() - 120); return d.toISOString().split('T')[0]; })()}
                   onChange={(e) => setEditFamilyForm({ ...editFamilyForm, dateOfBirth: e.target.value })}
-                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                  className="w-full rounded-xl border border-border bg-faint px-4 py-3 text-sm text-navy focus:outline-none focus:border-mint"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Relation</label>
+                <label className="block text-xs font-semibold tracking-widest text-muted uppercase mb-3">Relation</label>
                 <select
                   value={editFamilyForm.relation}
                   onChange={(e) => setEditFamilyForm({ ...editFamilyForm, relation: e.target.value })}
-                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                  className="w-full rounded-xl border border-border bg-faint px-4 py-3 text-sm text-navy focus:outline-none focus:border-mint"
                 >
                   <option value="self">Self</option><option value="mother">Mother</option><option value="father">Father</option>
                   <option value="grandmother">Grandmother</option><option value="grandfather">Grandfather</option>
@@ -906,20 +906,20 @@ export default function ProfilePage() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Allergies / Notes</label>
+                <label className="block text-xs font-semibold tracking-widest text-muted uppercase mb-3">Allergies / Notes</label>
                 <textarea
                   value={editFamilyForm.allergies}
                   onChange={(e) => setEditFamilyForm({ ...editFamilyForm, allergies: e.target.value })}
                   placeholder="e.g., Allergic to penicillin"
-                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                  className="w-full rounded-xl border border-border bg-faint px-4 py-3 text-sm text-navy focus:outline-none focus:border-mint"
                   rows={3}
                 />
               </div>
               <div className="flex gap-3 pt-2">
-                <button onClick={() => setEditFamilyTarget(null)} className="flex-1 border border-gray-200 rounded-lg py-2.5 text-gray-700 font-medium hover:bg-gray-50 cursor-pointer">
+                <button onClick={() => setEditFamilyTarget(null)} className="flex-1 border border-border bg-white text-navy rounded-full px-5 py-2.5 text-sm font-semibold hover:bg-faint cursor-pointer">
                   Cancel
                 </button>
-                <button onClick={handleSaveFamily} disabled={savingFamily} className="flex-1 bg-teal-500 text-white rounded-lg py-2.5 font-medium hover:bg-teal-600 disabled:opacity-50 cursor-pointer">
+                <button onClick={handleSaveFamily} disabled={savingFamily} className="flex-1 bg-mint text-white rounded-full px-5 py-2.5 text-sm font-semibold hover:opacity-90 disabled:opacity-50 cursor-pointer">
                   {savingFamily ? 'Saving...' : 'Save Changes'}
                 </button>
               </div>
@@ -930,11 +930,11 @@ export default function ProfilePage() {
 
       {/* ══════════════ DELETE FAMILY MODAL ══════════════ */}
       {deleteFamilyTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={() => setDeleteFamilyTarget(null)}>
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-navy/30 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setDeleteFamilyTarget(null)}>
+          <div className="bg-white rounded-2xl border border-border p-6 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-bold text-gray-800">Delete Family Profile</h3>
-              <button onClick={() => setDeleteFamilyTarget(null)} className="text-gray-400 hover:text-gray-600 cursor-pointer"><Icons.Close /></button>
+              <h3 className="text-lg font-bold text-navy">Delete Family Profile</h3>
+              <button onClick={() => setDeleteFamilyTarget(null)} className="text-muted hover:text-navy cursor-pointer"><Icons.Close /></button>
             </div>
             <div className="mb-2 p-3 bg-red-50 rounded-xl border border-red-100 flex items-start gap-3">
               <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center text-red-500 shrink-0 mt-0.5">
@@ -943,15 +943,15 @@ export default function ProfilePage() {
                 </svg>
               </div>
               <div>
-                <p className="text-sm text-gray-700">Are you sure you want to delete <strong className="text-gray-900">{deleteFamilyTarget.name}</strong>'s profile?</p>
+                <p className="text-sm text-navy">Are you sure you want to delete <strong className="text-navy">{deleteFamilyTarget.name}</strong>'s profile?</p>
                 <p className="text-xs text-red-500 mt-1">This will permanently remove all their medicines and prescriptions. This cannot be undone.</p>
               </div>
             </div>
             <div className="flex gap-3 mt-5">
-              <button onClick={() => setDeleteFamilyTarget(null)} className="flex-1 border border-gray-200 rounded-lg py-2.5 text-gray-700 font-medium hover:bg-gray-50 cursor-pointer">
+              <button onClick={() => setDeleteFamilyTarget(null)} className="flex-1 border border-border bg-white text-navy rounded-full px-5 py-2.5 text-sm font-semibold hover:bg-faint cursor-pointer">
                 Cancel
               </button>
-              <button onClick={handleDeleteFamily} disabled={deletingFamily} className="flex-1 bg-red-500 text-white rounded-lg py-2.5 font-medium hover:bg-red-600 disabled:opacity-50 cursor-pointer">
+              <button onClick={handleDeleteFamily} disabled={deletingFamily} className="flex-1 border border-red text-red rounded-full px-5 py-2.5 text-sm font-semibold hover:bg-red-light disabled:opacity-50 cursor-pointer">
                 {deletingFamily ? 'Deleting...' : 'Delete Profile'}
               </button>
             </div>
@@ -961,35 +961,35 @@ export default function ProfilePage() {
 
       {/* ══════════════ UPGRADE PRO MODAL ══════════════ */}
       {showProModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={() => setShowProModal(false)}>
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-navy/30 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowProModal(false)}>
+          <div className="bg-white rounded-2xl border border-border p-6 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
             <div className="flex justify-between items-center mb-4">
               <div className="flex items-center gap-2">
                 <Icons.Crown />
-                <h3 className="text-xl font-bold text-gray-800">Upgrade to Pro</h3>
+                <h3 className="text-xl font-bold text-navy">Upgrade to Pro</h3>
               </div>
-              <button onClick={() => setShowProModal(false)} className="text-gray-400 hover:text-gray-600 cursor-pointer"><Icons.Close /></button>
+              <button onClick={() => setShowProModal(false)} className="text-muted hover:text-navy cursor-pointer"><Icons.Close /></button>
             </div>
             <div className="space-y-4 mb-6">
-              <div className="bg-gradient-to-r from-amber-50 to-yellow-50 p-4 rounded-xl text-center">
+              <div className="bg-amber-50 p-4 rounded-xl text-center">
                 <p className="text-3xl font-bold text-amber-600">$4.99</p>
-                <p className="text-sm text-gray-600">per month</p>
+                <p className="text-sm text-muted">per month</p>
               </div>
               <div className="space-y-2">
-                <p className="font-medium text-gray-800">Pro includes:</p>
+                <p className="font-medium text-navy">Pro includes:</p>
                 <ul className="space-y-1">
-                  <li className="flex items-center gap-2 text-sm text-gray-600">✓ Unlimited family members</li>
-                  <li className="flex items-center gap-2 text-sm text-gray-600">✓ Advanced analytics & insights</li>
-                  <li className="flex items-center gap-2 text-sm text-gray-600">✓ AI-powered refill reminders</li>
-                  <li className="flex items-center gap-2 text-sm text-gray-600">✓ Export medical reports</li>
-                  <li className="flex items-center gap-2 text-sm text-gray-600">✓ Priority support</li>
+                  <li className="flex items-center gap-2 text-sm text-muted">✓ Unlimited family members</li>
+                  <li className="flex items-center gap-2 text-sm text-muted">✓ Advanced analytics &amp; insights</li>
+                  <li className="flex items-center gap-2 text-sm text-muted">✓ AI-powered refill reminders</li>
+                  <li className="flex items-center gap-2 text-sm text-muted">✓ Export medical reports</li>
+                  <li className="flex items-center gap-2 text-sm text-muted">✓ Priority support</li>
                 </ul>
               </div>
-              <p className="text-xs text-gray-400 text-center">Cancel anytime • No commitment</p>
+              <p className="text-xs text-muted text-center">Cancel anytime • No commitment</p>
             </div>
             <div className="flex gap-3">
-              <button onClick={() => setShowProModal(false)} className="flex-1 border border-gray-200 rounded-lg py-2.5 text-gray-700 font-medium hover:bg-gray-50 cursor-pointer">Cancel</button>
-              <button onClick={handleProPurchase} className="flex-1 bg-gradient-to-r from-amber-500 to-yellow-500 text-white rounded-lg py-2.5 font-medium hover:from-amber-600 hover:to-yellow-600 cursor-pointer">Continue to Payment</button>
+              <button onClick={() => setShowProModal(false)} className="flex-1 border border-border bg-white text-navy rounded-full px-5 py-2.5 text-sm font-semibold hover:bg-faint cursor-pointer">Cancel</button>
+              <button onClick={handleProPurchase} className="flex-1 bg-navy text-white rounded-full px-5 py-2.5 text-sm font-semibold hover:opacity-90 cursor-pointer">Continue to Payment</button>
             </div>
           </div>
         </div>
@@ -997,26 +997,26 @@ export default function ProfilePage() {
 
       {/* ══════════════ PIN MODAL ══════════════ */}
       {showPinModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={() => setShowPinModal(false)}>
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-navy/30 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowPinModal(false)}>
+          <div className="bg-white rounded-2xl border border-border p-6 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
             <div className="text-center mb-4">
-              <h3 className="text-xl font-bold text-gray-800">Verify PIN</h3>
-              <p className="text-sm text-gray-500 mt-1">Enter the test PIN to activate Pro</p>
+              <h3 className="text-xl font-bold text-navy">Verify PIN</h3>
+              <p className="text-sm text-muted mt-1">Enter the test PIN to activate Pro</p>
             </div>
             <div className="mb-4">
               <input
                 type="password" maxLength={4} value={pinInput}
                 onChange={(e) => { setPinInput(e.target.value); setPinError(''); }}
                 placeholder="Enter 4-digit PIN"
-                className="w-full text-center text-2xl tracking-widest border border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                className="w-full text-center text-2xl tracking-widest rounded-xl border border-border bg-faint px-4 py-3 text-navy focus:outline-none focus:border-mint"
                 autoFocus
               />
               {pinError && <p className="text-xs text-red-500 mt-1 text-center">{pinError}</p>}
-              <p className="text-xs text-gray-400 mt-2 text-center">Test PIN: 1234</p>
+              <p className="text-xs text-muted mt-2 text-center">Test PIN: 1234</p>
             </div>
             <div className="flex gap-3">
-              <button onClick={() => setShowPinModal(false)} className="flex-1 border border-gray-200 rounded-lg py-2.5 text-gray-700 font-medium hover:bg-gray-50 cursor-pointer">Cancel</button>
-              <button onClick={verifyPin} className="flex-1 bg-teal-500 text-white rounded-lg py-2.5 font-medium hover:bg-teal-600 cursor-pointer">Verify & Upgrade</button>
+              <button onClick={() => setShowPinModal(false)} className="flex-1 border border-border bg-white text-navy rounded-full px-5 py-2.5 text-sm font-semibold hover:bg-faint cursor-pointer">Cancel</button>
+              <button onClick={verifyPin} className="flex-1 bg-mint text-white rounded-full px-5 py-2.5 text-sm font-semibold hover:opacity-90 cursor-pointer">Verify &amp; Upgrade</button>
             </div>
           </div>
         </div>
@@ -1024,35 +1024,35 @@ export default function ProfilePage() {
 
       {/* ══════════════ CHANGE PASSWORD MODAL ══════════════ */}
       {showChangePassword && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={() => setShowChangePassword(false)}>
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-navy/30 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowChangePassword(false)}>
+          <div className="bg-white rounded-2xl border border-border p-6 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-bold text-gray-800">Change Password</h3>
-              <button onClick={() => setShowChangePassword(false)} className="text-gray-400 hover:text-gray-600 cursor-pointer"><Icons.Close /></button>
+              <h3 className="text-xl font-bold text-navy">Change Password</h3>
+              <button onClick={() => setShowChangePassword(false)} className="text-muted hover:text-navy cursor-pointer"><Icons.Close /></button>
             </div>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Current Password</label>
+                <label className="block text-xs font-semibold tracking-widest text-muted uppercase mb-3">Current Password</label>
                 <input type="password" value={passwordForm.current}
                   onChange={(e) => setPasswordForm({ ...passwordForm, current: e.target.value })}
-                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500" placeholder="Enter current password" />
+                  className="w-full rounded-xl border border-border bg-faint px-4 py-3 text-sm text-navy focus:outline-none focus:border-mint" placeholder="Enter current password" />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">New Password</label>
+                <label className="block text-xs font-semibold tracking-widest text-muted uppercase mb-3">New Password</label>
                 <input type="password" value={passwordForm.new}
                   onChange={(e) => setPasswordForm({ ...passwordForm, new: e.target.value })}
-                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500" placeholder="Enter new password" />
+                  className="w-full rounded-xl border border-border bg-faint px-4 py-3 text-sm text-navy focus:outline-none focus:border-mint" placeholder="Enter new password" />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Confirm New Password</label>
+                <label className="block text-xs font-semibold tracking-widest text-muted uppercase mb-3">Confirm New Password</label>
                 <input type="password" value={passwordForm.confirm}
                   onChange={(e) => setPasswordForm({ ...passwordForm, confirm: e.target.value })}
-                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500" placeholder="Confirm new password" />
+                  className="w-full rounded-xl border border-border bg-faint px-4 py-3 text-sm text-navy focus:outline-none focus:border-mint" placeholder="Confirm new password" />
               </div>
             </div>
             <div className="flex gap-3 mt-6">
-              <button onClick={() => setShowChangePassword(false)} className="flex-1 border border-gray-200 rounded-lg py-2.5 text-gray-700 font-medium hover:bg-gray-50 cursor-pointer">Cancel</button>
-              <button onClick={handleChangePassword} className="flex-1 bg-teal-500 text-white rounded-lg py-2.5 font-medium hover:bg-teal-600 cursor-pointer">Update Password</button>
+              <button onClick={() => setShowChangePassword(false)} className="flex-1 border border-border bg-white text-navy rounded-full px-5 py-2.5 text-sm font-semibold hover:bg-faint cursor-pointer">Cancel</button>
+              <button onClick={handleChangePassword} className="flex-1 bg-mint text-white rounded-full px-5 py-2.5 text-sm font-semibold hover:opacity-90 cursor-pointer">Update Password</button>
             </div>
           </div>
         </div>

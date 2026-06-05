@@ -113,25 +113,25 @@ const Icons = {
 // Health Trend Chart Component
 function HealthTrendChart({ history }) {
   const [showChart, setShowChart] = useState(true);
-  
+
   if (history.length === 0) return null;
-  
+
   // Prepare data for the chart (simple bar chart using CSS)
   const maxScore = 100;
   const chartData = history.slice(0, 7).reverse(); // Show last 7 entries, oldest to newest
-  
+
   return (
-    <div className="bg-white rounded-xl p-4 shadow-sm">
+    <div className="bg-white rounded-2xl border border-border p-4">
       <div className="flex justify-between items-center mb-4">
         <div className="flex items-center gap-2">
           <Icons.TrendingUp />
-          <h3 className="font-semibold text-gray-800">Health Trend</h3>
+          <h3 className="font-semibold text-navy">Health Trend</h3>
         </div>
-        <button onClick={() => setShowChart(!showChart)} className="text-xs text-teal-500">
+        <button onClick={() => setShowChart(!showChart)} className="text-xs text-mint">
           {showChart ? 'Hide Details' : 'Show Details'}
         </button>
       </div>
-      
+
       {showChart && (
         <>
           {/* Bar Chart */}
@@ -140,15 +140,15 @@ function HealthTrendChart({ history }) {
               const height = (entry.healthScore / maxScore) * 120;
               const date = new Date(entry.date);
               const formattedDate = `${date.getMonth() + 1}/${date.getDate()}`;
-              
+
               return (
                 <div key={idx} className="flex items-center gap-3">
-                  <div className="w-16 text-xs text-gray-500">{formattedDate}</div>
+                  <div className="w-16 text-xs text-muted">{formattedDate}</div>
                   <div className="flex-1">
-                    <div 
-                      className="bg-gradient-to-r from-teal-400 to-teal-500 rounded-full transition-all duration-500"
-                      style={{ 
-                        width: `${entry.healthScore}%`, 
+                    <div
+                      className="bg-mint rounded-full transition-all duration-500"
+                      style={{
+                        width: `${entry.healthScore}%`,
                         height: '24px',
                         display: 'flex',
                         alignItems: 'center',
@@ -163,12 +163,12 @@ function HealthTrendChart({ history }) {
               );
             })}
           </div>
-          
+
           {/* Trend Indicator */}
           {history.length >= 2 && (
-            <div className="p-3 bg-gray-50 rounded-lg">
+            <div className="p-3 bg-faint rounded-xl">
               <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">Overall Trend</span>
+                <span className="text-sm text-muted">Overall Trend</span>
                 {history[0].healthScore > history[history.length - 1].healthScore ? (
                   <div className="flex items-center gap-1 text-green-600">
                     <Icons.TrendingUp />
@@ -186,7 +186,7 @@ function HealthTrendChart({ history }) {
                   </div>
                 )}
               </div>
-              <div className="mt-2 text-xs text-gray-500">
+              <div className="mt-2 text-xs text-muted">
                 {history.length} total records • Last update: {new Date(history[0].date).toLocaleDateString()}
               </div>
             </div>
@@ -201,58 +201,58 @@ function HealthTrendChart({ history }) {
 function HealthHistoryTimeline({ history, onSelectEntry }) {
   const [expanded, setExpanded] = useState(false);
   const displayHistory = expanded ? history : history.slice(0, 3);
-  
+
   if (history.length === 0) {
     return (
-      <div className="bg-white rounded-xl p-4 shadow-sm text-center">
+      <div className="bg-white rounded-2xl border border-border p-4 text-center">
         <Icons.Calendar />
-        <p className="text-sm text-gray-500 mt-2">No health history yet</p>
-        <p className="text-xs text-gray-400">Complete an analysis to start tracking</p>
+        <p className="text-sm text-muted mt-2">No health history yet</p>
+        <p className="text-xs text-muted">Complete an analysis to start tracking</p>
       </div>
     );
   }
-  
+
   return (
-    <div className="bg-white rounded-xl p-4 shadow-sm">
+    <div className="bg-white rounded-2xl border border-border p-4">
       <div className="flex justify-between items-center mb-3">
         <div className="flex items-center gap-2">
           <Icons.Calendar />
-          <h3 className="font-semibold text-gray-800">Health History</h3>
+          <h3 className="font-semibold text-navy">Health History</h3>
         </div>
         {history.length > 3 && (
-          <button onClick={() => setExpanded(!expanded)} className="text-xs text-teal-500">
+          <button onClick={() => setExpanded(!expanded)} className="text-xs text-mint">
             {expanded ? 'Show Less' : `View All (${history.length})`}
           </button>
         )}
       </div>
-      
+
       <div className="space-y-3">
         {displayHistory.map((entry, idx) => {
           const date = new Date(entry.date);
-          const formattedDate = date.toLocaleDateString('en-US', { 
-            month: 'short', 
+          const formattedDate = date.toLocaleDateString('en-US', {
+            month: 'short',
             day: 'numeric',
             hour: '2-digit',
             minute: '2-digit'
           });
-          
+
           return (
-            <div 
-              key={idx} 
-              className="p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors"
+            <div
+              key={idx}
+              className="p-3 bg-faint rounded-xl cursor-pointer hover:bg-mint-light transition-colors"
               onClick={() => onSelectEntry?.(entry)}
             >
               <div className="flex justify-between items-start">
                 <div>
-                  <p className="text-xs text-gray-500">{formattedDate}</p>
+                  <p className="text-xs text-muted">{formattedDate}</p>
                   <div className="flex items-center gap-3 mt-1">
                     <div className="flex items-center gap-1">
                       <Icons.Heart className="w-4 h-4" />
-                      <span className="text-sm font-medium text-teal-600">{entry.healthScore}</span>
+                      <span className="text-sm font-medium text-mint">{entry.healthScore}</span>
                     </div>
                     <div className="flex items-center gap-1">
                       <Icons.Weight className="w-4 h-4" />
-                      <span className="text-xs text-gray-600">{entry.weight} kg</span>
+                      <span className="text-xs text-muted">{entry.weight} kg</span>
                     </div>
                   </div>
                 </div>
@@ -281,38 +281,38 @@ class HealthAdvisor {
 
   createModel() {
     const model = tf.sequential();
-    
+
     model.add(tf.layers.dense({
       inputShape: [5],
       units: 32,
       activation: 'relu',
       kernelInitializer: 'heNormal'
     }));
-    
+
     model.add(tf.layers.dense({
       units: 16,
       activation: 'relu',
       kernelInitializer: 'heNormal'
     }));
-    
+
     model.add(tf.layers.dense({
       units: 8,
       activation: 'relu',
       kernelInitializer: 'heNormal'
     }));
-    
+
     model.add(tf.layers.dense({
       units: 3,
       activation: 'sigmoid',
       kernelInitializer: 'heNormal'
     }));
-    
+
     model.compile({
       optimizer: tf.train.adam(0.001),
       loss: 'meanSquaredError',
       metrics: ['mae']
     });
-    
+
     this.model = model;
     return model;
   }
@@ -353,26 +353,26 @@ class HealthAdvisor {
     const bmiCategory = this.getBMICategory(bmi);
     const bmr = this.calculateBMR(weight, height, age);
     const dailyCalories = this.calculateDailyCalories(bmr, activityLevel);
-    
+
     let adjustedCalories = dailyCalories;
     if (goal === 'lose') adjustedCalories -= 500;
     else if (goal === 'gain') adjustedCalories += 500;
-    
+
     let healthScore = 70;
     if (bmiCategory === 'Normal') healthScore += 20;
     else if (bmiCategory === 'Overweight') healthScore -= 10;
     else if (bmiCategory === 'Obese') healthScore -= 20;
     else if (bmiCategory === 'Underweight') healthScore -= 10;
-    
+
     if (activityLevel === 'active' || activityLevel === 'veryActive') healthScore += 10;
     else if (activityLevel === 'sedentary') healthScore -= 15;
-    
+
     healthScore = Math.max(0, Math.min(100, healthScore));
-    
+
     let riskLevel = 'Low';
     if (healthScore < 50) riskLevel = 'High';
     else if (healthScore < 70) riskLevel = 'Moderate';
-    
+
     return {
       bmi: bmi.toFixed(1),
       bmiCategory,
@@ -448,12 +448,12 @@ class HealthAdvisor {
     };
 
     const plan = plans[bmiCategory] || plans.Normal;
-    
+
     if (age > 60) {
       plan.foods.eat.push('Calcium-rich foods', 'Vitamin D supplements');
       plan.foods.avoid.push('High sodium foods');
     }
-    
+
     if (allergies.includes('dairy')) {
       plan.foods.eat = plan.foods.eat.filter(f => !f.toLowerCase().includes('milk') && !f.toLowerCase().includes('yogurt'));
     }
@@ -463,7 +463,7 @@ class HealthAdvisor {
     if (allergies.includes('gluten')) {
       plan.foods.eat = plan.foods.eat.filter(f => !f.toLowerCase().includes('wheat') && !f.toLowerCase().includes('bread'));
     }
-    
+
     return plan;
   }
 
@@ -492,17 +492,17 @@ class HealthAdvisor {
     let level = 'beginner';
     if (activityLevel === 'moderate') level = 'intermediate';
     else if (activityLevel === 'active' || activityLevel === 'veryActive') level = 'advanced';
-    
+
     if (age > 60) level = 'beginner';
-    
+
     let plan = workouts[level];
-    
+
     if (goal === 'lose') {
       plan.cardio += ' (add 2 HIIT sessions/week)';
     } else if (goal === 'gain') {
       plan.strength += ' (focus on compound lifts, progressive overload)';
     }
-    
+
     if (age > 60) {
       plan = {
         cardio: 'Brisk walking 20-30 mins, 5 days/week',
@@ -513,7 +513,7 @@ class HealthAdvisor {
     } else if (age < 25) {
       plan.intensity = 'Can handle higher intensity, focus on building foundation';
     }
-    
+
     return plan;
   }
 
@@ -548,13 +548,13 @@ class HealthAdvisor {
         'Join a support group'
       ]
     };
-    
+
     let categoryTips = tips[bmiCategory] || [];
     if (age > 60) {
       categoryTips.push('Focus on balance exercises to prevent falls');
       categoryTips.push('Get adequate Vitamin D and calcium');
     }
-    
+
     return [...categoryTips, ...tips.general];
   }
 }
@@ -567,15 +567,15 @@ function BMIChart({ bmi, category }) {
     { label: 'Overweight', range: [25, 30], color: '#F59E0B', position: 65 },
     { label: 'Obese', range: [30, 40], color: '#EF4444', position: 85 }
   ];
-  
+
   let indicatorPosition = 10;
   if (bmi <= 18.5) indicatorPosition = (bmi / 18.5) * 20;
   else if (bmi <= 25) indicatorPosition = 20 + ((bmi - 18.5) / 6.5) * 30;
   else if (bmi <= 30) indicatorPosition = 50 + ((bmi - 25) / 5) * 30;
   else indicatorPosition = 80 + Math.min(20, (bmi - 30) / 10 * 20);
-  
+
   indicatorPosition = Math.min(95, Math.max(5, indicatorPosition));
-  
+
   return (
     <div className="space-y-2">
       <div className="relative h-8 rounded-full overflow-hidden">
@@ -590,12 +590,12 @@ function BMIChart({ bmi, category }) {
             }}
           />
         ))}
-        <div 
+        <div
           className="absolute top-0 w-1 h-8 bg-black transform -translate-x-1/2"
           style={{ left: `${indicatorPosition}%` }}
         />
       </div>
-      <div className="flex justify-between text-xs text-gray-500">
+      <div className="flex justify-between text-xs text-muted">
         <span>Underweight</span>
         <span>Normal</span>
         <span>Overweight</span>
@@ -608,51 +608,51 @@ function BMIChart({ bmi, category }) {
 // Diet Plan Card
 function DietPlanCard({ plan, bmiCategory }) {
   const [expanded, setExpanded] = useState(false);
-  
+
   return (
-    <div className="bg-white rounded-xl p-4 shadow-sm">
+    <div className="bg-white rounded-2xl border border-border p-4">
       <div className="flex justify-between items-center mb-3">
         <div className="flex items-center gap-2">
           <Icons.Food />
-          <h3 className="font-semibold text-gray-800">Personalized Diet Plan</h3>
+          <h3 className="font-semibold text-navy">Personalized Diet Plan</h3>
         </div>
-        <span className="px-2 py-1 bg-teal-50 text-teal-600 text-xs rounded-full">
+        <span className="px-2 py-1 bg-mint-light text-mint text-xs rounded-full">
           {plan.goal}
         </span>
       </div>
-      
+
       <div className="space-y-3">
-        <div className="flex justify-between text-sm border-b pb-2">
-          <span className="text-gray-600">Daily Calories</span>
-          <span className="font-medium text-teal-600">{plan.calories}</span>
+        <div className="flex justify-between text-sm border-b border-border pb-2">
+          <span className="text-muted">Daily Calories</span>
+          <span className="font-medium text-mint">{plan.calories}</span>
         </div>
-        
+
         {!expanded ? (
-          <button onClick={() => setExpanded(true)} className="text-sm text-teal-500">
+          <button onClick={() => setExpanded(true)} className="text-sm text-mint">
             View Full Plan →
           </button>
         ) : (
           <>
             <div>
-              <p className="text-sm font-medium text-gray-700 mb-1">✅ Foods to Eat</p>
-              <ul className="list-disc list-inside text-sm text-gray-600 space-y-1">
+              <p className="text-sm font-medium text-navy mb-1">✅ Foods to Eat</p>
+              <ul className="list-disc list-inside text-sm text-muted space-y-1">
                 {plan.foods.eat.map((food, idx) => (
                   <li key={idx}>{food}</li>
                 ))}
               </ul>
             </div>
-            
+
             <div>
-              <p className="text-sm font-medium text-gray-700 mb-1">❌ Foods to Avoid</p>
-              <ul className="list-disc list-inside text-sm text-gray-600 space-y-1">
+              <p className="text-sm font-medium text-navy mb-1">❌ Foods to Avoid</p>
+              <ul className="list-disc list-inside text-sm text-muted space-y-1">
                 {plan.foods.avoid.map((food, idx) => (
                   <li key={idx}>{food}</li>
                 ))}
               </ul>
             </div>
-            
-            <div className="bg-teal-50 rounded-lg p-3">
-              <p className="text-sm font-medium text-gray-700 mb-2">📅 Sample Meal Plan</p>
+
+            <div className="bg-mint-light rounded-2xl p-3">
+              <p className="text-sm font-medium text-navy mb-2">📅 Sample Meal Plan</p>
               <div className="space-y-2 text-sm">
                 <div><span className="font-medium">Breakfast:</span> {plan.foods.breakfast}</div>
                 <div><span className="font-medium">Lunch:</span> {plan.foods.lunch}</div>
@@ -660,8 +660,8 @@ function DietPlanCard({ plan, bmiCategory }) {
                 <div><span className="font-medium">Snacks:</span> {plan.foods.snacks}</div>
               </div>
             </div>
-            
-            <button onClick={() => setExpanded(false)} className="text-sm text-teal-500">
+
+            <button onClick={() => setExpanded(false)} className="text-sm text-mint">
               Show Less ↑
             </button>
           </>
@@ -674,42 +674,42 @@ function DietPlanCard({ plan, bmiCategory }) {
 // Workout Plan Card
 function WorkoutPlanCard({ plan }) {
   const [expanded, setExpanded] = useState(false);
-  
+
   return (
-    <div className="bg-white rounded-xl p-4 shadow-sm">
+    <div className="bg-white rounded-2xl border border-border p-4">
       <div className="flex items-center gap-2 mb-3">
         <Icons.Muscle />
-        <h3 className="font-semibold text-gray-800">Workout Guide</h3>
+        <h3 className="font-semibold text-navy">Workout Guide</h3>
       </div>
-      
+
       <div className="space-y-3">
         <div className="grid grid-cols-2 gap-2 text-sm">
           <div>
-            <p className="text-gray-500">Cardio</p>
+            <p className="text-muted">Cardio</p>
             <p className="font-medium">{plan.cardio}</p>
           </div>
           <div>
-            <p className="text-gray-500">Strength</p>
+            <p className="text-muted">Strength</p>
             <p className="font-medium">{plan.strength}</p>
           </div>
           <div>
-            <p className="text-gray-500">Flexibility</p>
+            <p className="text-muted">Flexibility</p>
             <p className="font-medium">{plan.flexibility}</p>
           </div>
           <div>
-            <p className="text-gray-500">Schedule</p>
+            <p className="text-muted">Schedule</p>
             <p className="font-medium">{plan.schedule}</p>
           </div>
         </div>
-        
+
         {!expanded ? (
-          <button onClick={() => setExpanded(true)} className="text-sm text-teal-500">
+          <button onClick={() => setExpanded(true)} className="text-sm text-mint">
             View Details →
           </button>
         ) : (
           <>
-            <div className="bg-gray-50 rounded-lg p-3">
-              <p className="text-sm font-medium text-gray-700 mb-2">🏋️ Weekly Schedule Example</p>
+            <div className="bg-faint rounded-xl p-3">
+              <p className="text-sm font-medium text-navy mb-2">🏋️ Weekly Schedule Example</p>
               <div className="space-y-1 text-sm">
                 <div>Monday: Cardio + Core</div>
                 <div>Tuesday: Upper Body Strength</div>
@@ -720,10 +720,10 @@ function WorkoutPlanCard({ plan }) {
                 <div>Sunday: Rest & Recovery</div>
               </div>
             </div>
-            
-            <div className="p-3 bg-yellow-50 rounded-lg">
-              <p className="text-sm font-medium text-gray-700 mb-1">⚠️ Important Tips</p>
-              <ul className="text-sm text-gray-600 space-y-1 list-disc list-inside">
+
+            <div className="p-3 bg-yellow-50 rounded-xl">
+              <p className="text-sm font-medium text-navy mb-1">⚠️ Important Tips</p>
+              <ul className="text-sm text-muted space-y-1 list-disc list-inside">
                 <li>Warm up for 5-10 minutes before each workout</li>
                 <li>Cool down and stretch after exercise</li>
                 <li>Stay hydrated before, during, and after workouts</li>
@@ -731,8 +731,8 @@ function WorkoutPlanCard({ plan }) {
                 <li>Progress gradually - increase intensity over time</li>
               </ul>
             </div>
-            
-            <button onClick={() => setExpanded(false)} className="text-sm text-teal-500">
+
+            <button onClick={() => setExpanded(false)} className="text-sm text-mint">
               Show Less ↑
             </button>
           </>
@@ -746,25 +746,25 @@ function WorkoutPlanCard({ plan }) {
 function HealthTipsCard({ tips }) {
   const [showAll, setShowAll] = useState(false);
   const displayedTips = showAll ? tips : tips.slice(0, 5);
-  
+
   return (
-    <div className="bg-gradient-to-r from-teal-50 to-blue-50 rounded-xl p-4">
+    <div className="bg-mint-light rounded-2xl p-4">
       <div className="flex items-center gap-2 mb-3">
         <Icons.Heart />
-        <h3 className="font-semibold text-gray-800">💡 Health Tips & Insights</h3>
+        <h3 className="font-semibold text-navy">💡 Health Tips & Insights</h3>
       </div>
-      
+
       <ul className="space-y-2">
         {displayedTips.map((tip, idx) => (
-          <li key={idx} className="flex items-start gap-2 text-sm text-gray-700">
+          <li key={idx} className="flex items-start gap-2 text-sm text-navy">
             <Icons.Check />
             <span>{tip}</span>
           </li>
         ))}
       </ul>
-      
+
       {tips.length > 5 && (
-        <button onClick={() => setShowAll(!showAll)} className="mt-3 text-sm text-teal-500">
+        <button onClick={() => setShowAll(!showAll)} className="mt-3 text-sm text-mint">
           {showAll ? 'Show Less ↑' : `Show ${tips.length - 5} More Tips ↓`}
         </button>
       )}
@@ -779,44 +779,44 @@ function ProgressTracker({ healthScore, bmiCategory, goal }) {
     maintain: { title: 'Maintenance Goal', target: 'Stay active & eat balanced', icon: Icons.Target },
     gain: { title: 'Weight Gain Goal', target: '0.25-0.5 kg per week', icon: Icons.TrendingUp }
   };
-  
+
   const currentGoal = goals[goal] || goals.maintain;
   const GoalIcon = currentGoal.icon;
-  
+
   return (
-    <div className="bg-white rounded-xl p-4 shadow-sm">
+    <div className="bg-white rounded-2xl border border-border p-4">
       <div className="flex justify-between items-center mb-4">
         <div className="flex items-center gap-2">
           <GoalIcon />
-          <h3 className="font-semibold text-gray-800">{currentGoal.title}</h3>
+          <h3 className="font-semibold text-navy">{currentGoal.title}</h3>
         </div>
         <div className="text-right">
-          <div className="text-2xl font-bold text-teal-600">{healthScore}</div>
-          <div className="text-xs text-gray-500">Health Score</div>
+          <div className="text-2xl font-bold text-mint">{healthScore}</div>
+          <div className="text-xs text-muted">Health Score</div>
         </div>
       </div>
-      
+
       <div className="space-y-3">
         <div>
           <div className="flex justify-between text-sm mb-1">
-            <span className="text-gray-600">Health Score Progress</span>
+            <span className="text-muted">Health Score Progress</span>
             <span className="font-medium">{healthScore}%</span>
           </div>
-          <div className="w-full bg-gray-200 rounded-full h-2">
-            <div 
-              className="h-2 rounded-full bg-teal-500 transition-all duration-500"
+          <div className="w-full bg-faint rounded-full h-1.5">
+            <div
+              className="bg-mint h-1.5 rounded-full transition-all duration-500"
               style={{ width: `${healthScore}%` }}
             />
           </div>
         </div>
-        
-        <div className="flex justify-between text-sm pt-2 border-t">
-          <span className="text-gray-600">Target</span>
-          <span className="font-medium text-gray-800">{currentGoal.target}</span>
+
+        <div className="flex justify-between text-sm pt-2 border-t border-border">
+          <span className="text-muted">Target</span>
+          <span className="font-medium text-navy">{currentGoal.target}</span>
         </div>
-        
-        <div className="bg-teal-50 rounded-lg p-2 text-center">
-          <p className="text-xs text-teal-700">Track your progress weekly to stay motivated!</p>
+
+        <div className="bg-mint-light rounded-2xl p-2 text-center">
+          <p className="text-xs text-mint">Track your progress weekly to stay motivated!</p>
         </div>
       </div>
     </div>
@@ -833,11 +833,11 @@ export default function AIHealthPage() {
   const [healthAdvisor, setHealthAdvisor] = useState(null);
   const [healthHistory, setHealthHistory] = useState([]);
   const [selectedHistoryEntry, setSelectedHistoryEntry] = useState(null);
-  
+
   // Unit selections
   const [heightUnit, setHeightUnit] = useState('cm');
   const [weightUnit, setWeightUnit] = useState('kg');
-  
+
   const [userInputs, setUserInputs] = useState({
     age: 30,
     height: 170,
@@ -852,13 +852,13 @@ export default function AIHealthPage() {
     loadPatients();
     initializeModel();
   }, []);
-  
+
   useEffect(() => {
     if (selectedPatient) {
       loadHealthHistory(selectedPatient._id);
     }
   }, [selectedPatient]);
-  
+
   const loadPatients = async () => {
     try {
       const data = await getPatients();
@@ -876,7 +876,7 @@ export default function AIHealthPage() {
       setLoading(false);
     }
   };
-  
+
   const loadHealthHistory = (patientId) => {
     const history = localStorage.getItem(`health_history_${patientId}`);
     if (history) {
@@ -886,47 +886,47 @@ export default function AIHealthPage() {
       setHealthHistory([]);
     }
   };
-  
+
   const saveHealthHistory = (patientId, entry) => {
     const existingHistory = localStorage.getItem(`health_history_${patientId}`);
     let history = existingHistory ? JSON.parse(existingHistory) : [];
-    
+
     // Add new entry
     history.unshift(entry);
-    
+
     // Keep only last 20 entries
     if (history.length > 20) history = history.slice(0, 20);
-    
+
     localStorage.setItem(`health_history_${patientId}`, JSON.stringify(history));
     loadHealthHistory(patientId);
   };
-  
+
   const initializeModel = async () => {
     await tf.ready();
     const advisor = new HealthAdvisor();
     advisor.createModel();
     setHealthAdvisor(advisor);
   };
-  
+
   const analyzeHealth = async () => {
     if (!selectedPatient) {
       toast.error('Please select a patient');
       return;
     }
-    
+
     setAnalyzing(true);
-    
+
     // Convert to standard units for calculation
     let heightInCm = userInputs.height;
     let weightInKg = userInputs.weight;
-    
+
     if (heightUnit === 'ft') {
       heightInCm = userInputs.height * 30.48;
     }
     if (weightUnit === 'lbs') {
       weightInKg = userInputs.weight * 0.453592;
     }
-    
+
     setTimeout(async () => {
       try {
         const metrics = await healthAdvisor.predictRecommendations(
@@ -936,27 +936,27 @@ export default function AIHealthPage() {
           userInputs.activityLevel,
           userInputs.goal
         );
-        
+
         const dietPlan = healthAdvisor.getDietPlan(
           metrics.bmiCategory,
           userInputs.goal,
           userInputs.age,
           userInputs.allergies
         );
-        
+
         const workoutPlan = healthAdvisor.getWorkoutPlan(
           userInputs.age,
           metrics.bmiCategory,
           userInputs.activityLevel,
           userInputs.goal
         );
-        
+
         const healthTips = healthAdvisor.getHealthTips(
           metrics.bmiCategory,
           userInputs.age,
           userInputs.goal
         );
-        
+
         const analysisResult = {
           ...metrics,
           recommendations: { dietPlan, workoutPlan, healthTips },
@@ -970,17 +970,17 @@ export default function AIHealthPage() {
           goal: userInputs.goal,
           gender: userInputs.gender
         };
-        
+
         setRecommendations({
           metrics,
           dietPlan,
           workoutPlan,
           healthTips
         });
-        
+
         // Save to history
         saveHealthHistory(selectedPatient._id, analysisResult);
-        
+
         toast.success('Health analysis complete! Data saved to history');
       } catch (error) {
         console.error('Analysis error:', error);
@@ -990,90 +990,95 @@ export default function AIHealthPage() {
       }
     }, 500);
   };
-  
+
   const handleViewHistoryEntry = (entry) => {
     setSelectedHistoryEntry(entry);
     // You can show a modal with detailed history
     toast.info(`Health score: ${entry.healthScore} - ${entry.riskLevel} risk`);
   };
-  
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-bg flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-500 mx-auto mb-4"></div>
-          <p className="text-gray-500">Loading...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-mint mx-auto mb-4"></div>
+          <p className="text-muted">Loading...</p>
         </div>
       </div>
     );
   }
-  
+
   // Display values for height and weight based on selected units
   const displayHeight = userInputs.height;
   const displayWeight = userInputs.weight;
-  
+
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
+    <div className="min-h-screen bg-bg pb-24">
       {/* Header */}
-      <div className="bg-white border-b border-gray-100 sticky top-0 z-40">
+      <div className="bg-white border-b border-border sticky top-0 z-30">
         <div className="flex items-center gap-3 px-4 h-16">
-          <button onClick={() => navigate(-1)} className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg">
+          <button onClick={() => navigate(-1)} className="p-2 rounded-xl text-muted hover:bg-faint transition-colors">
             <Icons.ArrowLeft />
           </button>
-          <h1 className="text-xl font-bold text-gray-800">AI Health Assistant</h1>
+          <h1 className="text-lg font-bold text-navy">AI Health Assistant</h1>
           <div className="ml-auto">
-            <div className="flex items-center gap-1 px-2 py-1 bg-teal-50 rounded-full">
-              <div className="w-2 h-2 bg-teal-500 rounded-full animate-pulse"></div>
-              <span className="text-xs text-teal-600">AI Ready</span>
+            <div className="flex items-center gap-1 px-2 py-1 bg-mint-light rounded-full">
+              <div className="w-2 h-2 bg-mint rounded-full animate-pulse"></div>
+              <span className="text-xs text-mint">AI Ready</span>
             </div>
           </div>
         </div>
       </div>
-      
+
       <div className="max-w-2xl mx-auto px-4 py-6 space-y-6">
         {/* Patient Selection */}
-        <div className="bg-white rounded-xl p-4 shadow-sm">
-          <label className="block text-sm font-medium text-gray-700 mb-2">Select Patient</label>
-          <select
-            value={selectedPatient?._id || ''}
-            onChange={(e) => {
-              const patient = patients.find(p => p._id === e.target.value);
-              setSelectedPatient(patient);
-              setRecommendations(null);
-              if (patient?.dateOfBirth) {
-                const age = new Date().getFullYear() - new Date(patient.dateOfBirth).getFullYear();
-                setUserInputs(prev => ({ ...prev, age }));
-              }
-            }}
-            className="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500"
-          >
+        <div className="bg-white rounded-2xl border border-border p-5">
+          <label className="block text-xs font-semibold tracking-widest text-muted uppercase mb-2">Select Patient</label>
+          <div className="flex flex-wrap gap-2">
             {patients.map(patient => (
-              <option key={patient._id} value={patient._id}>{patient.name}</option>
+              <button
+                key={patient._id}
+                onClick={() => {
+                  setSelectedPatient(patient);
+                  setRecommendations(null);
+                  if (patient?.dateOfBirth) {
+                    const age = new Date().getFullYear() - new Date(patient.dateOfBirth).getFullYear();
+                    setUserInputs(prev => ({ ...prev, age }));
+                  }
+                }}
+                className={`rounded-full border border-border text-sm font-medium px-4 py-1.5 transition-colors ${
+                  selectedPatient?._id === patient._id
+                    ? 'bg-navy text-white border-navy'
+                    : 'bg-white text-navy hover:bg-faint'
+                }`}
+              >
+                {patient.name}
+              </button>
             ))}
-          </select>
+          </div>
         </div>
-        
+
         {/* Health Trend Chart */}
         {healthHistory.length > 0 && (
           <HealthTrendChart history={healthHistory} />
         )}
-        
+
         {/* Health History Timeline */}
-        <HealthHistoryTimeline 
-          history={healthHistory} 
+        <HealthHistoryTimeline
+          history={healthHistory}
           onSelectEntry={handleViewHistoryEntry}
         />
-        
+
         {/* Health Input Form */}
-        <div className="bg-white rounded-xl p-4 shadow-sm">
+        <div className="bg-white rounded-2xl border border-border p-5">
           <div className="flex items-center gap-2 mb-4">
             <Icons.Heart />
-            <h2 className="font-semibold text-gray-800">Health Metrics</h2>
+            <h2 className="font-semibold text-navy">Health Metrics</h2>
           </div>
-          
+
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Age (years)</label>
+              <label className="block text-xs font-semibold tracking-widest text-muted uppercase mb-1">Age (years)</label>
               <input
                 type="range"
                 min="18"
@@ -1082,17 +1087,17 @@ export default function AIHealthPage() {
                 onChange={(e) => setUserInputs(prev => ({ ...prev, age: parseInt(e.target.value) }))}
                 className="w-full"
               />
-              <div className="flex justify-between text-xs text-gray-500 mt-1">
+              <div className="flex justify-between text-xs text-muted mt-1">
                 <span>18</span>
-                <span className="font-medium text-teal-600">{userInputs.age} years</span>
+                <span className="font-medium text-mint">{userInputs.age} years</span>
                 <span>100</span>
               </div>
             </div>
-            
+
             {/* Height Section with Unit Toggle */}
             <div>
               <div className="flex justify-between items-center mb-1">
-                <label className="block text-sm font-medium text-gray-700">Height</label>
+                <label className="block text-xs font-semibold tracking-widest text-muted uppercase">Height</label>
                 <div className="flex gap-2">
                   <button
                     type="button"
@@ -1102,8 +1107,8 @@ export default function AIHealthPage() {
                       setUserInputs(prev => ({ ...prev, height: Math.round(newValue) }));
                       setHeightUnit('cm');
                     }}
-                    className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${
-                      heightUnit === 'cm' ? 'bg-teal-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    className={`px-3 py-1 rounded-xl text-xs font-medium transition-all ${
+                      heightUnit === 'cm' ? 'bg-mint text-white' : 'bg-faint text-muted hover:bg-border'
                     }`}
                   >
                     cm
@@ -1116,8 +1121,8 @@ export default function AIHealthPage() {
                       setUserInputs(prev => ({ ...prev, height: parseFloat(newValue.toFixed(1)) }));
                       setHeightUnit('ft');
                     }}
-                    className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${
-                      heightUnit === 'ft' ? 'bg-teal-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    className={`px-3 py-1 rounded-xl text-xs font-medium transition-all ${
+                      heightUnit === 'ft' ? 'bg-mint text-white' : 'bg-faint text-muted hover:bg-border'
                     }`}
                   >
                     ft
@@ -1136,19 +1141,19 @@ export default function AIHealthPage() {
                 }}
                 className="w-full"
               />
-              <div className="flex justify-between text-xs text-gray-500 mt-1">
+              <div className="flex justify-between text-xs text-muted mt-1">
                 <span>{heightUnit === 'cm' ? '140 cm' : "4'6\""}</span>
-                <span className="font-medium text-teal-600">
+                <span className="font-medium text-mint">
                   {displayHeight} {heightUnit === 'cm' ? 'cm' : 'ft'}
                 </span>
                 <span>{heightUnit === 'cm' ? '220 cm' : "7'2\""}</span>
               </div>
             </div>
-            
+
             {/* Weight Section with Unit Toggle */}
             <div>
               <div className="flex justify-between items-center mb-1">
-                <label className="block text-sm font-medium text-gray-700">Weight</label>
+                <label className="block text-xs font-semibold tracking-widest text-muted uppercase">Weight</label>
                 <div className="flex gap-2">
                   <button
                     type="button"
@@ -1158,8 +1163,8 @@ export default function AIHealthPage() {
                       setUserInputs(prev => ({ ...prev, weight: Math.round(newValue) }));
                       setWeightUnit('kg');
                     }}
-                    className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${
-                      weightUnit === 'kg' ? 'bg-teal-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    className={`px-3 py-1 rounded-xl text-xs font-medium transition-all ${
+                      weightUnit === 'kg' ? 'bg-mint text-white' : 'bg-faint text-muted hover:bg-border'
                     }`}
                   >
                     kg
@@ -1172,8 +1177,8 @@ export default function AIHealthPage() {
                       setUserInputs(prev => ({ ...prev, weight: Math.round(newValue) }));
                       setWeightUnit('lbs');
                     }}
-                    className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${
-                      weightUnit === 'lbs' ? 'bg-teal-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    className={`px-3 py-1 rounded-xl text-xs font-medium transition-all ${
+                      weightUnit === 'lbs' ? 'bg-mint text-white' : 'bg-faint text-muted hover:bg-border'
                     }`}
                   >
                     lbs
@@ -1192,21 +1197,21 @@ export default function AIHealthPage() {
                 }}
                 className="w-full"
               />
-              <div className="flex justify-between text-xs text-gray-500 mt-1">
+              <div className="flex justify-between text-xs text-muted mt-1">
                 <span>{weightUnit === 'kg' ? '40 kg' : '88 lbs'}</span>
-                <span className="font-medium text-teal-600">
+                <span className="font-medium text-mint">
                   {displayWeight} {weightUnit === 'kg' ? 'kg' : 'lbs'}
                 </span>
                 <span>{weightUnit === 'kg' ? '150 kg' : '330 lbs'}</span>
               </div>
             </div>
-            
+
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Activity Level</label>
+              <label className="block text-xs font-semibold tracking-widest text-muted uppercase mb-1">Activity Level</label>
               <select
                 value={userInputs.activityLevel}
                 onChange={(e) => setUserInputs(prev => ({ ...prev, activityLevel: e.target.value }))}
-                className="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                className="w-full rounded-xl border border-border bg-faint px-4 py-3 text-sm text-navy focus:outline-none focus:border-mint transition-colors"
               >
                 <option value="sedentary">Sedentary (Little or no exercise)</option>
                 <option value="light">Light (Exercise 1-3 days/week)</option>
@@ -1215,9 +1220,9 @@ export default function AIHealthPage() {
                 <option value="veryActive">Very Active (Athlete/Physical job)</option>
               </select>
             </div>
-            
+
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Health Goal</label>
+              <label className="block text-xs font-semibold tracking-widest text-muted uppercase mb-1">Health Goal</label>
               <div className="grid grid-cols-3 gap-2">
                 {[
                   { value: 'lose', label: 'Lose Weight', icon: '🎯' },
@@ -1227,10 +1232,10 @@ export default function AIHealthPage() {
                   <button
                     key={option.value}
                     onClick={() => setUserInputs(prev => ({ ...prev, goal: option.value }))}
-                    className={`p-3 rounded-lg text-center transition-all ${
+                    className={`p-3 rounded-xl text-center transition-all ${
                       userInputs.goal === option.value
-                        ? 'bg-teal-500 text-white'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        ? 'bg-mint text-white'
+                        : 'bg-faint text-navy hover:bg-border'
                     }`}
                   >
                     <div className="text-xl mb-1">{option.icon}</div>
@@ -1239,9 +1244,9 @@ export default function AIHealthPage() {
                 ))}
               </div>
             </div>
-            
+
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Gender</label>
+              <label className="block text-xs font-semibold tracking-widests text-muted uppercase mb-1">Gender</label>
               <div className="grid grid-cols-2 gap-2">
                 {[
                   { value: 'male', label: 'Male', icon: '👨' },
@@ -1250,10 +1255,10 @@ export default function AIHealthPage() {
                   <button
                     key={option.value}
                     onClick={() => setUserInputs(prev => ({ ...prev, gender: option.value }))}
-                    className={`p-3 rounded-lg text-center transition-all ${
+                    className={`p-3 rounded-xl text-center transition-all ${
                       userInputs.gender === option.value
-                        ? 'bg-teal-500 text-white'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        ? 'bg-mint text-white'
+                        : 'bg-faint text-navy hover:bg-border'
                     }`}
                   >
                     <div className="text-xl mb-1">{option.icon}</div>
@@ -1263,11 +1268,11 @@ export default function AIHealthPage() {
               </div>
             </div>
           </div>
-          
+
           <button
             onClick={analyzeHealth}
             disabled={analyzing}
-            className="w-full mt-6 bg-teal-500 text-white py-3 rounded-lg font-medium hover:bg-teal-600 transition-colors disabled:opacity-50"
+            className="w-full mt-6 bg-mint text-white rounded-full px-5 py-2.5 text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-50"
           >
             {analyzing ? (
               <span className="flex items-center justify-center gap-2">
@@ -1279,76 +1284,76 @@ export default function AIHealthPage() {
             )}
           </button>
         </div>
-        
+
         {/* Results Section */}
         {recommendations && (
           <>
             {/* BMI & Health Metrics */}
-            <div className="bg-white rounded-xl p-4 shadow-sm">
-              <h3 className="font-semibold text-gray-800 mb-3">Your Health Profile</h3>
+            <div className="bg-white rounded-2xl border border-border p-5">
+              <h3 className="font-semibold text-navy mb-3">Your Health Profile</h3>
               <div className="grid grid-cols-2 gap-4 mb-4">
-                <div className="text-center p-3 bg-gray-50 rounded-lg">
-                  <p className="text-2xl font-bold text-teal-600">{recommendations.metrics.bmi}</p>
-                  <p className="text-xs text-gray-500">BMI</p>
+                <div className="text-center p-3 bg-faint rounded-xl">
+                  <p className="text-2xl font-bold text-mint">{recommendations.metrics.bmi}</p>
+                  <p className="text-xs text-muted">BMI</p>
                   <p className="text-sm font-medium mt-1">{recommendations.metrics.bmiCategory}</p>
                 </div>
-                <div className="text-center p-3 bg-gray-50 rounded-lg">
-                  <p className="text-2xl font-bold text-teal-600">{recommendations.metrics.healthScore}</p>
-                  <p className="text-xs text-gray-500">Health Score</p>
+                <div className="text-center p-3 bg-faint rounded-xl">
+                  <p className="text-2xl font-bold text-mint">{recommendations.metrics.healthScore}</p>
+                  <p className="text-xs text-muted">Health Score</p>
                   <p className="text-sm font-medium mt-1">out of 100</p>
                 </div>
               </div>
               <BMIChart bmi={parseFloat(recommendations.metrics.bmi)} category={recommendations.metrics.bmiCategory} />
               <div className="grid grid-cols-2 gap-2 mt-4 text-sm">
-                <div className="p-2 bg-gray-50 rounded-lg">
-                  <p className="text-gray-500">Daily Calories</p>
-                  <p className="font-bold text-teal-600">{recommendations.metrics.adjustedCalories} kcal</p>
+                <div className="p-2 bg-faint rounded-xl">
+                  <p className="text-muted">Daily Calories</p>
+                  <p className="font-bold text-mint">{recommendations.metrics.adjustedCalories} kcal</p>
                 </div>
-                <div className="p-2 bg-gray-50 rounded-lg">
-                  <p className="text-gray-500">Water Intake</p>
-                  <p className="font-bold text-teal-600">{recommendations.metrics.waterIntake} L/day</p>
+                <div className="p-2 bg-faint rounded-xl">
+                  <p className="text-muted">Water Intake</p>
+                  <p className="font-bold text-mint">{recommendations.metrics.waterIntake} L/day</p>
                 </div>
-                <div className="p-2 bg-gray-50 rounded-lg">
-                  <p className="text-gray-500">Protein Needed</p>
-                  <p className="font-bold text-teal-600">{recommendations.metrics.proteinNeeds} g/day</p>
+                <div className="p-2 bg-faint rounded-xl">
+                  <p className="text-muted">Protein Needed</p>
+                  <p className="font-bold text-mint">{recommendations.metrics.proteinNeeds} g/day</p>
                 </div>
-                <div className="p-2 bg-gray-50 rounded-lg">
-                  <p className="text-gray-500">Sleep Needed</p>
-                  <p className="font-bold text-teal-600">{recommendations.metrics.sleepNeeds} hours</p>
+                <div className="p-2 bg-faint rounded-xl">
+                  <p className="text-muted">Sleep Needed</p>
+                  <p className="font-bold text-mint">{recommendations.metrics.sleepNeeds} hours</p>
                 </div>
               </div>
             </div>
-            
+
             {/* Progress Tracker */}
-            <ProgressTracker 
+            <ProgressTracker
               healthScore={recommendations.metrics.healthScore}
               bmiCategory={recommendations.metrics.bmiCategory}
               goal={userInputs.goal}
             />
-            
+
             {/* Diet Plan */}
-            <DietPlanCard 
+            <DietPlanCard
               plan={recommendations.dietPlan}
               bmiCategory={recommendations.metrics.bmiCategory}
             />
-            
+
             {/* Workout Plan */}
             <WorkoutPlanCard plan={recommendations.workoutPlan} />
-            
+
             {/* Health Tips */}
             <HealthTipsCard tips={recommendations.healthTips} />
-            
+
             {/* Hydration Reminder */}
-            <div className="bg-gradient-to-r from-blue-50 to-teal-50 rounded-xl p-4">
+            <div className="bg-mint-light rounded-2xl p-4">
               <div className="flex items-center gap-3">
                 <Icons.Water />
                 <div>
-                  <p className="font-medium text-gray-800">Hydration Reminder</p>
-                  <p className="text-sm text-gray-600">Try to drink {recommendations.metrics.waterIntake} liters of water today</p>
+                  <p className="font-medium text-navy">Hydration Reminder</p>
+                  <p className="text-sm text-muted">Try to drink {recommendations.metrics.waterIntake} liters of water today</p>
                 </div>
               </div>
-              <div className="mt-3 w-full bg-gray-200 rounded-full h-2">
-                <div className="w-0 h-2 rounded-full bg-teal-500 transition-all duration-500" />
+              <div className="mt-3 w-full bg-faint rounded-full h-1.5">
+                <div className="w-0 bg-mint h-1.5 rounded-full transition-all duration-500" />
               </div>
             </div>
           </>

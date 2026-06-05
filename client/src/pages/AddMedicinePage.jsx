@@ -255,10 +255,10 @@ export default function AddMedicinePage() {
             <div key={s.number} className="flex items-center">
               <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
                 step > s.number
-                  ? 'bg-mint text-white'
+                  ? 'bg-mint text-white rounded-full'
                   : step === s.number
-                  ? 'bg-mint text-white ring-4 ring-mint/20'
-                  : 'bg-faint text-muted'
+                  ? 'bg-mint text-white ring-4 ring-mint/20 rounded-full'
+                  : 'bg-faint text-muted rounded-full'
               }`}>
                 {step > s.number ? (
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
@@ -294,7 +294,7 @@ export default function AddMedicinePage() {
       <div className="space-y-6">
         {/* Medicine Photo */}
         <div>
-          <label className="mb-2 block text-xs font-semibold tracking-wide text-navy">Medicine Photo</label>
+          <label className="mb-2 block text-xs font-semibold tracking-widest text-muted uppercase">Medicine Photo</label>
           <div
             className="border-2 border-dashed border-border rounded-2xl p-5 text-center cursor-pointer hover:border-mint hover:bg-mint-light transition-all"
             onClick={() => document.getElementById('med-photo-input')?.click()}
@@ -317,12 +317,12 @@ export default function AddMedicinePage() {
               </div>
             ) : (
               <div className="py-2">
-                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" className="mx-auto mb-2 text-navIcon">
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" className="mx-auto mb-2 text-muted">
                   <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" stroke="currentColor" strokeWidth="1.5" />
                   <circle cx="12" cy="13" r="4" stroke="currentColor" strokeWidth="1.5" />
                 </svg>
                 <p className="text-sm font-medium text-muted">Tap to add a photo</p>
-                <p className="text-xs text-navIcon mt-0.5">Optional — helps with quick identification</p>
+                <p className="text-xs text-muted mt-0.5">Optional — helps with quick identification</p>
               </div>
             )}
           </div>
@@ -330,7 +330,7 @@ export default function AddMedicinePage() {
 
         {/* Medicine Name */}
         <div>
-          <label className="mb-1.5 block text-xs font-semibold tracking-wide text-navy">
+          <label className="mb-1.5 block text-xs font-semibold tracking-widest text-muted uppercase">
             Medicine Name <span className="text-red">*</span>
           </label>
           <div className="flex gap-2">
@@ -339,12 +339,12 @@ export default function AddMedicinePage() {
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g. Amoxicillin"
-              className="flex-1 rounded-xl border border-border bg-card px-4 py-3 text-sm text-navy outline-none focus:border-mint transition-colors"
+              className="flex-1 rounded-xl border border-border bg-faint px-4 py-3 text-sm text-navy focus:outline-none focus:border-mint transition-colors"
             />
             <button
               type="button"
               onClick={() => setShowCamera(true)}
-              className="bg-mint text-white px-4 rounded-xl hover:bg-mint-mid transition-colors flex items-center gap-1.5 text-sm font-medium whitespace-nowrap"
+              className="bg-mint text-white px-4 rounded-xl hover:opacity-90 transition-opacity flex items-center gap-1.5 text-sm font-medium whitespace-nowrap"
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
@@ -357,7 +357,7 @@ export default function AddMedicinePage() {
 
         {/* Form of Medicine */}
         <div>
-          <label className="mb-3 block text-xs font-semibold tracking-wide text-navy">
+          <label className="mb-3 block text-xs font-semibold tracking-widests text-muted uppercase">
             Form of Medicine <span className="text-red">*</span>
           </label>
           <div className="grid grid-cols-2 gap-2.5">
@@ -369,7 +369,7 @@ export default function AddMedicinePage() {
                 className={`flex items-center gap-3 p-3.5 rounded-2xl border-2 text-left transition-all ${
                   medicineForm === opt.value
                     ? 'border-mint bg-mint-light'
-                    : 'border-border bg-card hover:border-mint/30 hover:bg-faint'
+                    : 'border-border bg-white hover:border-mint/30'
                 }`}
               >
                 <span className="text-2xl leading-none shrink-0">{opt.emoji}</span>
@@ -387,7 +387,7 @@ export default function AddMedicinePage() {
         {/* Strength */}
         <div>
           <div className="flex items-center gap-2 mb-1.5">
-            <label className="text-xs font-semibold tracking-wide text-navy">{strCfg.label}</label>
+            <label className="text-xs font-semibold tracking-widests text-muted uppercase">{strCfg.label}</label>
             {strCfg.disabled && (
               <span className="text-[10px] font-normal text-muted bg-faint px-2 py-0.5 rounded-full border border-border">
                 Not applicable
@@ -402,13 +402,13 @@ export default function AddMedicinePage() {
               onChange={(e) => setStrengthValue(e.target.value)}
               disabled={strCfg.disabled}
               placeholder={strCfg.disabled ? 'Not applicable for creams' : strCfg.placeholder}
-              className="flex-1 rounded-xl border border-border bg-card px-4 py-3 text-sm text-navy outline-none focus:border-mint transition-colors disabled:bg-faint"
+              className="flex-1 rounded-xl border border-border bg-faint px-4 py-3 text-sm text-navy focus:outline-none focus:border-mint transition-colors disabled:opacity-50 disabled:pointer-events-none"
             />
             {!strCfg.disabled && strCfg.units.length > 1 && (
               <select
                 value={strengthUnit}
                 onChange={(e) => setStrengthUnit(e.target.value)}
-                className="rounded-xl border border-border bg-card px-3 py-3 text-sm text-navy outline-none focus:border-mint transition-colors"
+                className="rounded-xl border border-border bg-faint px-3 py-3 text-sm text-navy focus:outline-none focus:border-mint transition-colors"
               >
                 {strCfg.units.map((u) => <option key={u} value={u}>{u}</option>)}
               </select>
@@ -432,7 +432,7 @@ export default function AddMedicinePage() {
       <div className="space-y-6">
         {/* Quantity */}
         <div>
-          <label className="mb-1.5 block text-xs font-semibold tracking-wide text-navy">
+          <label className="mb-1.5 block text-xs font-semibold tracking-widests text-muted uppercase">
             {qtyCfg.label} <span className="text-red">*</span>
           </label>
           <div className="flex gap-2">
@@ -443,13 +443,13 @@ export default function AddMedicinePage() {
               value={quantityValue}
               onChange={(e) => setQuantityValue(e.target.value)}
               placeholder={qtyCfg.placeholder}
-              className="flex-1 rounded-xl border border-border bg-card px-4 py-3 text-sm text-navy outline-none focus:border-mint transition-colors"
+              className="flex-1 rounded-xl border border-border bg-faint px-4 py-3 text-sm text-navy focus:outline-none focus:border-mint transition-colors"
             />
             {qtyCfg.units ? (
               <select
                 value={quantityUnit}
                 onChange={(e) => setQuantityUnit(e.target.value)}
-                className="rounded-xl border border-border bg-card px-3 py-3 text-sm text-navy outline-none focus:border-mint transition-colors"
+                className="rounded-xl border border-border bg-faint px-3 py-3 text-sm text-navy focus:outline-none focus:border-mint transition-colors"
               >
                 {qtyCfg.units.map((u) => <option key={u} value={u}>{u}</option>)}
               </select>
@@ -464,7 +464,7 @@ export default function AddMedicinePage() {
 
         {/* Alert Threshold */}
         <div>
-          <label className="mb-1.5 block text-xs font-semibold tracking-wide text-navy">
+          <label className="mb-1.5 block text-xs font-semibold tracking-widests text-muted uppercase">
             Alert Threshold <span className="text-red">*</span>
           </label>
           <div className="flex gap-2 items-center">
@@ -473,7 +473,7 @@ export default function AddMedicinePage() {
               min={1}
               value={alertThreshold}
               onChange={(e) => setAlertThreshold(Number(e.target.value))}
-              className="flex-1 rounded-xl border border-border bg-card px-4 py-3 text-sm text-navy outline-none focus:border-mint transition-colors"
+              className="flex-1 rounded-xl border border-border bg-faint px-4 py-3 text-sm text-navy focus:outline-none focus:border-mint transition-colors"
             />
             <div className="px-4 rounded-xl border border-border bg-faint text-sm font-semibold text-navy flex items-center whitespace-nowrap h-[46px]">
               days
@@ -488,7 +488,7 @@ export default function AddMedicinePage() {
 
         {/* Times per Day */}
         <div>
-          <label className="mb-4 block text-xs font-semibold tracking-wide text-navy">
+          <label className="mb-4 block text-xs font-semibold tracking-widests text-muted uppercase">
             Number of Times per Day <span className="text-red">*</span>
           </label>
           <div className="flex items-center gap-4">
@@ -499,7 +499,7 @@ export default function AddMedicinePage() {
             >
               −
             </button>
-            <div className="flex-1 text-center py-3 rounded-2xl bg-card border border-border">
+            <div className="flex-1 text-center py-3 rounded-2xl bg-white border border-border">
               <span className="text-3xl font-bold text-navy">{timesPerDay}</span>
               <p className="text-xs text-muted mt-0.5">
                 {timesPerDay === 1 ? 'once daily' : timesPerDay === 2 ? 'twice daily' : `${timesPerDay} times daily`}
@@ -540,7 +540,7 @@ export default function AddMedicinePage() {
         {timesPerDay === 1 ? 'dose' : 'doses'}.
       </p>
       {doseTimes.map((time, i) => (
-        <div key={i} className="bg-card rounded-2xl border border-border p-5 shadow-sm">
+        <div key={i} className="bg-white rounded-2xl border border-border p-5">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-9 h-9 rounded-full bg-mint-light flex items-center justify-center shrink-0">
               <span className="text-mint text-sm font-bold">{i + 1}</span>
@@ -560,7 +560,7 @@ export default function AddMedicinePage() {
               updated[i] = e.target.value;
               setDoseTimes(updated);
             }}
-            className="w-full rounded-xl border border-border bg-faint px-4 py-3.5 text-xl font-bold text-navy text-center outline-none focus:border-mint transition-colors"
+            className="w-full rounded-xl border border-border bg-faint px-4 py-3.5 text-xl font-bold text-navy text-center focus:outline-none focus:border-mint transition-colors"
           />
         </div>
       ))}
@@ -576,35 +576,35 @@ export default function AddMedicinePage() {
       </p>
 
       <div>
-        <label className="mb-1.5 block text-xs font-semibold tracking-wide text-navy">Doctor's Name</label>
+        <label className="mb-1.5 block text-xs font-semibold tracking-widests text-muted uppercase">Doctor's Name</label>
         <input
           type="text"
           value={doctorName}
           onChange={(e) => setDoctorName(e.target.value)}
           placeholder="Dr. Anita Sharma"
-          className="w-full rounded-xl border border-border bg-card px-4 py-3 text-sm text-navy outline-none focus:border-mint transition-colors"
+          className="w-full rounded-xl border border-border bg-faint px-4 py-3 text-sm text-navy focus:outline-none focus:border-mint transition-colors"
         />
       </div>
 
       <div>
-        <label className="mb-1.5 block text-xs font-semibold tracking-wide text-navy">Hospital / Clinic</label>
+        <label className="mb-1.5 block text-xs font-semibold tracking-widests text-muted uppercase">Hospital / Clinic</label>
         <input
           type="text"
           value={hospitalName}
           onChange={(e) => setHospitalName(e.target.value)}
           placeholder="City General Hospital"
-          className="w-full rounded-xl border border-border bg-card px-4 py-3 text-sm text-navy outline-none focus:border-mint transition-colors"
+          className="w-full rounded-xl border border-border bg-faint px-4 py-3 text-sm text-navy focus:outline-none focus:border-mint transition-colors"
         />
       </div>
 
       <div>
-        <label className="mb-1.5 block text-xs font-semibold tracking-wide text-navy">Prescription Date</label>
+        <label className="mb-1.5 block text-xs font-semibold tracking-widests text-muted uppercase">Prescription Date</label>
         <input
           type="date"
           value={prescriptionDate}
           onChange={(e) => setPrescriptionDate(e.target.value)}
           max={new Date().toISOString().split('T')[0]}
-          className="w-full rounded-xl border border-border bg-card px-4 py-3 text-sm text-navy outline-none focus:border-mint transition-colors"
+          className="w-full rounded-xl border border-border bg-faint px-4 py-3 text-sm text-navy focus:outline-none focus:border-mint transition-colors"
         />
         <p className="text-xs text-muted mt-1">Cannot be a future date.</p>
       </div>
@@ -612,7 +612,7 @@ export default function AddMedicinePage() {
       {/* Prescription Image */}
       <div>
         <div className="flex items-center gap-2 mb-1.5">
-          <label className="text-xs font-semibold tracking-wide text-navy">Prescription Image</label>
+          <label className="text-xs font-semibold tracking-widests text-muted uppercase">Prescription Image</label>
           <span className="text-[10px] font-normal text-muted bg-faint px-2 py-0.5 rounded-full border border-border">
             Optional
           </span>
@@ -653,13 +653,13 @@ export default function AddMedicinePage() {
             </div>
           ) : (
             <div>
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" className="mx-auto mb-2 text-navIcon">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" className="mx-auto mb-2 text-muted">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="currentColor" strokeWidth="1.5" />
                 <polyline points="17 8 12 3 7 8" stroke="currentColor" strokeWidth="1.5" />
                 <line x1="12" y1="3" x2="12" y2="15" stroke="currentColor" strokeWidth="1.5" />
               </svg>
               <p className="text-sm text-muted font-medium">Upload prescription</p>
-              <p className="text-xs text-navIcon mt-0.5">JPG, PNG or PDF — max 5 MB</p>
+              <p className="text-xs text-muted mt-0.5">JPG, PNG or PDF — max 5 MB</p>
             </div>
           )}
         </div>
@@ -670,8 +670,26 @@ export default function AddMedicinePage() {
   // ── Render ────────────────────────────────────────────────────────────────
 
   return (
-    <div className="min-h-screen bg-bg">
-      <div className="max-w-lg mx-auto px-5 py-6 pb-28">
+    <div className="min-h-screen bg-bg pb-24">
+      {/* Sticky Header */}
+      <div className="bg-white border-b border-border sticky top-0 z-30">
+        <div className="flex items-center gap-3 px-4 h-16 max-w-lg mx-auto">
+          <button
+            type="button"
+            onClick={() => navigate('/')}
+            className="p-2 rounded-xl text-muted hover:bg-faint transition-colors"
+          >
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M15 18L9 12L15 6"/>
+            </svg>
+          </button>
+          <h1 className="text-lg font-bold text-navy">
+            {isEdit ? 'Edit Medicine' : 'Add Medicine'}
+          </h1>
+        </div>
+      </div>
+
+      <div className="max-w-lg mx-auto px-5 py-6">
         {renderStepIndicator()}
 
         {step === 1 && renderStep1()}
@@ -686,7 +704,7 @@ export default function AddMedicinePage() {
           <button
             type="button"
             onClick={prevStep}
-            className="flex-1 rounded-xl border border-border bg-white py-3 text-sm font-semibold text-navy hover:bg-faint transition-colors"
+            className="flex-1 border border-border bg-white text-navy rounded-full px-5 py-2.5 text-sm font-semibold hover:bg-faint"
           >
             ← Back
           </button>
@@ -694,7 +712,7 @@ export default function AddMedicinePage() {
           <button
             type="button"
             onClick={() => navigate('/')}
-            className="flex-1 rounded-xl border border-border bg-white py-3 text-sm font-semibold text-navy hover:bg-faint transition-colors"
+            className="flex-1 border border-border bg-white text-navy rounded-full px-5 py-2.5 text-sm font-semibold hover:bg-faint"
           >
             Cancel
           </button>
@@ -704,7 +722,7 @@ export default function AddMedicinePage() {
           <button
             type="button"
             onClick={nextStep}
-            className="flex-1 rounded-xl bg-mint text-white py-3 text-sm font-semibold hover:bg-mint-mid transition-colors"
+            className="flex-1 bg-mint text-white rounded-full px-5 py-2.5 text-sm font-semibold hover:opacity-90 transition-opacity"
           >
             Next →
           </button>
@@ -713,7 +731,7 @@ export default function AddMedicinePage() {
             type="button"
             onClick={handleSubmit}
             disabled={isSubmitting}
-            className="flex-1 rounded-xl bg-mint text-white py-3 text-sm font-semibold hover:bg-mint-mid transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
+            className="flex-1 bg-navy text-white rounded-full px-5 py-2.5 text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2"
           >
             {isSubmitting ? (
               <>

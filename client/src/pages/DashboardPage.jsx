@@ -171,12 +171,12 @@ const FamilyAvatar = memo(function FamilyAvatar({ patient, isActive, hasAlert, o
         <div className="w-14 h-14 flex items-center justify-center">
           <div
             className={`rounded-full transition-all duration-300 ease-in-out ${isActive
-              ? 'ring-4 ring-teal-500 ring-offset-2 shadow-lg w-14 h-14'
+              ? 'ring-2 ring-mint ring-offset-2 w-14 h-14'
               : 'w-14 h-14 group-hover:w-[52px] group-hover:h-[52px] opacity-80 group-hover:opacity-100'
               }`}
           >
             <div
-              className={`w-full h-full rounded-full flex items-center justify-center text-white font-semibold shadow-sm transition-all duration-300 ease-in-out ${isActive
+              className={`w-full h-full rounded-full flex items-center justify-center text-white font-semibold transition-all duration-300 ease-in-out ${isActive
                 ? 'bg-gradient-to-br from-teal-500 to-teal-600'
                 : 'bg-gradient-to-br from-teal-400 to-teal-500 group-hover:from-teal-500 group-hover:to-teal-600'
                 }`}
@@ -195,7 +195,7 @@ const FamilyAvatar = memo(function FamilyAvatar({ patient, isActive, hasAlert, o
         )}
       </div>
       <span
-        className={`text-sm font-medium transition-colors duration-300 ${isActive ? 'text-teal-600' : 'text-gray-500 group-hover:text-gray-700'
+        className={`text-sm font-medium transition-colors duration-300 ${isActive ? 'text-mint' : 'text-muted group-hover:text-navy'
           }`}
       >
         {patient.name.split(' ')[0]}
@@ -230,49 +230,49 @@ const MobileMedicineCard = memo(function MobileMedicineCard({ medicine, onRestoc
   const timings = getTimings();
 
   return (
-    <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-all duration-200">
+    <div className="bg-white rounded-2xl border border-border p-5 transition-all duration-200">
       <div className="flex justify-between items-start mb-3">
         <div className="flex-1">
-          <h3 className="font-semibold text-gray-800 text-base">{medicine.name}</h3>
-          <p className="text-gray-400 text-xs mt-0.5">{medicine.strength}{medicine.unit}</p>
+          <h3 className="font-semibold text-navy text-base">{medicine.name}</h3>
+          <p className="text-muted text-xs mt-0.5">{medicine.strength}{medicine.unit}</p>
         </div>
-        <div className={`px-2.5 py-1 rounded-full text-xs font-medium`} style={{ backgroundColor: statusConfig.bg, color: statusConfig.color }}>
+        <div className="rounded-full text-xs font-semibold px-2.5 py-0.5" style={{ backgroundColor: statusConfig.bg, color: statusConfig.color }}>
           {statusConfig.label}
         </div>
       </div>
       <div className="mb-3">
-        <div className="flex justify-between text-xs text-gray-500 mb-1.5">
+        <div className="flex justify-between text-xs text-muted mb-1.5">
           <span>Remaining: {medicine.currentStock} tablets</span>
           <span className="font-medium">{daysRemaining} days left</span>
         </div>
-        <div className="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
-          <div className="h-full rounded-full transition-all duration-300" style={{ width: `${stockPercentage}%`, backgroundColor: statusConfig.color }} />
+        <div className="w-full bg-border rounded-full h-1.5 overflow-hidden">
+          <div className="h-1.5 rounded-full transition-all duration-300" style={{ width: `${stockPercentage}%`, backgroundColor: statusConfig.color }} />
         </div>
       </div>
       <div className="flex flex-wrap gap-2 mb-3">
-        <span className="text-xs text-gray-500 flex items-center gap-1">
-          <span className="w-1 h-1 rounded-full bg-gray-300" />
+        <span className="text-xs text-muted flex items-center gap-1">
+          <span className="w-1 h-1 rounded-full bg-border" />
           {medicine.frequencyPerDay}× daily
         </span>
         {timings.map((time, idx) => (
-          <span key={idx} className="text-xs px-2 py-0.5 bg-gray-50 text-gray-600 rounded-md">
+          <span key={idx} className="text-xs px-2 py-0.5 bg-faint text-navy rounded-md">
             {time}
           </span>
         ))}
       </div>
-      <div className="flex gap-2 pt-2 border-t border-gray-100">
-        <button onClick={() => onRestock(medicine)} className="flex-1 bg-teal-500 text-white py-2 rounded-lg text-sm font-medium hover:bg-teal-600 transition-colors flex items-center justify-center gap-2">
+      <div className="flex gap-2 pt-2 border-t border-border">
+        <button onClick={() => onRestock(medicine)} className="flex-1 bg-mint text-white py-2 rounded-full text-sm font-semibold hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
           Restock
         </button>
         {medicine.prescriptionImgUrl && (
-          <button onClick={() => onViewRx(medicine)} className="px-3 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200">
+          <button onClick={() => onViewRx(medicine)} className="px-3 py-2 bg-faint text-navy rounded-lg hover:bg-mint-light transition-colors">
             Rx
           </button>
         )}
-        <button onClick={() => onEdit(medicine)} className="px-3 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200">
+        <button onClick={() => onEdit(medicine)} className="px-3 py-2 bg-faint text-navy rounded-lg hover:bg-mint-light transition-colors">
           Edit
         </button>
-        <button onClick={() => onRemove(medicine)} className="px-3 py-2 bg-gray-100 text-red-500 rounded-lg hover:bg-red-50">
+        <button onClick={() => onRemove(medicine)} className="px-3 py-2 bg-faint text-red-500 rounded-lg hover:bg-red-50 transition-colors">
           Delete
         </button>
       </div>
@@ -308,12 +308,12 @@ function DesktopSidebar({ activeTab, onTabChange, onQRPress, navigate }) {
   ];
 
   return (
-    <aside className="hidden lg:flex lg:flex-col lg:w-64 lg:fixed lg:inset-y-0 lg:border-r lg:border-gray-100 lg:bg-white">
+    <aside className="hidden lg:flex lg:flex-col lg:w-64 lg:fixed lg:inset-y-0 lg:border-r lg:border-border lg:bg-white">
       <div className="flex-1 flex flex-col min-h-0">
-        <div className="flex items-center justify-center h-16 px-4 border-b border-gray-100">
+        <div className="flex items-center justify-center h-16 px-4 border-b border-border">
           <div className="flex items-center gap-2">
             <img src="/logo-b.png" alt="MedSync" className="w-8 h-8" />
-            <span className="font-bold text-gray-800 text-xl tracking-tight">MedSync</span>
+            <span className="font-bold text-navy text-xl tracking-tight">MedSync</span>
           </div>
         </div>
 
@@ -334,36 +334,36 @@ function DesktopSidebar({ activeTab, onTabChange, onQRPress, navigate }) {
                 } else {
                   onTabChange(item.id);
                 }
-              }} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all ${isActive ? 'bg-teal-50 text-teal-605' : 'text-gray-600 hover:bg-gray-50'}`}>
+              }} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all ${isActive ? 'bg-mint-light text-mint border-l-[3px] border-mint' : 'text-muted hover:bg-faint'}`}>
                 <Icon active={isActive} />
-                <span className={`text-sm font-medium ${isActive ? 'text-teal-600' : 'text-gray-700'}`}>{item.label}</span>
+                <span className={`text-sm font-medium ${isActive ? 'text-mint' : 'text-navy'}`}>{item.label}</span>
               </button>
             );
           })}
         </nav>
 
-        <div className="p-4 border-t border-gray-100" ref={menuRef}>
+        <div className="p-4 border-t border-border" ref={menuRef}>
           <div className="relative">
-            <button onClick={() => setShowUserMenu(!showUserMenu)} className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors">
-              <div className="w-8 h-8 bg-teal-100 rounded-full flex items-center justify-center text-teal-600 font-semibold text-sm">
+            <button onClick={() => setShowUserMenu(!showUserMenu)} className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-faint transition-colors">
+              <div className="w-8 h-8 bg-mint-light rounded-full flex items-center justify-center text-mint font-semibold text-sm">
                 {(rootUserName.charAt(0) || 'U').toUpperCase()}
               </div>
               <div className="flex-1 text-left min-w-0">
-                <p className="text-sm font-medium text-gray-700 truncate">{rootUserName}</p>
-                <p className="text-xs text-gray-400">Account owner</p>
+                <p className="text-sm font-medium text-navy truncate">{rootUserName}</p>
+                <p className="text-xs text-muted">Account owner</p>
               </div>
-              <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
               </svg>
             </button>
 
             {showUserMenu && (
-              <div className="absolute bottom-full left-0 mb-2 w-full bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
-                <button onClick={() => navigate('/profile')} className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+              <div className="absolute bottom-full left-0 mb-2 w-full bg-white rounded-2xl border border-border overflow-hidden shadow-modal">
+                <button onClick={() => navigate('/profile')} className="w-full flex items-center gap-3 px-4 py-2 text-sm text-navy hover:bg-faint transition-colors">
                   <Icons.User />
                   My Profile
                 </button>
-                <hr className="my-1" />
+                <hr className="my-1 border-border" />
                 <button
                   onClick={() => {
                     const logout = useAuthStore.getState().logout;
@@ -391,7 +391,7 @@ function SkeletonLoader() {
   return (
     <div className="space-y-4">
       {[1, 2, 3].map((i) => (
-        <div key={i} className="bg-white rounded-xl p-4 animate-pulse">
+        <div key={i} className="bg-white rounded-2xl border border-border p-5 animate-pulse">
           <div className="flex justify-between mb-3">
             <div>
               <div className="h-5 w-32 bg-gray-200 rounded mb-2" />
@@ -720,10 +720,10 @@ export default function DashboardPage() {
 
   if (loadingPatients) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-bg flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-500 mx-auto mb-4" />
-          <p className="text-gray-500">Loading your health data...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-mint mx-auto mb-4" />
+          <p className="text-muted">Loading your health data...</p>
         </div>
       </div>
     );
@@ -743,57 +743,57 @@ export default function DashboardPage() {
     const totalCount = patientAlerts.length + patientOffers.length;
 
     return (
-      <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-lg border border-gray-100 z-50 overflow-hidden text-left">
-        <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-          <h4 className="font-semibold text-gray-800 text-sm">Notifications</h4>
+      <div className="absolute right-0 mt-2 w-80 bg-white rounded-2xl border border-border z-50 overflow-hidden text-left shadow-modal">
+        <div className="p-4 border-b border-border flex justify-between items-center bg-faint">
+          <h4 className="font-semibold text-navy text-sm">Notifications</h4>
           {totalCount > 0 && (
-            <span className="text-[10px] px-2 py-0.5 bg-teal-50 text-teal-605 rounded-full font-bold uppercase tracking-wider shrink-0">
+            <span className="text-[10px] px-2 py-0.5 bg-mint-light text-mint rounded-full font-bold uppercase tracking-wider shrink-0">
               {totalCount} New
             </span>
           )}
         </div>
-        <div className="max-h-96 overflow-y-auto divide-y divide-gray-50">
+        <div className="max-h-96 overflow-y-auto divide-y divide-border">
           {/* Special Offers Section */}
           {patientOffers.length > 0 && (
-            <div className="p-3 bg-teal-50/20">
-              <div className="text-[10px] font-bold text-teal-700 uppercase tracking-wider mb-2">Special Offers</div>
+            <div className="p-3 bg-mint-light/20">
+              <div className="text-[10px] font-bold text-mint uppercase tracking-wider mb-2">Special Offers</div>
               <div className="space-y-2">
                 {patientOffers.map((offer) => (
                   <div
                     key={offer._id}
                     className={`p-3 rounded-lg border bg-white transition-all ${
                       offer.read
-                        ? 'border-gray-100 opacity-70'
-                        : 'border-teal-100 shadow-sm'
+                        ? 'border-border opacity-70'
+                        : 'border-mint/20'
                     }`}
                   >
                     <div className="flex justify-between items-start gap-2 mb-1.5">
-                      <span className="text-[9px] font-bold px-1.5 py-0.5 bg-teal-50 text-teal-600 rounded-full uppercase">
+                      <span className="text-[9px] font-bold px-1.5 py-0.5 bg-mint-light text-mint rounded-full uppercase">
                         {offer.discountPercent}% OFF
                       </span>
                       <div className="flex items-center gap-2">
-                        <span className="text-[9px] font-semibold text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded-full">
+                        <span className="text-[9px] font-semibold text-muted bg-faint px-1.5 py-0.5 rounded-full">
                           For {getPatientName(offer.patientId)}
                         </span>
                         {!offer.read && (
                           <button
                             onClick={() => handleMarkAsRead(offer._id)}
-                            className="text-[9px] text-teal-600 hover:text-teal-700 font-medium"
+                            className="text-[9px] text-mint hover:text-navy font-medium"
                           >
                             Mark Read
                           </button>
                         )}
                       </div>
                     </div>
-                    <div className="font-bold text-gray-800 text-xs leading-snug">{offer.title}</div>
-                    <div className="text-gray-500 text-[11px] mt-1 leading-normal">
+                    <div className="font-bold text-navy text-xs leading-snug">{offer.title}</div>
+                    <div className="text-muted text-[11px] mt-1 leading-normal">
                       {offer.message}
                     </div>
-                    
-                    <div className="text-[10px] text-gray-400 mt-2 bg-gray-50 p-1.5 rounded flex justify-between items-center">
+
+                    <div className="text-[10px] text-muted mt-2 bg-faint p-1.5 rounded flex justify-between items-center">
                       <div className="min-w-0 flex-1 pr-2">
-                        <div className="font-medium text-gray-600 truncate">{offer.pharmacyName}</div>
-                        <div className="text-[9px] text-gray-400">Exp: {offer.expiresAt ? new Date(offer.expiresAt).toLocaleDateString() : 'N/A'}</div>
+                        <div className="font-medium text-navy truncate">{offer.pharmacyName}</div>
+                        <div className="text-[9px] text-muted">Exp: {offer.expiresAt ? new Date(offer.expiresAt).toLocaleDateString() : 'N/A'}</div>
                       </div>
                       <div className="shrink-0">
                         {offer.orderPlaced ? (
@@ -803,7 +803,7 @@ export default function DashboardPage() {
                         ) : (
                           <button
                             onClick={() => handlePlaceOrderFromOffer(offer._id)}
-                            className="bg-teal-500 hover:bg-teal-600 text-white font-bold px-2 py-1 rounded text-[9px] transition-colors"
+                            className="bg-mint hover:opacity-90 text-white font-bold px-2 py-1 rounded-full text-[9px] transition-opacity"
                           >
                             Place Order
                           </button>
@@ -822,9 +822,9 @@ export default function DashboardPage() {
               <div className="text-[10px] font-bold text-amber-700 uppercase tracking-wider mb-2">Stock Alerts</div>
               <div className="space-y-2">
                 {patientAlerts.map((a) => (
-                  <div key={a._id} className="p-2.5 rounded-lg border border-gray-100 hover:bg-gray-50 transition-colors">
+                  <div key={a._id} className="p-2.5 rounded-lg border border-border hover:bg-faint transition-colors">
                     <div className="flex items-start justify-between gap-2 mb-1">
-                      <div className="font-semibold text-gray-800 text-xs leading-snug">{a.name}</div>
+                      <div className="font-semibold text-navy text-xs leading-snug">{a.name}</div>
                       <div
                         className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full shrink-0 ${
                           a.status === 'red' ? 'bg-red-50 text-red-500' : 'bg-amber-50 text-amber-500'
@@ -833,7 +833,7 @@ export default function DashboardPage() {
                         {a.daysLeft} days left
                       </div>
                     </div>
-                    <div className="flex justify-between items-center text-[10px] text-gray-500">
+                    <div className="flex justify-between items-center text-[10px] text-muted">
                       <span>Stock: {a.currentStock} {a.unit || 'tablets'}</span>
                     </div>
                   </div>
@@ -843,7 +843,7 @@ export default function DashboardPage() {
           )}
 
           {totalCount === 0 && (
-            <div className="p-8 text-center text-gray-400 text-sm">
+            <div className="p-8 text-center text-muted text-sm">
               <span className="text-2xl mb-2 block">🎉</span>
               All good! No new notifications.
             </div>
@@ -854,25 +854,25 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20 lg:pb-0">
+    <div className="min-h-screen bg-bg pb-20 lg:pb-0">
       {/* Desktop Sidebar */}
       <DesktopSidebar activeTab={activeTab} onTabChange={setActiveTab} onQRPress={() => handleOpenQrModal(activePatientId)} navigate={navigate} />
 
       {/* Main Content - with margin for desktop sidebar */}
       <div className="lg:pl-64">
         {/* Header for mobile */}
-        <div className="lg:hidden bg-white border-b border-gray-100 sticky top-0 z-40">
+        <div className="lg:hidden bg-white border-b border-border sticky top-0 z-40">
           <div className="flex justify-between items-center px-4 h-16">
             <div className="flex items-center gap-2">
               <img src="/logo-b.png" alt="MedSync" className="w-8 h-8" />
-              <span className="font-bold text-gray-800 text-xl tracking-tight">MedSync</span>
+              <span className="font-bold text-navy text-xl tracking-tight">MedSync</span>
             </div>
             <div className="flex items-center gap-3">
               {/* Root account owner (registration account) */}
               <div className="flex flex-col items-center justify-center -mt-0.5">
                 <button
                   onClick={() => navigate('/profile')}
-                  className="w-8 h-8 rounded-full bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center text-white font-bold text-xs shadow-sm overflow-hidden hover:scale-105 transition-all duration-200 active:scale-95 cursor-pointer"
+                  className="w-8 h-8 rounded-full bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center text-white font-bold text-xs overflow-hidden hover:scale-105 transition-all duration-200 active:scale-95 cursor-pointer"
                   title="Account owner"
                 >
                   {profilePic ? (
@@ -881,14 +881,14 @@ export default function DashboardPage() {
                     userInitials
                   )}
                 </button>
-                <span className="text-[9px] text-teal-600 font-bold mt-0.5 max-w-[72px] truncate text-center">
+                <span className="text-[9px] text-mint font-bold mt-0.5 max-w-[72px] truncate text-center">
                   {rootAccountName.split(' ')[0]}
                 </span>
               </div>
 
               {/* Notification Bell */}
               <div className="relative" ref={notificationRef}>
-                <button onClick={() => setShowNotifications(!showNotifications)} className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors relative">
+                <button onClick={() => setShowNotifications(!showNotifications)} className="p-2 text-muted hover:text-navy hover:bg-faint rounded-lg transition-colors relative">
                   <Icons.Notification hasAlert={hasAnyAlerts} />
                 </button>
                 {showNotifications && <NotificationDropdown />}
@@ -902,13 +902,13 @@ export default function DashboardPage() {
           {/* Welcome Section */}
           <div className="flex justify-between items-start mb-8">
             <div>
-              <h1 className="text-2xl lg:text-3xl font-bold text-gray-800">{greeting}, {userName}!</h1>
-              <p className="text-gray-500 text-sm lg:text-base mt-1">Here's your medication summary for today</p>
+              <h1 className="text-2xl lg:text-3xl font-bold text-navy">{greeting}, {userName}!</h1>
+              <p className="text-muted text-sm lg:text-base mt-1">Here's your medication summary for today</p>
             </div>
 
             {/* Desktop Notification Bell */}
             <div className="hidden lg:block relative" ref={desktopNotificationRef}>
-              <button onClick={() => setShowNotifications(!showNotifications)} className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors relative">
+              <button onClick={() => setShowNotifications(!showNotifications)} className="p-2 text-muted hover:text-navy hover:bg-faint rounded-lg transition-colors relative">
                 <Icons.Notification hasAlert={hasAnyAlerts} />
               </button>
               {showNotifications && <NotificationDropdown />}
@@ -919,10 +919,10 @@ export default function DashboardPage() {
           <div className="mb-10">
             <div className="flex justify-between items-center mb-4">
               <div>
-                <h2 className="font-semibold text-gray-800 text-lg">Family Members</h2>
-                <p className="text-xs text-gray-400 mt-0.5">Switch between family profiles</p>
+                <h2 className="font-semibold text-navy text-lg">Family Members</h2>
+                <p className="text-xs text-muted mt-0.5">Switch between family profiles</p>
               </div>
-              <button onClick={handleAddMember} className="flex items-center gap-1.5 text-teal-500 text-sm font-medium hover:text-teal-600 transition-colors">
+              <button onClick={handleAddMember} className="flex items-center gap-1.5 text-mint text-sm font-medium hover:opacity-80 transition-opacity">
                 <Icons.Add />
                 Add Member
               </button>
@@ -948,22 +948,22 @@ export default function DashboardPage() {
           {/* Medicines Section */}
           <div>
             <div className="flex justify-between items-center mb-4">
-              <h2 className="font-semibold text-gray-800 text-lg">
+              <h2 className="font-semibold text-navy text-lg">
                 {activePatientName ? `${activePatientName}'s Medications` : 'My Medications'}
               </h2>
               <div className="flex gap-2">
                 <button
                   type="button"
                   onClick={() => handleOpenQrModal(activePatientId)}
-                  className="hidden lg:flex items-center gap-2 border-[1.5px] border-teal-500/30 text-teal-600 hover:bg-teal-50/30 px-4 py-2 rounded-lg text-sm font-medium transition-all cursor-pointer"
+                  className="hidden lg:flex items-center gap-2 border border-border bg-white text-navy hover:bg-faint px-5 py-2.5 rounded-full text-sm font-semibold transition-colors cursor-pointer"
                 >
-                  <Icons.QR className="w-4 h-4 text-teal-500" />
+                  <Icons.QR className="w-4 h-4 text-mint" />
                   Show Pharmacy QR
                 </button>
                 <button
                   type="button"
                   onClick={() => navigate('/add-medicine')}
-                  className="bg-teal-500 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-teal-600"
+                  className="bg-navy text-white px-5 py-2.5 rounded-full text-sm font-semibold hover:opacity-90 transition-opacity"
                 >
                   + Add Medicine
                 </button>
@@ -971,12 +971,12 @@ export default function DashboardPage() {
             </div>
 
             {medicines.length === 0 && !loadingMedicines ? (
-              <div className="text-center py-12 bg-white rounded-xl">
-                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <div className="text-center py-12 bg-white rounded-2xl border border-border">
+                <div className="w-16 h-16 bg-faint rounded-full flex items-center justify-center mx-auto mb-4">
                   <span>💊</span>
                 </div>
-                <p className="text-gray-500 font-medium">No medications yet</p>
-                <p className="text-sm text-gray-400 mt-1">Add your first medicine to start tracking</p>
+                <p className="text-muted font-medium">No medications yet</p>
+                <p className="text-sm text-muted mt-1">Add your first medicine to start tracking</p>
               </div>
             ) : loadingMedicines ? (
               <SkeletonLoader />
@@ -1004,33 +1004,33 @@ export default function DashboardPage() {
       {/* Add Patient Profile Modal */}
       {addProfileOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={() => setAddProfileOpen(false)}>
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-modal" onClick={(e) => e.stopPropagation()}>
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-bold text-gray-800">Add Family Member</h3>
-              <button onClick={() => setAddProfileOpen(false)} className="text-gray-400 hover:text-gray-600"><Icons.Close /></button>
+              <h3 className="text-xl font-bold text-navy">Add Family Member</h3>
+              <button onClick={() => setAddProfileOpen(false)} className="text-muted hover:text-navy"><Icons.Close /></button>
             </div>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Full Name *</label>
-                <input type="text" placeholder="Enter full name" value={addProfileForm.name} onChange={(e) => setAddProfileForm({ ...addProfileForm, name: e.target.value })} className="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500" />
+                <label className="block text-sm font-medium text-navy mb-1">Full Name *</label>
+                <input type="text" placeholder="Enter full name" value={addProfileForm.name} onChange={(e) => setAddProfileForm({ ...addProfileForm, name: e.target.value })} className="w-full rounded-xl border border-border bg-faint px-4 py-2.5 text-sm focus:outline-none focus:border-mint" />
                 {addProfileErrors.name && <p className="text-xs text-red-500 mt-1">{addProfileErrors.name}</p>}
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Date of Birth</label>
+                <label className="block text-sm font-medium text-navy mb-1">Date of Birth</label>
                 <input
                   type="date"
                   value={addProfileForm.dateOfBirth}
                   max={(() => { const d = new Date(); d.setFullYear(d.getFullYear() - 6); return d.toISOString().split('T')[0]; })()}
                   min={(() => { const d = new Date(); d.setFullYear(d.getFullYear() - 120); return d.toISOString().split('T')[0]; })()}
                   onChange={(e) => setAddProfileForm({ ...addProfileForm, dateOfBirth: e.target.value })}
-                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                  className="w-full rounded-xl border border-border bg-faint px-4 py-2.5 text-sm focus:outline-none focus:border-mint"
                 />
-                <p className="text-xs text-gray-400 mt-1">Patient must be between 6 and 120 years old</p>
+                <p className="text-xs text-muted mt-1">Patient must be between 6 and 120 years old</p>
                 {addProfileErrors.dateOfBirth && <p className="text-xs text-red-500 mt-1">{addProfileErrors.dateOfBirth}</p>}
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Relation *</label>
-                <select value={addProfileForm.relation} onChange={(e) => setAddProfileForm({ ...addProfileForm, relation: e.target.value })} className="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500">
+                <label className="block text-sm font-medium text-navy mb-1">Relation *</label>
+                <select value={addProfileForm.relation} onChange={(e) => setAddProfileForm({ ...addProfileForm, relation: e.target.value })} className="w-full rounded-xl border border-border bg-faint px-4 py-2.5 text-sm focus:outline-none focus:border-mint">
                   <option value="self">Self</option><option value="mother">Mother</option><option value="father">Father</option>
                   <option value="grandmother">Grandmother</option><option value="grandfather">Grandfather</option>
                   <option value="spouse">Spouse</option><option value="other">Other</option>
@@ -1038,17 +1038,17 @@ export default function DashboardPage() {
                 {addProfileErrors.relation && <p className="text-xs text-red-500 mt-1">{addProfileErrors.relation}</p>}
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Allergies / Notes</label>
-                <textarea value={addProfileForm.allergies} onChange={(e) => setAddProfileForm({ ...addProfileForm, allergies: e.target.value })} placeholder="e.g., Allergic to penicillin" className="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500" rows={3} />
+                <label className="block text-sm font-medium text-navy mb-1">Allergies / Notes</label>
+                <textarea value={addProfileForm.allergies} onChange={(e) => setAddProfileForm({ ...addProfileForm, allergies: e.target.value })} placeholder="e.g., Allergic to penicillin" className="w-full rounded-xl border border-border bg-faint px-4 py-2.5 text-sm focus:outline-none focus:border-mint" rows={3} />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Pharmacy PIN (4-digit) *</label>
-                <input type="text" placeholder="Enter 4-digit PIN" maxLength={4} value={addProfileForm.pharmacyPin} onChange={(e) => setAddProfileForm({ ...addProfileForm, pharmacyPin: e.target.value.replace(/\D/g, '') })} className="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500" />
-                <p className="text-xs text-gray-400 mt-1">This PIN will be hashed and used for pharmacy verification</p>
+                <label className="block text-sm font-medium text-navy mb-1">Pharmacy PIN (4-digit) *</label>
+                <input type="text" placeholder="Enter 4-digit PIN" maxLength={4} value={addProfileForm.pharmacyPin} onChange={(e) => setAddProfileForm({ ...addProfileForm, pharmacyPin: e.target.value.replace(/\D/g, '') })} className="w-full rounded-xl border border-border bg-faint px-4 py-2.5 text-sm focus:outline-none focus:border-mint" />
+                <p className="text-xs text-muted mt-1">This PIN will be hashed and used for pharmacy verification</p>
                 {addProfileErrors.pharmacyPin && <p className="text-xs text-red-500 mt-1">{addProfileErrors.pharmacyPin}</p>}
               </div>
               <div className="flex gap-3 pt-2">
-                <button onClick={() => setAddProfileOpen(false)} className="flex-1 border border-gray-200 rounded-lg py-2.5 text-gray-700 font-medium hover:bg-gray-50">Cancel</button>
+                <button onClick={() => setAddProfileOpen(false)} className="flex-1 border border-border bg-white text-navy rounded-full py-2.5 text-sm font-semibold hover:bg-faint transition-colors">Cancel</button>
                 <button
                   disabled={isAddingProfile}
                   onClick={async () => {
@@ -1089,7 +1089,7 @@ export default function DashboardPage() {
                       setIsAddingProfile(false);
                     }
                   }}
-                  className="flex-1 bg-teal-500 text-white rounded-lg py-2.5 font-medium hover:bg-teal-600 disabled:opacity-60"
+                  className="flex-1 bg-mint text-white rounded-full py-2.5 text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-60"
                 >
                   {isAddingProfile ? 'Adding...' : 'Add Member'}
                 </button>
@@ -1102,21 +1102,21 @@ export default function DashboardPage() {
       {/* Restock Modal */}
       {restockTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={() => setRestockTarget(null)}>
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-modal" onClick={(e) => e.stopPropagation()}>
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-bold text-gray-800">Restock Medicine</h3>
-              <button onClick={() => setRestockTarget(null)} className="text-gray-400 hover:text-gray-600"><Icons.Close /></button>
+              <h3 className="text-xl font-bold text-navy">Restock Medicine</h3>
+              <button onClick={() => setRestockTarget(null)} className="text-muted hover:text-navy"><Icons.Close /></button>
             </div>
-            <div className="mb-4 p-3 bg-gray-50 rounded-lg">
-              <p className="font-medium text-gray-800">{restockTarget.name}</p>
-              <p className="text-sm text-gray-500">Current stock: {restockTarget.currentStock} tablets</p>
+            <div className="mb-4 p-3 bg-faint rounded-xl border border-border">
+              <p className="font-medium text-navy">{restockTarget.name}</p>
+              <p className="text-sm text-muted">Current stock: {restockTarget.currentStock} tablets</p>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Quantity Purchased</label>
-              <input type="number" value={restockQty} onChange={(e) => setRestockQty(e.target.value)} placeholder="Enter quantity" className="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500" />
+              <label className="block text-sm font-medium text-navy mb-1">Quantity Purchased</label>
+              <input type="number" value={restockQty} onChange={(e) => setRestockQty(e.target.value)} placeholder="Enter quantity" className="w-full rounded-xl border border-border bg-faint px-4 py-2.5 text-sm focus:outline-none focus:border-mint" />
             </div>
             <div className="flex gap-3 mt-5">
-              <button onClick={() => setRestockTarget(null)} className="flex-1 border border-gray-200 rounded-lg py-2.5 text-gray-700 font-medium hover:bg-gray-50">Cancel</button>
+              <button onClick={() => setRestockTarget(null)} className="flex-1 border border-border bg-white text-navy rounded-full py-2.5 text-sm font-semibold hover:bg-faint transition-colors">Cancel</button>
               <button onClick={async () => {
                 const qty = Number(restockQty);
                 if (isNaN(qty) || qty <= 0) { toast.error('Please enter a valid quantity'); return; }
@@ -1127,7 +1127,7 @@ export default function DashboardPage() {
                   await refreshMedicines(activePatientId);
                   await refreshPatients();
                 } catch { toast.error('Failed to update stock'); }
-              }} className="flex-1 bg-teal-500 text-white rounded-lg py-2.5 font-medium hover:bg-teal-600">Update Stock</button>
+              }} className="flex-1 bg-mint text-white rounded-full py-2.5 text-sm font-semibold hover:opacity-90 transition-opacity">Update Stock</button>
             </div>
           </div>
         </div>
@@ -1136,15 +1136,15 @@ export default function DashboardPage() {
       {/* Delete Modal */}
       {removeTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={() => setRemoveTarget(null)}>
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-modal" onClick={(e) => e.stopPropagation()}>
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-bold text-gray-800">Remove Medicine</h3>
-              <button onClick={() => setRemoveTarget(null)} className="text-gray-400 hover:text-gray-600"><Icons.Close /></button>
+              <h3 className="text-xl font-bold text-navy">Remove Medicine</h3>
+              <button onClick={() => setRemoveTarget(null)} className="text-muted hover:text-navy"><Icons.Close /></button>
             </div>
-            <p className="text-gray-600 mb-2">Are you sure you want to remove <strong className="text-gray-800">{removeTarget.name}</strong>?</p>
-            <p className="text-sm text-gray-500 mb-5">This action cannot be undone.</p>
+            <p className="text-muted mb-2">Are you sure you want to remove <strong className="text-navy">{removeTarget.name}</strong>?</p>
+            <p className="text-sm text-muted mb-5">This action cannot be undone.</p>
             <div className="flex gap-3">
-              <button onClick={() => setRemoveTarget(null)} className="flex-1 border border-gray-200 rounded-lg py-2.5 text-gray-700 font-medium hover:bg-gray-50">Cancel</button>
+              <button onClick={() => setRemoveTarget(null)} className="flex-1 border border-border bg-white text-navy rounded-full py-2.5 text-sm font-semibold hover:bg-faint transition-colors">Cancel</button>
               <button onClick={async () => {
                 try {
                   await deleteMedicine(removeTarget._id);
@@ -1153,7 +1153,7 @@ export default function DashboardPage() {
                   await refreshMedicines(activePatientId);
                   await refreshPatients();
                 } catch { toast.error('Failed to remove medicine'); }
-              }} className="flex-1 bg-red-500 text-white rounded-lg py-2.5 font-medium hover:bg-red-600">Remove</button>
+              }} className="flex-1 bg-red-500 text-white rounded-full py-2.5 text-sm font-semibold hover:opacity-90 transition-opacity">Remove</button>
             </div>
           </div>
         </div>
@@ -1169,26 +1169,26 @@ export default function DashboardPage() {
 
             <div className="flex justify-between items-center mb-6 relative z-10">
               <div>
-                <h3 className="text-xl font-bold text-gray-800 tracking-tight flex items-center gap-2">
-                  <Icons.QR className="w-6 h-6 text-teal-600" />
+                <h3 className="text-xl font-bold text-navy tracking-tight flex items-center gap-2">
+                  <Icons.QR className="w-6 h-6 text-mint" />
                   Pharmacy QR & OTP
                 </h3>
-                <p className="text-xs text-gray-400 mt-0.5">Share securely with your pharmacist</p>
+                <p className="text-xs text-muted mt-0.5">Share securely with your pharmacist</p>
               </div>
-              <button onClick={handleCloseQrModal} className="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100/50 transition-colors">
+              <button onClick={handleCloseQrModal} className="p-2 text-muted hover:text-navy rounded-full hover:bg-faint transition-colors">
                 <Icons.Close />
               </button>
             </div>
 
             {qrLoading ? (
               <div className="flex flex-col items-center justify-center py-12 relative z-10">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-500 mb-4" />
-                <p className="text-sm text-gray-500">Generating secure OTP...</p>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-mint mb-4" />
+                <p className="text-sm text-muted">Generating secure OTP...</p>
               </div>
             ) : (
               <div className="flex flex-col items-center relative z-10">
-                <div className="bg-gray-50/50 p-3 rounded-2xl border border-gray-100/80 mb-6 shadow-inner flex justify-center items-center">
-                  <div className="p-2 bg-white rounded-xl shadow-sm">
+                <div className="bg-faint p-3 rounded-2xl border border-border mb-6 flex justify-center items-center">
+                  <div className="p-2 bg-white rounded-xl">
                     <QRCodeCanvas
                       value={`${window.location.origin}/pharma/${qrPatient.qrToken}`}
                       size={200}
@@ -1200,9 +1200,9 @@ export default function DashboardPage() {
                 </div>
 
                 <div className="text-center w-full mb-6">
-                  <span className="text-xs font-semibold text-gray-400 uppercase tracking-widest block mb-2">Patient Profile</span>
-                  <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-teal-50 text-teal-700 font-semibold text-sm border border-teal-100">
-                    <span className="w-2 h-2 rounded-full bg-teal-500 animate-ping" />
+                  <span className="text-xs font-semibold text-muted uppercase tracking-widest block mb-2">Patient Profile</span>
+                  <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-mint-light text-mint font-semibold text-sm border border-mint/20">
+                    <span className="w-2 h-2 rounded-full bg-mint animate-ping" />
                     {qrPatient.name}
                   </div>
                 </div>
@@ -1210,12 +1210,12 @@ export default function DashboardPage() {
                 {qrSecondsLeft > 0 ? (
                   <>
                     <div className="text-center w-full mb-6">
-                      <span className="text-xs font-semibold text-gray-400 uppercase tracking-widest block mb-2">Temporary Verification OTP</span>
+                      <span className="text-xs font-semibold text-muted uppercase tracking-widest block mb-2">Temporary Verification OTP</span>
                       <div className="flex gap-2 justify-center">
                         {qrOtp.split('').map((char, index) => (
                           <div
                             key={index}
-                            className="w-11 h-14 bg-gradient-to-b from-teal-50 to-teal-50/20 border-2 border-teal-500/20 rounded-xl flex items-center justify-center text-2xl font-bold text-teal-600 shadow-sm"
+                            className="w-11 h-14 bg-mint-light border-2 border-mint/20 rounded-xl flex items-center justify-center text-2xl font-bold text-mint"
                             style={{ animationDelay: `${index * 50}ms` }}
                           >
                             {char}
@@ -1224,12 +1224,12 @@ export default function DashboardPage() {
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2 px-4 py-2 bg-slate-900/5 backdrop-blur-sm rounded-2xl border border-slate-900/5 mb-4">
-                      <svg className="w-4 h-4 text-teal-600 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <div className="flex items-center gap-2 px-4 py-2 bg-faint rounded-2xl border border-border mb-4">
+                      <svg className="w-4 h-4 text-mint animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
-                      <span className="text-sm font-semibold font-mono text-teal-600">{formatSecondsLeft(qrSecondsLeft)}</span>
-                      <span className="text-xs text-gray-500 font-medium">remaining</span>
+                      <span className="text-sm font-semibold font-mono text-mint">{formatSecondsLeft(qrSecondsLeft)}</span>
+                      <span className="text-xs text-muted font-medium">remaining</span>
                     </div>
                   </>
                 ) : (
@@ -1243,7 +1243,7 @@ export default function DashboardPage() {
                     <p className="text-xs text-red-500 mt-1">For your security, this OTP code has expired. Please regenerate a new one.</p>
                     <button
                       onClick={() => handleOpenQrModal(qrPatient._id || qrPatient.id)}
-                      className="mt-4 px-4 py-2 bg-red-500 hover:bg-red-655 text-white rounded-xl text-xs font-bold transition-all shadow-sm flex items-center gap-2 mx-auto cursor-pointer"
+                      className="mt-4 px-4 py-2 bg-red-500 hover:opacity-90 text-white rounded-xl text-xs font-bold transition-opacity flex items-center gap-2 mx-auto cursor-pointer"
                     >
                       <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 4.75M9 9h1.586M9 9l1.586-1.586" />
@@ -1253,7 +1253,7 @@ export default function DashboardPage() {
                   </div>
                 )}
 
-                <div className="bg-teal-50/30 border border-teal-100/50 rounded-2xl px-4 py-3.5 text-xs text-teal-800 leading-relaxed text-center">
+                <div className="bg-mint-light border border-mint/20 rounded-2xl px-4 py-3.5 text-xs text-mint leading-relaxed text-center">
                   💡 Let the pharmacist scan this QR code, then give them the 6-digit OTP code to verify and access your active medications & prescriptions safely.
                 </div>
               </div>

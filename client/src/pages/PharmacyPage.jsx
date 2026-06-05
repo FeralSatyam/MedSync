@@ -199,9 +199,9 @@ const MOCK_PHARMACIES = [
 // Pharmacy Card Component
 function PharmacyCard({ pharmacy, onSelect, onOrder, isSelected }) {
   return (
-    <div 
-      className={`bg-white rounded-xl p-4 shadow-sm border transition-all cursor-pointer ${
-        isSelected ? 'border-teal-500 ring-2 ring-teal-200' : 'border-gray-100 hover:shadow-md'
+    <div
+      className={`bg-white rounded-2xl p-4 border border-border transition-all cursor-pointer ${
+        isSelected ? 'border-mint ring-2 ring-mint-light' : 'hover:border-mint'
       }`}
       onClick={() => onSelect(pharmacy)}
     >
@@ -209,25 +209,25 @@ function PharmacyCard({ pharmacy, onSelect, onOrder, isSelected }) {
         <div className="flex-1">
           <div className="flex justify-between items-start">
             <div>
-              <h3 className="font-semibold text-gray-800">{pharmacy.name}</h3>
+              <h3 className="font-semibold text-navy">{pharmacy.name}</h3>
               <div className="flex items-center gap-1 mt-1">
                 <div className="flex items-center">
                   {[...Array(5)].map((_, i) => (
                     <Icons.Star key={i} filled={i < Math.floor(pharmacy.rating)} />
                   ))}
                 </div>
-                <span className="text-xs text-gray-500">({pharmacy.reviews})</span>
+                <span className="text-xs text-muted">({pharmacy.reviews})</span>
               </div>
             </div>
             <button
               onClick={(e) => { e.stopPropagation(); onOrder(pharmacy); }}
-              className="px-3 py-1.5 bg-teal-500 text-white rounded-lg text-xs font-medium hover:bg-teal-600 transition-colors flex items-center gap-1"
+              className="bg-mint text-white rounded-full px-5 py-2.5 text-sm font-semibold hover:opacity-90 flex items-center gap-1"
             >
               <Icons.Cart />
               Order
             </button>
           </div>
-          <div className="mt-2 text-xs text-gray-500 space-y-1">
+          <div className="mt-2 text-xs text-muted space-y-1">
             <div className="flex items-center gap-1">
               <Icons.Location />
               <span>{pharmacy.address}</span>
@@ -259,12 +259,12 @@ function OrderDetailsModal({ order, onClose, onCancel }) {
   }, [orderUrl]);
 
   const statusColors = {
-    pending: 'bg-yellow-100 text-yellow-800',
-    confirmed: 'bg-blue-100 text-blue-800',
-    preparing: 'bg-purple-100 text-purple-800',
-    out_for_delivery: 'bg-orange-100 text-orange-800',
-    delivered: 'bg-green-100 text-green-800',
-    cancelled: 'bg-red-100 text-red-800',
+    pending: 'bg-amber-light text-amber border border-border',
+    confirmed: 'bg-faint text-muted border border-border',
+    preparing: 'bg-faint text-muted border border-border',
+    out_for_delivery: 'bg-faint text-muted border border-border',
+    delivered: 'bg-mint-light text-mint',
+    cancelled: 'bg-red-light text-red',
   };
 
   const handleCancelConfirm = () => {
@@ -281,82 +281,82 @@ function OrderDetailsModal({ order, onClose, onCancel }) {
 
   return (
     <>
-      <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/50" onClick={onClose}>
-        <div className="bg-white rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto shadow-xl" onClick={(e) => e.stopPropagation()}>
-          <div className="sticky top-0 bg-white border-b border-gray-100 p-4 flex justify-between items-center">
-            <h2 className="text-xl font-bold text-gray-800">Order Details</h2>
-            <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+      <div className="fixed inset-0 bg-navy/30 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={onClose}>
+        <div className="bg-white rounded-2xl border border-border max-w-md w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+          <div className="sticky top-0 bg-white border-b border-border p-4 flex justify-between items-center">
+            <h2 className="text-xl font-bold text-navy">Order Details</h2>
+            <button onClick={onClose} className="text-muted hover:text-navy">
               <Icons.Close />
             </button>
           </div>
-          
+
           <div className="p-4 space-y-4">
             {order.status === 'cancelled' && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                <p className="text-sm font-medium text-red-800">Order Cancelled</p>
-                <p className="text-xs text-red-600 mt-1">Reason: {order.cancelledReason || 'User requested cancellation'}</p>
+              <div className="bg-red-light border border-red rounded-lg p-3">
+                <p className="text-sm font-medium text-red">Order Cancelled</p>
+                <p className="text-xs text-red mt-1">Reason: {order.cancelledReason || 'User requested cancellation'}</p>
               </div>
             )}
 
-            <div className="bg-gray-50 rounded-lg p-4 text-center">
-              <p className="text-sm font-medium text-gray-700 mb-2">Order QR Code</p>
+            <div className="bg-faint rounded-lg p-4 text-center">
+              <p className="text-sm font-medium text-navy mb-2">Order QR Code</p>
               {qrCodeUrl && (
                 <img src={qrCodeUrl} alt="Order QR Code" className="w-40 h-40 mx-auto mb-2" />
               )}
-              <p className="text-xs text-gray-500">Scan to track your order</p>
+              <p className="text-xs text-muted">Scan to track your order</p>
             </div>
 
             <div>
-              <p className="text-sm font-medium text-gray-700 mb-2">Order Information</p>
+              <p className="text-sm font-medium text-navy mb-2">Order Information</p>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Order ID:</span>
+                  <span className="text-muted">Order ID:</span>
                   <span className="font-medium">{order.orderId}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Status:</span>
-                  <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${statusColors[order.status]}`}>
+                  <span className="text-muted">Status:</span>
+                  <span className={`rounded-full text-xs font-semibold px-2.5 py-0.5 ${statusColors[order.status]}`}>
                     {order.status.replace('_', ' ')}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Pharmacy:</span>
+                  <span className="text-muted">Pharmacy:</span>
                   <span className="font-medium">{order.pharmacyName}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Patient:</span>
+                  <span className="text-muted">Patient:</span>
                   <span className="font-medium">{order.patientName}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Date:</span>
+                  <span className="text-muted">Date:</span>
                   <span>{new Date(order.orderDate).toLocaleString()}</span>
                 </div>
               </div>
             </div>
 
             <div>
-              <p className="text-sm font-medium text-gray-700 mb-2">Medicines ({order.totalItems} items)</p>
+              <p className="text-sm font-medium text-navy mb-2">Medicines ({order.totalItems} items)</p>
               <div className="space-y-2 max-h-48 overflow-y-auto">
                 {order.medicines.map((item, idx) => (
                   <div key={idx} className="flex justify-between items-center py-2 border-b last:border-0">
                     <div>
-                      <p className="font-medium text-gray-800">{item.name}</p>
-                      <p className="text-xs text-gray-500">Quantity: {item.quantity}</p>
+                      <p className="font-medium text-navy">{item.name}</p>
+                      <p className="text-xs text-muted">Quantity: {item.quantity}</p>
                     </div>
                   </div>
                 ))}
               </div>
             </div>
 
-            <div className="bg-gray-50 rounded-lg p-3">
-              <p className="text-sm font-medium text-gray-700 mb-2">Delivery Information</p>
+            <div className="bg-faint rounded-lg p-3">
+              <p className="text-sm font-medium text-navy mb-2">Delivery Information</p>
               <div className="space-y-1 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Delivery Fee:</span>
+                  <span className="text-muted">Delivery Fee:</span>
                   <span className="font-medium">{order.deliveryFee}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Est. Delivery:</span>
+                  <span className="text-muted">Est. Delivery:</span>
                   <span>{order.estimatedDelivery}</span>
                 </div>
               </div>
@@ -364,8 +364,8 @@ function OrderDetailsModal({ order, onClose, onCancel }) {
 
             {order.notes && (
               <div>
-                <p className="text-sm font-medium text-gray-700 mb-1">Special Instructions</p>
-                <p className="text-sm text-gray-600 bg-gray-50 p-2 rounded-lg">{order.notes}</p>
+                <p className="text-sm font-medium text-navy mb-1">Special Instructions</p>
+                <p className="text-sm text-muted bg-faint p-2 rounded-lg">{order.notes}</p>
               </div>
             )}
 
@@ -373,14 +373,14 @@ function OrderDetailsModal({ order, onClose, onCancel }) {
               {isCancellable && (
                 <button
                   onClick={() => setShowCancelConfirm(true)}
-                  className="flex-1 border border-red-300 text-red-600 rounded-lg py-2.5 font-medium hover:bg-red-50"
+                  className="flex-1 border border-red bg-white text-red rounded-full px-5 py-2.5 text-sm font-semibold hover:bg-red-light"
                 >
                   Cancel Order
                 </button>
               )}
               <button
                 onClick={onClose}
-                className="flex-1 bg-teal-500 text-white rounded-lg py-2.5 font-medium hover:bg-teal-600"
+                className="flex-1 bg-mint text-white rounded-full px-5 py-2.5 text-sm font-semibold hover:opacity-90"
               >
                 Close
               </button>
@@ -390,30 +390,30 @@ function OrderDetailsModal({ order, onClose, onCancel }) {
       </div>
 
       {showCancelConfirm && (
-        <div className="fixed inset-0 z-[10001] flex items-center justify-center p-4 bg-black/50" onClick={() => setShowCancelConfirm(false)}>
-          <div className="bg-white rounded-2xl max-w-md w-full p-6" onClick={(e) => e.stopPropagation()}>
-            <h3 className="text-xl font-bold text-gray-800 mb-4">Cancel Order</h3>
-            <p className="text-gray-600 mb-4">Are you sure you want to cancel this order?</p>
+        <div className="fixed inset-0 bg-navy/30 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowCancelConfirm(false)}>
+          <div className="bg-white rounded-2xl border border-border max-w-md w-full p-6" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-xl font-bold text-navy mb-4">Cancel Order</h3>
+            <p className="text-muted mb-4">Are you sure you want to cancel this order?</p>
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Reason for cancellation</label>
+              <label className="block text-sm font-medium text-navy mb-1">Reason for cancellation</label>
               <textarea
                 value={cancelReason}
                 onChange={(e) => setCancelReason(e.target.value)}
                 placeholder="Please tell us why you're cancelling..."
                 rows={3}
-                className="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                className="rounded-xl border border-border bg-faint px-4 py-3 text-sm focus:outline-none focus:border-mint w-full"
               />
             </div>
             <div className="flex gap-3">
               <button
                 onClick={() => setShowCancelConfirm(false)}
-                className="flex-1 border border-gray-200 rounded-lg py-2.5 text-gray-700 font-medium hover:bg-gray-50"
+                className="flex-1 border border-border bg-white text-navy rounded-full px-5 py-2.5 text-sm font-semibold hover:bg-faint"
               >
                 No, Keep Order
               </button>
               <button
                 onClick={handleCancelConfirm}
-                className="flex-1 bg-red-500 text-white rounded-lg py-2.5 font-medium hover:bg-red-600"
+                className="flex-1 border border-red bg-white text-red rounded-full px-5 py-2.5 text-sm font-semibold hover:bg-red-light"
               >
                 Yes, Cancel Order
               </button>
@@ -428,43 +428,43 @@ function OrderDetailsModal({ order, onClose, onCancel }) {
 // Order Card Component
 function OrderCard({ order, onViewDetails, onCancel }) {
   const statusColors = {
-    pending: 'bg-yellow-100 text-yellow-800',
-    confirmed: 'bg-blue-100 text-blue-800',
-    preparing: 'bg-purple-100 text-purple-800',
-    out_for_delivery: 'bg-orange-100 text-orange-800',
-    delivered: 'bg-green-100 text-green-800',
-    cancelled: 'bg-red-100 text-red-800',
+    pending: 'bg-amber-light text-amber border border-border',
+    confirmed: 'bg-faint text-muted border border-border',
+    preparing: 'bg-faint text-muted border border-border',
+    out_for_delivery: 'bg-faint text-muted border border-border',
+    delivered: 'bg-mint-light text-mint',
+    cancelled: 'bg-red-light text-red',
   };
 
   const isCancelled = order.status === 'cancelled';
   const canCancel = !isCancelled && order.status !== 'delivered';
 
   return (
-    <div className={`bg-white rounded-xl p-4 shadow-sm border ${isCancelled ? 'border-red-100 opacity-70' : 'border-gray-100 hover:shadow-md'} transition-shadow`}>
+    <div className={`bg-white rounded-2xl p-4 border border-border transition-shadow ${isCancelled ? 'opacity-70' : ''}`}>
       <div className="flex justify-between items-start mb-3">
         <div>
-          <p className="text-xs text-gray-500">Order ID</p>
-          <p className="font-semibold text-gray-800">{order.orderId}</p>
+          <p className="text-xs text-muted">Order ID</p>
+          <p className="font-semibold text-navy">{order.orderId}</p>
         </div>
-        <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColors[order.status]}`}>
+        <span className={`rounded-full text-xs font-semibold px-2.5 py-0.5 ${statusColors[order.status]}`}>
           {order.status.replace('_', ' ')}
         </span>
       </div>
-      
+
       <div className="mb-3">
-        <p className="text-sm text-gray-600">{order.pharmacyName}</p>
-        <p className="text-xs text-gray-400 mt-1">{new Date(order.orderDate).toLocaleDateString()}</p>
+        <p className="text-sm text-muted">{order.pharmacyName}</p>
+        <p className="text-xs text-muted mt-1">{new Date(order.orderDate).toLocaleDateString()}</p>
       </div>
-      
+
       <div className="flex justify-between items-center">
         <div>
-          <p className="text-sm font-medium text-gray-800">{order.totalItems} items</p>
-          <p className="text-xs text-gray-500">{order.deliveryFee} delivery</p>
+          <p className="text-sm font-medium text-navy">{order.totalItems} items</p>
+          <p className="text-xs text-muted">{order.deliveryFee} delivery</p>
         </div>
         <div className="flex gap-2">
           <button
             onClick={() => onViewDetails(order)}
-            className="flex items-center gap-1 px-3 py-1.5 bg-teal-500 text-white rounded-lg text-xs font-medium hover:bg-teal-600"
+            className="flex items-center gap-1 bg-mint text-white rounded-full px-5 py-2.5 text-sm font-semibold hover:opacity-90"
           >
             <Icons.Eye />
             View Details
@@ -472,7 +472,7 @@ function OrderCard({ order, onViewDetails, onCancel }) {
           {canCancel && (
             <button
               onClick={() => onCancel(order)}
-              className="flex items-center gap-1 px-3 py-1.5 border border-red-300 text-red-600 rounded-lg text-xs font-medium hover:bg-red-50"
+              className="flex items-center gap-1 border border-red bg-white text-red rounded-full px-5 py-2.5 text-sm font-semibold hover:bg-red-light"
             >
               Cancel
             </button>
@@ -497,36 +497,36 @@ function OrderSuccessModal({ order, onClose }) {
   }, [orderUrl]);
 
   return (
-    <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/50" onClick={onClose}>
-      <div className="bg-white rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto shadow-xl" onClick={(e) => e.stopPropagation()}>
-        <div className="sticky top-0 bg-white border-b border-gray-100 p-4 flex justify-between items-center">
-          <h2 className="text-xl font-bold text-gray-800">Order Placed Successfully!</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+    <div className="fixed inset-0 bg-navy/30 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={onClose}>
+      <div className="bg-white rounded-2xl border border-border max-w-md w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+        <div className="sticky top-0 bg-white border-b border-border p-4 flex justify-between items-center">
+          <h2 className="text-xl font-bold text-navy">Order Placed Successfully!</h2>
+          <button onClick={onClose} className="text-muted hover:text-navy">
             <Icons.Close />
           </button>
         </div>
-        
+
         <div className="p-6 text-center">
-          <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg className="w-10 h-10 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="w-20 h-20 bg-mint-light rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg className="w-10 h-10 text-mint" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
           </div>
-          
-          <h3 className="text-lg font-semibold text-gray-800 mb-2">Order #{order.orderId}</h3>
-          <p className="text-sm text-gray-500 mb-4">Your order has been placed successfully!</p>
-          
-          <div className="bg-gray-50 rounded-lg p-4 mb-4">
-            <p className="text-sm font-medium text-gray-700 mb-2">Order QR Code</p>
+
+          <h3 className="text-lg font-semibold text-navy mb-2">Order #{order.orderId}</h3>
+          <p className="text-sm text-muted mb-4">Your order has been placed successfully!</p>
+
+          <div className="bg-faint rounded-lg p-4 mb-4">
+            <p className="text-sm font-medium text-navy mb-2">Order QR Code</p>
             {qrCodeUrl && (
               <img src={qrCodeUrl} alt="Order QR Code" className="w-48 h-48 mx-auto mb-2" />
             )}
-            <p className="text-xs text-gray-500">Scan to view order details</p>
+            <p className="text-xs text-muted">Scan to view order details</p>
           </div>
-          
+
           <button
             onClick={onClose}
-            className="w-full bg-teal-500 text-white py-2.5 rounded-lg font-medium hover:bg-teal-600"
+            className="w-full bg-mint text-white rounded-full px-5 py-2.5 text-sm font-semibold hover:opacity-90"
           >
             Close
           </button>
@@ -550,7 +550,7 @@ function OrderModal({ pharmacy, onClose, onSubmit }) {
   const [loadingMedicines, setLoadingMedicines] = useState(false);
   const [customMedicineName, setCustomMedicineName] = useState('');
   const [customMedicines, setCustomMedicines] = useState([]);
-  
+
   const currentUser = useAuthStore((s) => s.user);
   const userId = currentUser?._id || currentUser?.id;
 
@@ -599,7 +599,7 @@ function OrderModal({ pharmacy, onClose, onSubmit }) {
       ...prev,
       [medicineId]: !prev[medicineId]
     }));
-    
+
     if (!selectedMedicines[medicineId]) {
       setMedicineQuantities(prev => ({
         ...prev,
@@ -626,7 +626,7 @@ function OrderModal({ pharmacy, onClose, onSubmit }) {
       toast.error('Please enter a medicine name');
       return;
     }
-    
+
     const newId = `custom_${Date.now()}`;
     setCustomMedicines(prev => [...prev, {
       id: newId,
@@ -664,20 +664,20 @@ function OrderModal({ pharmacy, onClose, onSubmit }) {
       toast.error('Please select a patient');
       return;
     }
-    
+
     const selectedMeds = Object.keys(selectedMedicines).filter(key => selectedMedicines[key]);
     if (selectedMeds.length === 0) {
       toast.error('Please select at least one medicine');
       return;
     }
-    
+
     if (!userId) {
       toast.error('Please log in to place an order');
       return;
     }
 
     setLoading(true);
-    
+
     const selectedMedicineDetails = [
       ...medicines
         .filter(med => selectedMedicines[med._id])
@@ -700,10 +700,10 @@ function OrderModal({ pharmacy, onClose, onSubmit }) {
           type: 'custom'
         }))
     ];
-    
+
     const totalItems = selectedMedicineDetails.reduce((sum, item) => sum + item.quantity, 0);
     const deliveryFeeNum = parseInt(pharmacy.deliveryFee.replace('Rs. ', ''));
-    
+
     const orderData = {
       orderId: `ORD${Date.now()}`,
       userId: userId,
@@ -722,7 +722,7 @@ function OrderModal({ pharmacy, onClose, onSubmit }) {
       totalItems,
       totalAmount: `Rs. ${deliveryFeeNum}`
     };
-    
+
     try {
       const savedOrder = await createOrder(orderData);
       toast.success(`Order placed successfully to ${pharmacy.name}!`);
@@ -746,22 +746,22 @@ function OrderModal({ pharmacy, onClose, onSubmit }) {
   const totalSelectedCount = Object.keys(selectedMedicines).filter(key => selectedMedicines[key]).length;
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/50" onClick={onClose}>
-      <div className="bg-white rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-xl relative z-[10000]" onClick={(e) => e.stopPropagation()}>
-        <div className="sticky top-0 bg-white border-b border-gray-100 p-4 flex justify-between items-center">
-          <h2 className="text-xl font-bold text-gray-800">Order from {pharmacy.name}</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+    <div className="fixed inset-0 bg-navy/30 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={onClose}>
+      <div className="bg-white rounded-2xl border border-border max-w-lg w-full max-h-[90vh] overflow-y-auto relative" onClick={(e) => e.stopPropagation()}>
+        <div className="sticky top-0 bg-white border-b border-border p-4 flex justify-between items-center">
+          <h2 className="text-xl font-bold text-navy">Order from {pharmacy.name}</h2>
+          <button onClick={onClose} className="text-muted hover:text-navy">
             <Icons.Close />
           </button>
         </div>
-        
+
         <div className="p-4 space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Select Patient *</label>
+            <label className="block text-sm font-medium text-navy mb-1">Select Patient *</label>
             <select
               value={selectedPatient}
               onChange={(e) => setSelectedPatient(e.target.value)}
-              className="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500"
+              className="rounded-xl border border-border bg-faint px-4 py-3 text-sm focus:outline-none focus:border-mint w-full"
             >
               <option value="">Select a patient</option>
               {patients.map(p => (
@@ -772,31 +772,31 @@ function OrderModal({ pharmacy, onClose, onSubmit }) {
 
           {selectedPatient && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-navy mb-2">
                 Select Medicines *
-                {loadingMedicines && <span className="ml-2 text-xs text-gray-400">Loading...</span>}
+                {loadingMedicines && <span className="ml-2 text-xs text-muted">Loading...</span>}
               </label>
-              
+
               {loadingMedicines ? (
                 <div className="flex justify-center py-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500"></div>
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-mint"></div>
                 </div>
               ) : (
                 <>
                   {medicines.length > 0 && (
-                    <div className="space-y-2 max-h-48 overflow-y-auto border border-gray-200 rounded-lg p-2 mb-3">
-                      <p className="text-xs font-semibold text-gray-500 px-2 pt-1">Prescribed Medicines</p>
+                    <div className="space-y-2 max-h-48 overflow-y-auto border border-border rounded-xl p-2 mb-3">
+                      <p className="text-xs font-semibold text-muted px-2 pt-1">Prescribed Medicines</p>
                       {medicines.map(med => (
-                        <div key={med._id} className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg">
+                        <div key={med._id} className="flex items-center gap-3 p-2 hover:bg-faint rounded-xl">
                           <input
                             type="checkbox"
                             checked={selectedMedicines[med._id] || false}
                             onChange={() => handleMedicineToggle(med._id)}
-                            className="w-4 h-4 text-teal-500 rounded focus:ring-teal-500"
+                            className="w-4 h-4 text-mint rounded focus:ring-mint"
                           />
                           <div className="flex-1">
-                            <p className="font-medium text-gray-800">{med.name}</p>
-                            <p className="text-xs text-gray-500">
+                            <p className="font-medium text-navy">{med.name}</p>
+                            <p className="text-xs text-muted">
                               {med.strength}{med.unit} - Stock: {med.currentStock}
                             </p>
                           </div>
@@ -804,14 +804,14 @@ function OrderModal({ pharmacy, onClose, onSubmit }) {
                             <div className="flex items-center gap-2">
                               <button
                                 onClick={() => updateQuantity(med._id, -1)}
-                                className="p-1 text-gray-500 hover:text-teal-500"
+                                className="p-1 text-muted hover:text-mint"
                               >
                                 <Icons.Minus />
                               </button>
                               <span className="w-8 text-center font-medium">{medicineQuantities[med._id] || 1}</span>
                               <button
                                 onClick={() => updateQuantity(med._id, 1)}
-                                className="p-1 text-gray-500 hover:text-teal-500"
+                                className="p-1 text-muted hover:text-mint"
                               >
                                 <Icons.Plus />
                               </button>
@@ -823,40 +823,40 @@ function OrderModal({ pharmacy, onClose, onSubmit }) {
                   )}
 
                   {customMedicines.length > 0 && (
-                    <div className="space-y-2 max-h-32 overflow-y-auto border border-gray-200 rounded-lg p-2 mb-3">
-                      <p className="text-xs font-semibold text-gray-500 px-2 pt-1">Custom Medicines</p>
+                    <div className="space-y-2 max-h-32 overflow-y-auto border border-border rounded-xl p-2 mb-3">
+                      <p className="text-xs font-semibold text-muted px-2 pt-1">Custom Medicines</p>
                       {customMedicines.map(med => (
-                        <div key={med.id} className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg">
+                        <div key={med.id} className="flex items-center gap-3 p-2 hover:bg-faint rounded-xl">
                           <input
                             type="checkbox"
                             checked={selectedMedicines[med.id] || false}
                             onChange={() => handleMedicineToggle(med.id)}
-                            className="w-4 h-4 text-teal-500 rounded focus:ring-teal-500"
+                            className="w-4 h-4 text-mint rounded focus:ring-mint"
                           />
                           <div className="flex-1">
-                            <p className="font-medium text-gray-800">{med.name}</p>
-                            <p className="text-xs text-gray-500">Custom added</p>
+                            <p className="font-medium text-navy">{med.name}</p>
+                            <p className="text-xs text-muted">Custom added</p>
                           </div>
                           {selectedMedicines[med.id] && (
                             <>
                               <div className="flex items-center gap-2">
                                 <button
                                   onClick={() => updateQuantity(med.id, -1)}
-                                  className="p-1 text-gray-500 hover:text-teal-500"
+                                  className="p-1 text-muted hover:text-mint"
                                 >
                                   <Icons.Minus />
                                 </button>
                                 <span className="w-8 text-center font-medium">{medicineQuantities[med.id] || 1}</span>
                                 <button
                                   onClick={() => updateQuantity(med.id, 1)}
-                                  className="p-1 text-gray-500 hover:text-teal-500"
+                                  className="p-1 text-muted hover:text-mint"
                                 >
                                   <Icons.Plus />
                                 </button>
                               </div>
                               <button
                                 onClick={() => removeCustomMedicine(med.id)}
-                                className="p-1 text-red-500 hover:text-red-700"
+                                className="p-1 text-red hover:text-red"
                               >
                                 <Icons.Trash />
                               </button>
@@ -873,22 +873,22 @@ function OrderModal({ pharmacy, onClose, onSubmit }) {
                       value={customMedicineName}
                       onChange={(e) => setCustomMedicineName(e.target.value)}
                       placeholder="Add other medicine name..."
-                      className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+                      className="flex-1 rounded-xl border border-border bg-faint px-4 py-3 text-sm focus:outline-none focus:border-mint"
                     />
                     <button
                       onClick={addCustomMedicine}
-                      className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                      className="px-3 py-2 bg-faint text-navy rounded-xl hover:bg-border transition-colors"
                     >
                       <Icons.Plus />
                     </button>
                   </div>
 
                   {medicines.length === 0 && customMedicines.length === 0 && (
-                    <div className="text-center py-8 bg-gray-50 rounded-lg">
-                      <p className="text-gray-500">No medicines added</p>
+                    <div className="text-center py-8 bg-faint rounded-xl">
+                      <p className="text-muted">No medicines added</p>
                       <button
                         onClick={() => navigate('/add-medicine')}
-                        className="mt-2 text-sm text-teal-500 hover:underline"
+                        className="mt-2 text-sm text-mint hover:underline"
                       >
                         Add Medicine
                       </button>
@@ -900,55 +900,55 @@ function OrderModal({ pharmacy, onClose, onSubmit }) {
           )}
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Upload Prescription (Optional)</label>
+            <label className="block text-sm font-medium text-navy mb-1">Upload Prescription (Optional)</label>
             <input
               type="file"
               accept="image/*,application/pdf"
               onChange={(e) => setPrescription(e.target.files?.[0])}
-              className="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500 text-sm"
+              className="rounded-xl border border-border bg-faint px-4 py-3 text-sm focus:outline-none focus:border-mint w-full"
             />
             {prescription && (
-              <p className="text-xs text-green-600 mt-1">✓ {prescription.name} selected</p>
+              <p className="text-xs text-mint mt-1">✓ {prescription.name} selected</p>
             )}
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Additional Notes</label>
+            <label className="block text-sm font-medium text-navy mb-1">Additional Notes</label>
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Any special instructions for the pharmacy..."
               rows={3}
-              className="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500"
+              className="rounded-xl border border-border bg-faint px-4 py-3 text-sm focus:outline-none focus:border-mint w-full"
             />
           </div>
 
-          <div className="bg-gray-50 rounded-lg p-3">
-            <p className="text-sm font-medium text-gray-700 mb-2">Order Summary</p>
+          <div className="bg-faint rounded-xl p-3">
+            <p className="text-sm font-medium text-navy mb-2">Order Summary</p>
             <div className="space-y-1 text-sm">
               <div className="flex justify-between">
-                <span className="text-gray-600">Items:</span>
+                <span className="text-muted">Items:</span>
                 <span className="font-medium">{totalSelectedCount} items</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">Delivery Fee:</span>
+                <span className="text-muted">Delivery Fee:</span>
                 <span className="font-medium">{pharmacy.deliveryFee}</span>
               </div>
-              <div className="flex justify-between pt-2 border-t">
+              <div className="flex justify-between pt-2 border-t border-border">
                 <span className="font-semibold">Total:</span>
-                <span className="font-semibold text-teal-600">{calculateTotal()}</span>
+                <span className="font-semibold text-mint">{calculateTotal()}</span>
               </div>
             </div>
           </div>
 
           <div className="flex gap-3 pt-2">
-            <button onClick={onClose} className="flex-1 border border-gray-200 rounded-lg py-2.5 text-gray-700 font-medium hover:bg-gray-50">
+            <button onClick={onClose} className="flex-1 border border-border bg-white text-navy rounded-full px-5 py-2.5 text-sm font-semibold hover:bg-faint">
               Cancel
             </button>
-            <button 
-              onClick={handleSubmit} 
-              disabled={loading || !selectedPatient || totalSelectedCount === 0} 
-              className="flex-1 bg-teal-500 text-white rounded-lg py-2.5 font-medium hover:bg-teal-600 disabled:opacity-50 disabled:cursor-not-allowed"
+            <button
+              onClick={handleSubmit}
+              disabled={loading || !selectedPatient || totalSelectedCount === 0}
+              className="flex-1 bg-navy text-white rounded-full px-5 py-2.5 text-sm font-semibold hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? 'Placing Order...' : 'Place Order'}
             </button>
@@ -967,27 +967,27 @@ function OfferCard({ offer, patientName, onAccept, onDismiss }) {
     : null;
 
   return (
-    <div className={`bg-white rounded-2xl border shadow-sm overflow-hidden transition-all ${isExpired ? 'opacity-60 border-gray-100' : 'border-teal-100 hover:shadow-md'}`}>
+    <div className={`bg-white rounded-2xl border border-border overflow-hidden transition-all ${isExpired ? 'opacity-60' : 'hover:border-mint'}`}>
       {/* Header strip */}
       <div className="flex items-center justify-between px-4 pt-4 pb-3">
         <div className="flex items-center gap-2 min-w-0">
           {/* Pharmacy icon */}
-          <div className="shrink-0 w-9 h-9 rounded-xl bg-teal-50 flex items-center justify-center">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0d9488" strokeWidth="2">
+          <div className="shrink-0 w-9 h-9 rounded-xl bg-mint-light flex items-center justify-center">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00A878" strokeWidth="2">
               <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
               <polyline points="9 22 9 12 15 12 15 22"/>
             </svg>
           </div>
           <div className="min-w-0">
-            <p className="text-sm font-bold text-gray-800 truncate">{offer.pharmacyName || 'Partner Pharmacy'}</p>
+            <p className="text-sm font-bold text-navy truncate">{offer.pharmacyName || 'Partner Pharmacy'}</p>
             {offer.pharmacyAddress && (
-              <p className="text-xs text-gray-400 truncate">{offer.pharmacyAddress}</p>
+              <p className="text-xs text-muted truncate">{offer.pharmacyAddress}</p>
             )}
           </div>
         </div>
         <button
           onClick={() => onDismiss(offer._id || offer.id)}
-          className="shrink-0 ml-2 w-7 h-7 flex items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors text-lg leading-none"
+          className="shrink-0 ml-2 w-7 h-7 flex items-center justify-center rounded-full text-muted hover:bg-faint hover:text-navy transition-colors text-lg leading-none"
           title="Dismiss offer"
         >
           ×
@@ -999,16 +999,16 @@ function OfferCard({ offer, patientName, onAccept, onDismiss }) {
         {/* Discount badge + medicine */}
         <div className="flex items-start gap-3">
           {offer.discountPercent > 0 && (
-            <div className="shrink-0 bg-teal-500 text-white text-xs font-bold px-2.5 py-1.5 rounded-xl leading-tight text-center">
+            <div className="shrink-0 bg-mint text-white text-xs font-bold px-2.5 py-1.5 rounded-xl leading-tight text-center">
               <span className="text-lg font-extrabold leading-none">{offer.discountPercent}%</span>
               <br />OFF
             </div>
           )}
           <div className="min-w-0">
             {offer.medicineName && (
-              <p className="text-sm font-semibold text-gray-800">{offer.medicineName}</p>
+              <p className="text-sm font-semibold text-navy">{offer.medicineName}</p>
             )}
-            <p className="text-sm text-gray-500 mt-0.5 leading-snug">
+            <p className="text-sm text-muted mt-0.5 leading-snug">
               {offer.offerMessage || offer.message}
             </p>
           </div>
@@ -1016,20 +1016,20 @@ function OfferCard({ offer, patientName, onAccept, onDismiss }) {
 
         {/* Meta row: patient + expiry */}
         <div className="flex items-center justify-between text-xs">
-          <div className="flex items-center gap-1.5 text-gray-500">
+          <div className="flex items-center gap-1.5 text-muted">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
               <circle cx="12" cy="7" r="4"/>
             </svg>
-            <span>For <span className="font-medium text-gray-700">{patientName}</span></span>
+            <span>For <span className="font-medium text-navy">{patientName}</span></span>
           </div>
           {daysLeft !== null && (
             <span className={`font-semibold px-2 py-0.5 rounded-full ${
               isExpired
-                ? 'bg-red-50 text-red-500'
+                ? 'bg-red-light text-red'
                 : daysLeft <= 2
-                  ? 'bg-orange-50 text-orange-500'
-                  : 'bg-gray-100 text-gray-500'
+                  ? 'bg-amber-light text-amber'
+                  : 'bg-faint text-muted'
             }`}>
               {isExpired ? 'Expired' : `${daysLeft}d left`}
             </span>
@@ -1040,14 +1040,14 @@ function OfferCard({ offer, patientName, onAccept, onDismiss }) {
         <div className="flex gap-2 pt-1">
           <button
             onClick={() => onDismiss(offer._id || offer.id)}
-            className="flex-1 border border-gray-200 text-gray-600 text-sm font-medium py-2.5 rounded-xl hover:bg-gray-50 transition-colors"
+            className="flex-1 border border-border bg-white text-navy text-sm font-semibold py-2.5 rounded-full hover:bg-faint transition-colors"
           >
             Dismiss
           </button>
           <button
             onClick={() => onAccept(offer._id || offer.id)}
             disabled={isExpired}
-            className="flex-[2] bg-teal-600 text-white text-sm font-semibold py-2.5 rounded-xl hover:bg-teal-700 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex-[2] bg-navy text-white text-sm font-semibold py-2.5 rounded-full hover:opacity-90 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isExpired ? 'Expired' : 'Accept & Order'}
           </button>
@@ -1096,7 +1096,7 @@ function SearchBox({ onLocationSelect }) {
 
   const searchAddress = async (searchQuery) => {
     if (!searchQuery.trim()) return [];
-    
+
     setLoading(true);
     try {
       const response = await fetch(
@@ -1141,28 +1141,28 @@ function SearchBox({ onLocationSelect }) {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search for a location..."
-          className="w-full pl-10 pr-20 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+          className="rounded-xl border border-border bg-faint px-4 py-3 text-sm focus:outline-none focus:border-mint w-full pl-10 pr-20"
         />
-        <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+        <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <circle cx="11" cy="11" r="7"/>
             <path d="M16 16L21 21"/>
           </svg>
         </div>
-        <button type="submit" className="absolute right-2 top-1/2 transform -translate-y-1/2 px-3 py-1 bg-teal-500 text-white rounded-lg text-sm">
+        <button type="submit" className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-mint text-white rounded-full px-3 py-1 text-sm font-semibold hover:opacity-90">
           {loading ? '...' : 'Go'}
         </button>
       </form>
-      
+
       {showResults && results.length > 0 && (
-        <div className="absolute z-30 w-full mt-1 bg-white rounded-lg shadow-lg border border-gray-200 max-h-60 overflow-y-auto">
+        <div className="absolute z-30 w-full mt-1 bg-white rounded-xl border border-border max-h-60 overflow-y-auto">
           {results.map((result) => (
             <button
               key={result.place_id}
               onClick={() => selectLocation(result)}
-              className="w-full text-left px-4 py-2 hover:bg-gray-50 border-b border-gray-100 last:border-none"
+              className="w-full text-left px-4 py-2 hover:bg-faint border-b border-border last:border-none"
             >
-              <p className="text-sm text-gray-800">{result.display_name}</p>
+              <p className="text-sm text-navy">{result.display_name}</p>
             </button>
           ))}
         </div>
@@ -1191,10 +1191,10 @@ export default function PharmacyPage() {
   const [offers, setOffers] = useState([]);
   const [loadingOffers, setLoadingOffers] = useState(false);
   const [offerPatients, setOfferPatients] = useState([]);
-  
+
   const { location: userLocation, loading: locationLoading } = useUserLocation();
   const [mapCenter, setMapCenter] = useState({ lat: 27.6866, lng: 85.3374 });
-  
+
   const currentUser = useAuthStore((s) => s.user);
   const userId = currentUser?._id || currentUser?.id;
 
@@ -1268,7 +1268,7 @@ export default function PharmacyPage() {
 
   useEffect(() => {
     if (searchTerm) {
-      const filtered = MOCK_PHARMACIES.filter(p => 
+      const filtered = MOCK_PHARMACIES.filter(p =>
         p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         p.address.toLowerCase().includes(searchTerm.toLowerCase())
       );
@@ -1328,24 +1328,24 @@ export default function PharmacyPage() {
   const filteredOrders = getFilteredOrders();
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
+    <div className="min-h-screen bg-bg pb-24">
       {/* Header */}
-      <div className="bg-white border-b border-gray-100 sticky top-0 z-40">
+      <div className="bg-white border-b border-border sticky top-0 z-40">
         <div className="flex items-center gap-3 px-4 h-16">
-          <button onClick={() => navigate(-1)} className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
+          <button onClick={() => navigate(-1)} className="p-2 text-navy hover:bg-faint rounded-xl transition-colors">
             <Icons.ArrowLeft />
           </button>
-          <h1 className="text-xl font-bold text-gray-800">Orders</h1>
+          <h1 className="text-xl font-bold text-navy">Orders</h1>
         </div>
-        
+
         {/* Main Tab Navigation */}
-        <div className="flex border-b border-gray-100 px-4">
+        <div className="flex border-b border-border px-4">
           <button
             onClick={() => setActiveView('orders')}
             className={`px-4 py-2.5 text-sm font-medium transition-colors ${
               activeView === 'orders'
-                ? 'text-teal-600 border-b-2 border-teal-600'
-                : 'text-gray-500 hover:text-gray-700'
+                ? 'text-mint border-b-2 border-mint'
+                : 'text-muted hover:text-navy'
             }`}
           >
             My Orders
@@ -1354,13 +1354,13 @@ export default function PharmacyPage() {
             onClick={() => setActiveView('offers')}
             className={`px-4 py-2.5 text-sm font-medium transition-colors flex items-center gap-1.5 ${
               activeView === 'offers'
-                ? 'text-teal-600 border-b-2 border-teal-600'
-                : 'text-gray-500 hover:text-gray-700'
+                ? 'text-mint border-b-2 border-mint'
+                : 'text-muted hover:text-navy'
             }`}
           >
             Offers
             {offers.length > 0 && (
-              <span className="min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full bg-teal-500 text-white text-[10px] font-bold leading-none">
+              <span className="min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full bg-mint text-white text-[10px] font-bold leading-none">
                 {offers.length}
               </span>
             )}
@@ -1369,8 +1369,8 @@ export default function PharmacyPage() {
             onClick={() => setActiveView('pharmacies')}
             className={`px-4 py-2.5 text-sm font-medium transition-colors ${
               activeView === 'pharmacies'
-                ? 'text-teal-600 border-b-2 border-teal-600'
-                : 'text-gray-500 hover:text-gray-700'
+                ? 'text-mint border-b-2 border-mint'
+                : 'text-muted hover:text-navy'
             }`}
           >
             Nearby Pharmacy
@@ -1389,15 +1389,15 @@ export default function PharmacyPage() {
               placeholder="Filter pharmacies by name..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+              className="rounded-xl border border-border bg-faint px-4 py-3 text-sm focus:outline-none focus:border-mint w-full"
             />
           </div>
 
-          <div className="mb-6 rounded-xl overflow-hidden shadow-sm border border-gray-200 relative" style={{ height: '400px', zIndex: 1 }}>
+          <div className="mb-6 rounded-2xl border border-border overflow-hidden relative" style={{ height: '400px', zIndex: 1 }}>
             {locationLoading ? (
-              <div className="w-full h-full flex items-center justify-center bg-gray-100">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500"></div>
-                <span className="ml-2 text-gray-500">Getting your location...</span>
+              <div className="w-full h-full flex items-center justify-center bg-faint">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-mint"></div>
+                <span className="ml-2 text-muted">Getting your location...</span>
               </div>
             ) : (
               <MapContainer
@@ -1425,11 +1425,11 @@ export default function PharmacyPage() {
                   >
                     <Popup>
                       <div className="p-2 min-w-[200px]">
-                        <h3 className="font-semibold text-gray-800">{pharmacy.name}</h3>
-                        <p className="text-xs text-gray-500 mt-1">{pharmacy.address}</p>
+                        <h3 className="font-semibold text-navy">{pharmacy.name}</h3>
+                        <p className="text-xs text-muted mt-1">{pharmacy.address}</p>
                         <div className="flex gap-2 mt-3">
-                          <button onClick={() => handleOrder(pharmacy)} className="flex-1 px-3 py-1.5 bg-teal-500 text-white rounded-lg text-xs">Order Now</button>
-                          <button onClick={() => window.open(`https://www.openstreetmap.org/directions?to=${pharmacy.lat},${pharmacy.lng}`)} className="flex-1 px-3 py-1.5 border rounded-lg text-xs">Directions</button>
+                          <button onClick={() => handleOrder(pharmacy)} className="flex-1 bg-mint text-white rounded-full px-3 py-1.5 text-xs font-semibold hover:opacity-90">Order Now</button>
+                          <button onClick={() => window.open(`https://www.openstreetmap.org/directions?to=${pharmacy.lat},${pharmacy.lng}`)} className="flex-1 border border-border bg-white text-navy rounded-full px-3 py-1.5 text-xs font-semibold hover:bg-faint">Directions</button>
                         </div>
                       </div>
                     </Popup>
@@ -1440,9 +1440,9 @@ export default function PharmacyPage() {
           </div>
 
           <div>
-            <h2 className="font-semibold text-gray-800 text-lg mb-4">
+            <h2 className="font-semibold text-navy text-lg mb-4">
               Pharmacies Near You
-              <span className="text-sm text-gray-500 ml-2">({filteredPharmacies.length} found)</span>
+              <span className="text-sm text-muted ml-2">({filteredPharmacies.length} found)</span>
             </h2>
             <div className="space-y-3">
               {filteredPharmacies.map((pharmacy) => (
@@ -1464,8 +1464,8 @@ export default function PharmacyPage() {
         <div className="max-w-lg mx-auto px-4 py-6">
           <div className="flex items-center justify-between mb-5">
             <div>
-              <h2 className="text-lg font-bold text-gray-800">Pharmacy Offers</h2>
-              <p className="text-sm text-gray-400 mt-0.5">Offers sent to you by linked pharmacists</p>
+              <h2 className="text-lg font-bold text-navy">Pharmacy Offers</h2>
+              <p className="text-sm text-muted mt-0.5">Offers sent to you by linked pharmacists</p>
             </div>
             {!loadingOffers && offers.length > 0 && (
               <button
@@ -1478,7 +1478,7 @@ export default function PharmacyPage() {
                     toast.error('Could not dismiss all offers');
                   }
                 }}
-                className="text-xs text-gray-400 hover:text-red-500 transition-colors font-medium"
+                className="text-xs text-muted hover:text-red transition-colors font-medium"
               >
                 Dismiss all
               </button>
@@ -1487,12 +1487,12 @@ export default function PharmacyPage() {
 
           {loadingOffers ? (
             <div className="flex justify-center py-16">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500" />
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-mint" />
             </div>
           ) : offers.length === 0 ? (
-            <div className="text-center py-16 bg-white rounded-2xl border border-gray-100">
-              <div className="w-16 h-16 bg-teal-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#0d9488" strokeWidth="1.5">
+            <div className="text-center py-16 bg-white rounded-2xl border border-border">
+              <div className="w-16 h-16 bg-mint-light rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#00A878" strokeWidth="1.5">
                   <path d="M20 12V22H4V12"/>
                   <path d="M22 7H2v5h20V7z"/>
                   <path d="M12 22V7"/>
@@ -1500,8 +1500,8 @@ export default function PharmacyPage() {
                   <path d="M12 7h4.5a2.5 2.5 0 000-5C13 2 12 7 12 7z"/>
                 </svg>
               </div>
-              <p className="text-gray-700 font-semibold mb-1">No offers yet</p>
-              <p className="text-gray-400 text-sm">Offers sent by your pharmacist will appear here.</p>
+              <p className="text-navy font-semibold mb-1">No offers yet</p>
+              <p className="text-muted text-sm">Offers sent by your pharmacist will appear here.</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -1523,33 +1523,33 @@ export default function PharmacyPage() {
       {activeView === 'orders' && (
         <div className="max-w-2xl mx-auto px-4 py-6">
           {/* Orders Sub-tabs */}
-          <div className="flex gap-2 mb-6 border-b border-gray-200">
+          <div className="flex gap-2 mb-6">
             <button
               onClick={() => setOrdersActiveTab('active')}
-              className={`px-4 py-2 text-sm font-medium transition-colors ${
-                ordersActiveTab === 'active' 
-                  ? 'text-teal-600 border-b-2 border-teal-600' 
-                  : 'text-gray-500 hover:text-gray-700'
+              className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors ${
+                ordersActiveTab === 'active'
+                  ? 'bg-mint text-white'
+                  : 'bg-faint text-muted hover:bg-border'
               }`}
             >
               Active Orders
             </button>
             <button
               onClick={() => setOrdersActiveTab('history')}
-              className={`px-4 py-2 text-sm font-medium transition-colors ${
-                ordersActiveTab === 'history' 
-                  ? 'text-teal-600 border-b-2 border-teal-600' 
-                  : 'text-gray-500 hover:text-gray-700'
+              className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors ${
+                ordersActiveTab === 'history'
+                  ? 'bg-mint text-white'
+                  : 'bg-faint text-muted hover:bg-border'
               }`}
             >
               Order History
             </button>
             <button
               onClick={() => setOrdersActiveTab('all')}
-              className={`px-4 py-2 text-sm font-medium transition-colors ${
-                ordersActiveTab === 'all' 
-                  ? 'text-teal-600 border-b-2 border-teal-600' 
-                  : 'text-gray-500 hover:text-gray-700'
+              className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors ${
+                ordersActiveTab === 'all'
+                  ? 'bg-mint text-white'
+                  : 'bg-faint text-muted hover:bg-border'
               }`}
             >
               All Orders
@@ -1558,22 +1558,22 @@ export default function PharmacyPage() {
 
           {loadingOrders ? (
             <div className="flex justify-center py-12">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500"></div>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-mint"></div>
             </div>
           ) : filteredOrders.length === 0 ? (
-            <div className="text-center py-12 bg-white rounded-xl">
-              <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <div className="text-center py-12 bg-white rounded-2xl border border-border">
+              <div className="w-20 h-20 bg-faint rounded-full flex items-center justify-center mx-auto mb-4">
                 <Icons.Package />
               </div>
-              <h3 className="text-gray-800 font-semibold mb-2">
+              <h3 className="text-navy font-semibold mb-2">
                 {ordersActiveTab === 'active' ? 'No active orders' : ordersActiveTab === 'history' ? 'No order history' : 'No orders yet'}
               </h3>
-              <p className="text-gray-500 text-sm mb-4">
+              <p className="text-muted text-sm mb-4">
                 {ordersActiveTab === 'active' ? 'Your active orders will appear here' : 'Your order history will appear here'}
               </p>
               <button
                 onClick={() => setActiveView('pharmacies')}
-                className="bg-teal-500 text-white px-6 py-2 rounded-lg text-sm font-medium hover:bg-teal-600"
+                className="bg-navy text-white rounded-full px-5 py-2.5 text-sm font-semibold hover:opacity-90"
               >
                 Browse Pharmacies
               </button>
@@ -1618,30 +1618,30 @@ export default function PharmacyPage() {
       )}
 
       {cancellingOrder && (
-        <div className="fixed inset-0 z-[10001] flex items-center justify-center p-4 bg-black/50" onClick={() => setCancellingOrder(null)}>
-          <div className="bg-white rounded-2xl max-w-md w-full p-6" onClick={(e) => e.stopPropagation()}>
-            <h3 className="text-xl font-bold text-gray-800 mb-4">Cancel Order</h3>
-            <p className="text-gray-600 mb-4">Are you sure you want to cancel order <strong>{cancellingOrder.orderId}</strong>?</p>
+        <div className="fixed inset-0 bg-navy/30 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setCancellingOrder(null)}>
+          <div className="bg-white rounded-2xl border border-border max-w-md w-full p-6" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-xl font-bold text-navy mb-4">Cancel Order</h3>
+            <p className="text-muted mb-4">Are you sure you want to cancel order <strong>{cancellingOrder.orderId}</strong>?</p>
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Reason for cancellation</label>
+              <label className="block text-sm font-medium text-navy mb-1">Reason for cancellation</label>
               <textarea
                 value={cancellingOrder.cancelReason || ''}
                 onChange={(e) => setCancellingOrder({ ...cancellingOrder, cancelReason: e.target.value })}
                 placeholder="Please tell us why you're cancelling..."
                 rows={3}
-                className="w-full border border-gray-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                className="rounded-xl border border-border bg-faint px-4 py-3 text-sm focus:outline-none focus:border-mint w-full"
               />
             </div>
             <div className="flex gap-3">
               <button
                 onClick={() => setCancellingOrder(null)}
-                className="flex-1 border border-gray-200 rounded-lg py-2.5 text-gray-700 font-medium hover:bg-gray-50"
+                className="flex-1 border border-border bg-white text-navy rounded-full px-5 py-2.5 text-sm font-semibold hover:bg-faint"
               >
                 No, Keep Order
               </button>
               <button
                 onClick={() => handleCancelOrder(cancellingOrder.orderId, cancellingOrder.cancelReason || 'User requested cancellation')}
-                className="flex-1 bg-red-500 text-white rounded-lg py-2.5 font-medium hover:bg-red-600"
+                className="flex-1 border border-red bg-white text-red rounded-full px-5 py-2.5 text-sm font-semibold hover:bg-red-light"
               >
                 Yes, Cancel Order
               </button>

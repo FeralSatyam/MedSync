@@ -291,7 +291,7 @@ export default function LoginPage() {
   if (verifyStep) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-bg px-[24px]">
-        <div className="w-full max-w-[400px] rounded-[20px] bg-card p-[40px] shadow-modal text-center">
+        <div className="w-full max-w-[400px] rounded-2xl bg-card p-[40px] border border-border text-center">
           <div className="mx-auto mb-[20px] flex h-[56px] w-[56px] items-center justify-center rounded-full bg-mint/10">
             <svg className="h-[28px] w-[28px] text-mint" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -319,7 +319,7 @@ export default function LoginPage() {
                   value={verifyOtp[index] || ''}
                   onChange={(e) => handleOtpChange(index, e.target.value)}
                   onKeyDown={(e) => handleKeyDown(index, e)}
-                  className="w-[52px] h-[60px] text-center text-[28px] font-bold bg-bg border-[1.5px] border-border rounded-btn text-navy outline-none focus:border-mint focus:ring-1 focus:ring-mint transition-all"
+                  className="w-[52px] h-[60px] text-center text-[28px] font-bold bg-bg border border-border rounded-xl text-navy outline-none focus:border-mint focus:outline-none transition-all"
                 />
               ))}
             </div>
@@ -327,7 +327,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={verifying}
-              className="w-full bg-navy text-white rounded-btn border-none py-[12px] text-[14px] font-medium cursor-pointer hover:bg-navy-mid active:scale-[0.98] transition-all disabled:opacity-60"
+              className="w-full bg-navy text-white rounded-full border-none py-3 px-6 text-sm font-medium cursor-pointer hover:opacity-90 transition-all disabled:opacity-60"
             >
               {verifying ? 'Verifying…' : 'Verify email'}
             </button>
@@ -339,7 +339,7 @@ export default function LoginPage() {
               type="button"
               disabled={resending}
               onClick={handleResend}
-              className="text-mint-mid font-semibold underline disabled:opacity-50"
+              className="text-mint font-semibold text-sm hover:underline disabled:opacity-50"
             >
               {resending ? 'Sending…' : 'Resend code'}
             </button>
@@ -350,7 +350,7 @@ export default function LoginPage() {
           <button
             type="button"
             onClick={() => { setVerifyStep(false); setVerifyOtp(['', '', '', '', '', '']); }}
-            className="mt-[14px] text-[12px] text-muted hover:underline"
+            className="mt-[14px] text-xs text-muted hover:underline"
           >
             ← Back
           </button>
@@ -390,7 +390,7 @@ export default function LoginPage() {
 
         <div className="mt-[36px] flex flex-wrap gap-[8px]">
           {['QR-based', 'Stock tracking', 'Auto-alerts', 'Family accounts'].map((t) => (
-            <span key={t} className="px-[13px] py-[5px] rounded-full border border-[rgba(255,255,255,0.12)] bg-[rgba(255,255,255,0.08)] text-[11px] font-medium text-[rgba(255,255,255,0.65)]">
+            <span key={t} className="px-[13px] py-[5px] rounded-full border border-white/10 bg-white/5 text-[11px] font-medium text-[rgba(255,255,255,0.65)]">
               {t}
             </span>
           ))}
@@ -416,23 +416,23 @@ export default function LoginPage() {
           <h2 className="font-display text-[28px] font-bold tracking-[-0.4px] text-navy mb-[6px]">
             {mode === 'login' ? 'Sign In' : 'Register'}
           </h2>
-          <p className="text-[14px] font-body text-muted mb-[32px]">
+          <p className="text-sm font-body text-muted mb-[32px]">
             {mode === 'login' ? 'Welcome back! Enter your details.' : 'Create an account to start tracking medicines.'}
           </p>
 
           {/* Tab switcher */}
-          <div className="flex gap-[4px] bg-bg rounded-[14px] p-[5px] mb-[26px]">
-            <button 
-              type="button" 
-              onClick={() => { setMode('login'); setFormError(''); }} 
-              className={`flex-1 px-[8px] py-[10px] rounded-[10px] font-body text-[13px] font-semibold cursor-pointer transition-all ${mode === 'login' ? 'bg-card text-navy shadow-sm' : 'bg-transparent text-muted hover:text-navy'}`}
+          <div className="flex gap-[4px] bg-faint rounded-2xl p-[5px] mb-[26px]">
+            <button
+              type="button"
+              onClick={() => { setMode('login'); setFormError(''); }}
+              className={`flex-1 px-[8px] py-[10px] rounded-xl font-body text-[13px] font-semibold cursor-pointer transition-all ${mode === 'login' ? 'bg-white text-navy shadow-none' : 'bg-transparent text-muted hover:text-navy'}`}
             >
               Sign In
             </button>
-            <button 
-              type="button" 
-              onClick={() => { setMode('register'); setFormError(''); }} 
-              className={`flex-1 px-[8px] py-[10px] rounded-[10px] font-body text-[13px] font-semibold cursor-pointer transition-all ${mode === 'register' ? 'bg-card text-navy shadow-sm' : 'bg-transparent text-muted hover:text-navy'}`}
+            <button
+              type="button"
+              onClick={() => { setMode('register'); setFormError(''); }}
+              className={`flex-1 px-[8px] py-[10px] rounded-xl font-body text-[13px] font-semibold cursor-pointer transition-all ${mode === 'register' ? 'bg-white text-navy shadow-none' : 'bg-transparent text-muted hover:text-navy'}`}
             >
               Register
             </button>
@@ -443,49 +443,49 @@ export default function LoginPage() {
             <div>
               <div className="space-y-[18px]">
                 <div>
-                  <label className="mb-[7px] block text-[12px] font-semibold tracking-[0.02em] text-navy">Email or Mobile Number</label>
-                  <input 
-                    type="text" 
+                  <label className="mb-[7px] block text-xs font-semibold tracking-widest text-muted uppercase">Email or Mobile Number</label>
+                  <input
+                    type="text"
                     placeholder="e.g. email@gmail.com or 98XXXXXXXX"
                     {...loginForm.register('email')}
-                    className="w-full rounded-btn border-[1.5px] border-border bg-card px-[15px] py-[11px] text-[14px] text-navy outline-none transition-colors focus:border-mint" 
+                    className="w-full rounded-xl border border-border bg-white px-4 py-3 text-sm text-navy outline-none transition-colors focus:border-mint focus:outline-none"
                   />
                   {loginForm.formState.errors.email && (
-                    <div className="mt-[7px] text-[12px] text-red font-semibold">{loginForm.formState.errors.email.message}</div>
+                    <div className="mt-[7px] text-xs font-medium text-red">{loginForm.formState.errors.email.message}</div>
                   )}
                 </div>
                 <div>
-                  <label className="mb-[7px] block text-[12px] font-semibold tracking-[0.02em] text-navy">Password</label>
-                  <input 
-                    type="password" 
+                  <label className="mb-[7px] block text-xs font-semibold tracking-widest text-muted uppercase">Password</label>
+                  <input
+                    type="password"
                     {...loginForm.register('password')}
-                    className="w-full rounded-btn border-[1.5px] border-border bg-card px-[15px] py-[11px] text-[14px] text-navy outline-none transition-colors focus:border-mint" 
+                    className="w-full rounded-xl border border-border bg-white px-4 py-3 text-sm text-navy outline-none transition-colors focus:border-mint focus:outline-none"
                   />
                   {loginForm.formState.errors.password && (
-                    <div className="mt-[7px] text-[12px] text-red font-semibold">{loginForm.formState.errors.password.message}</div>
+                    <div className="mt-[7px] text-xs font-medium text-red">{loginForm.formState.errors.password.message}</div>
                   )}
                 </div>
                 {formError && (
-                  <div className="text-[12px] text-red font-semibold bg-red-50 p-3 rounded-lg border border-red-200">
+                  <div className="text-xs font-medium text-red bg-red-50 p-3 rounded-lg border border-red-200">
                     {formError}
                   </div>
                 )}
-                <button 
+                <button
                   type="button"
                   onClick={handleLoginSubmit}
                   disabled={submitting}
-                  className="w-full bg-navy text-white rounded-btn border-none py-[12px] text-[14px] font-medium cursor-pointer hover:bg-navy-mid active:scale-[0.98] transition-all disabled:opacity-60"
+                  className="w-full bg-navy text-white rounded-full border-none py-3 px-6 text-sm font-medium cursor-pointer hover:opacity-90 transition-all disabled:opacity-60"
                 >
                   {submitting ? 'Signing in...' : 'Sign In'}
                 </button>
-                <button 
-                  type="button" 
-                  className="w-full text-[12px] text-mint-mid underline"
+                <button
+                  type="button"
+                  className="w-full text-sm text-mint font-semibold hover:underline"
                   onClick={() => { setForgotOpen(true); setOtpSent(false); setForgotEmail(loginForm.getValues('email') || ''); setResetOtp(['', '', '', '', '', '']); setNewPassword(''); }}
                 >
                   Forgot password?
                 </button>
-                <div className="mt-[10px] text-[12px] text-muted text-center bg-[#f0f2f8] py-[10px] px-[14px] rounded-[10px]">
+                <div className="mt-[10px] text-xs text-muted text-center bg-faint py-[10px] px-[14px] rounded-[10px]">
                   {demoHint}
                 </div>
               </div>
@@ -496,46 +496,46 @@ export default function LoginPage() {
               <div className="space-y-[18px]">
                 <div className="grid grid-cols-2 gap-[12px]">
                   <div>
-                    <label className="mb-[7px] block text-[12px] font-semibold tracking-[0.02em] text-navy">First name</label>
-                    <input 
-                      type="text" 
+                    <label className="mb-[7px] block text-xs font-semibold tracking-widest text-muted uppercase">First name</label>
+                    <input
+                      type="text"
                       {...registerForm.register('firstName')}
-                      className="w-full rounded-btn border-[1.5px] border-border bg-card px-[15px] py-[11px] text-[14px] text-navy outline-none transition-colors focus:border-mint" 
+                      className="w-full rounded-xl border border-border bg-white px-4 py-3 text-sm text-navy outline-none transition-colors focus:border-mint focus:outline-none"
                     />
                     {registerForm.formState.errors.firstName && (
-                      <div className="mt-[7px] text-[12px] text-red font-semibold">{registerForm.formState.errors.firstName.message}</div>
+                      <div className="mt-[7px] text-xs font-medium text-red">{registerForm.formState.errors.firstName.message}</div>
                     )}
                   </div>
                   <div>
-                    <label className="mb-[7px] block text-[12px] font-semibold tracking-[0.02em] text-navy">Last name</label>
-                    <input 
-                      type="text" 
+                    <label className="mb-[7px] block text-xs font-semibold tracking-widest text-muted uppercase">Last name</label>
+                    <input
+                      type="text"
                       {...registerForm.register('lastName')}
-                      className="w-full rounded-btn border-[1.5px] border-border bg-card px-[15px] py-[11px] text-[14px] text-navy outline-none transition-colors focus:border-mint" 
+                      className="w-full rounded-xl border border-border bg-white px-4 py-3 text-sm text-navy outline-none transition-colors focus:border-mint focus:outline-none"
                     />
                     {registerForm.formState.errors.lastName && (
-                      <div className="mt-[7px] text-[12px] text-red font-semibold">{registerForm.formState.errors.lastName.message}</div>
+                      <div className="mt-[7px] text-xs font-medium text-red">{registerForm.formState.errors.lastName.message}</div>
                     )}
                   </div>
                 </div>
                 <div>
-                  <label className="mb-[7px] block text-[12px] font-semibold tracking-[0.02em] text-navy">Email</label>
-                  <input 
-                    type="email" 
+                  <label className="mb-[7px] block text-xs font-semibold tracking-widest text-muted uppercase">Email</label>
+                  <input
+                    type="email"
                     {...registerForm.register('email')}
-                    className="w-full rounded-btn border-[1.5px] border-border bg-card px-[15px] py-[11px] text-[14px] text-navy outline-none transition-colors focus:border-mint" 
+                    className="w-full rounded-xl border border-border bg-white px-4 py-3 text-sm text-navy outline-none transition-colors focus:border-mint focus:outline-none"
                   />
                   {registerForm.formState.errors.email && (
-                    <div className="mt-[7px] text-[12px] text-red font-semibold">{registerForm.formState.errors.email.message}</div>
+                    <div className="mt-[7px] text-xs font-medium text-red">{registerForm.formState.errors.email.message}</div>
                   )}
                 </div>
                 <div>
-                  <label className="mb-[7px] block text-[12px] font-semibold tracking-[0.02em] text-navy">Contact Number</label>
-                  <div className="flex items-center rounded-btn border-[1.5px] border-border bg-card overflow-hidden focus-within:border-mint transition-colors">
-                    <span className="inline-flex items-center px-3 py-[11px] bg-gray-50 border-r border-border text-gray-500 text-[14px] font-semibold select-none">
+                  <label className="mb-[7px] block text-xs font-semibold tracking-widest text-muted uppercase">Contact Number</label>
+                  <div className="flex items-center rounded-xl border border-border bg-white overflow-hidden focus-within:border-mint transition-colors">
+                    <span className="inline-flex items-center px-3 py-3 bg-gray-50 border-r border-border text-gray-500 text-sm font-semibold select-none">
                       +977
                     </span>
-                    <input 
+                    <input
                       type="text"
                       placeholder="98XXXXXXXX"
                       maxLength={10}
@@ -544,34 +544,34 @@ export default function LoginPage() {
                         const val = e.target.value.replace(/\D/g, '');
                         registerForm.setValue('contactNumber', val);
                       }}
-                      className="flex-1 bg-transparent px-[15px] py-[11px] text-[14px] text-navy outline-none" 
+                      className="flex-1 bg-transparent px-4 py-3 text-sm text-navy outline-none"
                     />
                   </div>
                   {registerForm.formState.errors.contactNumber && (
-                    <div className="mt-[7px] text-[12px] text-red font-semibold">{registerForm.formState.errors.contactNumber.message}</div>
+                    <div className="mt-[7px] text-xs font-medium text-red">{registerForm.formState.errors.contactNumber.message}</div>
                   )}
                 </div>
                 <div>
-                  <label className="mb-[7px] block text-[12px] font-semibold tracking-[0.02em] text-navy">Password</label>
-                  <input 
-                    type="password" 
+                  <label className="mb-[7px] block text-xs font-semibold tracking-widest text-muted uppercase">Password</label>
+                  <input
+                    type="password"
                     {...registerForm.register('password')}
-                    className="w-full rounded-btn border-[1.5px] border-border bg-card px-[15px] py-[11px] text-[14px] text-navy outline-none transition-colors focus:border-mint" 
+                    className="w-full rounded-xl border border-border bg-white px-4 py-3 text-sm text-navy outline-none transition-colors focus:border-mint focus:outline-none"
                   />
                   {registerForm.formState.errors.password && (
-                    <div className="mt-[7px] text-[12px] text-red font-semibold">{registerForm.formState.errors.password.message}</div>
+                    <div className="mt-[7px] text-xs font-medium text-red">{registerForm.formState.errors.password.message}</div>
                   )}
                 </div>
                 {formError && (
-                  <div className="text-[12px] text-red font-semibold bg-red-50 p-3 rounded-lg border border-red-200">
+                  <div className="text-xs font-medium text-red bg-red-50 p-3 rounded-lg border border-red-200">
                     {formError}
                   </div>
                 )}
-                <button 
+                <button
                   type="button"
                   onClick={handleRegisterSubmit}
                   disabled={submitting}
-                  className="w-full bg-navy text-white rounded-btn border-none py-[12px] text-[14px] font-medium cursor-pointer hover:bg-navy-mid active:scale-[0.98] transition-all disabled:opacity-60"
+                  className="w-full bg-navy text-white rounded-full border-none py-3 px-6 text-sm font-medium cursor-pointer hover:opacity-90 transition-all disabled:opacity-60"
                 >
                   {submitting ? 'Creating account...' : 'Register'}
                 </button>
@@ -586,21 +586,21 @@ export default function LoginPage() {
         <div className="fixed inset-0 z-[1000] flex items-center justify-center p-[20px] bg-[rgba(15,31,61,0.45)] backdrop-blur"
           onMouseDown={(e) => { if (e.target === e.currentTarget) setForgotOpen(false); }}
           role="dialog" aria-modal="true">
-          <div className="relative w-full max-w-[420px] rounded-[16px] bg-card p-[26px] shadow-modal">
+          <div className="relative w-full max-w-[420px] rounded-2xl bg-card p-[26px] border border-border shadow-modal">
             <div className="font-display text-[18px] font-bold text-navy mb-[4px]">Forgot Password</div>
             <div className="text-[13px] text-muted mb-[18px]">Get OTP on your email and reset password.</div>
 
-            <label className="mb-[7px] block text-[12px] font-semibold tracking-[0.02em] text-navy">Email</label>
-            <input 
-              type="email" 
-              value={forgotEmail} 
+            <label className="mb-[7px] block text-xs font-semibold tracking-widest text-muted uppercase">Email</label>
+            <input
+              type="email"
+              value={forgotEmail}
               onChange={(e) => setForgotEmail(e.target.value)}
-              className="w-full rounded-btn border-[1.5px] border-border bg-card px-[15px] py-[11px] text-[14px] text-navy outline-none transition-colors focus:border-mint" 
+              className="w-full rounded-xl border border-border bg-white px-4 py-3 text-sm text-navy outline-none transition-colors focus:border-mint focus:outline-none"
             />
 
             {otpSent && (
               <>
-                <label className="mt-[12px] mb-[7px] block text-[12px] font-semibold tracking-[0.02em] text-navy">Enter OTP</label>
+                <label className="mt-[12px] mb-[7px] block text-xs font-semibold tracking-widest text-muted uppercase">Enter OTP</label>
 
                 <div className="flex justify-center gap-[8px] mb-[16px]" onPaste={handleResetPaste}>
                   {[...Array(6)].map((_, index) => (
@@ -634,37 +634,37 @@ export default function LoginPage() {
                           }
                         }
                       }}
-                      className="w-[45px] h-[50px] text-center text-[24px] font-bold bg-bg border-[1.5px] border-border rounded-btn text-navy outline-none focus:border-mint focus:ring-1 focus:ring-mint transition-all"
+                      className="w-[45px] h-[50px] text-center text-[24px] font-bold bg-bg border border-border rounded-xl text-navy outline-none focus:border-mint focus:outline-none transition-all"
                     />
                   ))}
                 </div>
 
-                <label className="mt-[12px] mb-[7px] block text-[12px] font-semibold tracking-[0.02em] text-navy">New Password</label>
-                <input 
-                  type="password" 
-                  value={newPassword} 
+                <label className="mt-[12px] mb-[7px] block text-xs font-semibold tracking-widest text-muted uppercase">New Password</label>
+                <input
+                  type="password"
+                  value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  className="w-full rounded-btn border-[1.5px] border-border bg-card px-[15px] py-[11px] text-[14px] text-navy outline-none transition-colors focus:border-mint" 
+                  className="w-full rounded-xl border border-border bg-white px-4 py-3 text-sm text-navy outline-none transition-colors focus:border-mint focus:outline-none"
                 />
               </>
             )}
 
             <div className="mt-[16px] flex gap-[8px]">
-              <button 
-                type="button" 
+              <button
+                type="button"
                 onClick={() => {
                   setForgotOpen(false);
                   setResetOtp(['', '', '', '', '', '']);
                   setNewPassword('');
                 }}
-                className="flex-1 rounded-btn border-[1.5px] border-border bg-card py-[9px] text-[13px] font-body font-semibold text-navy cursor-pointer"
+                className="flex-1 rounded-full border border-border bg-white py-3 px-6 text-[13px] font-body font-semibold text-navy cursor-pointer hover:opacity-90"
               >
                 Cancel
               </button>
               {!otpSent ? (
-                <button 
+                <button
                   type="button"
-                  className="flex-1 rounded-btn bg-navy text-white py-[10px] text-[13px] font-semibold"
+                  className="flex-1 rounded-full bg-navy text-white py-3 px-6 text-[13px] font-semibold hover:opacity-90"
                   onClick={async () => {
                     if (!isValidEmailStr(forgotEmail)) {
                       toast.error('Invalid email format. Please check and try again.');
@@ -683,9 +683,9 @@ export default function LoginPage() {
                   Send OTP
                 </button>
               ) : (
-                <button 
+                <button
                   type="button"
-                  className="flex-1 rounded-btn bg-mint text-white py-[10px] text-[13px] font-semibold"
+                  className="flex-1 rounded-full bg-mint text-white py-3 px-6 text-[13px] font-semibold hover:opacity-90"
                   onClick={async () => {
                     const fullOtp = resetOtp.join('');
                     if (!fullOtp || fullOtp.length !== 6) {

@@ -64,7 +64,7 @@ export default function MobileBottomNav({ showQR = false, onQRPress }) {
   const activeTab = getActiveTab(location.pathname);
 
   return (
-    <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-2 pt-4 pb-3 shadow-lg z-40">
+    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-border z-40 lg:hidden px-2 pt-3 pb-4">
       <div className="flex justify-around items-center relative">
         {showQR ? (
           <>
@@ -75,7 +75,7 @@ export default function MobileBottomNav({ showQR = false, onQRPress }) {
                 <button
                   key={tab.id}
                   onClick={() => navigate(tab.path)}
-                  className={`flex flex-col items-center gap-1 py-2 px-3 rounded-xl transition-all ${isActive ? 'text-teal-500' : 'text-gray-500 hover:text-gray-700'}`}
+                  className={`flex flex-col items-center gap-1 py-2 px-3 rounded-xl transition-colors ${isActive ? 'text-mint' : 'text-[#9CA3AF]'}`}
                 >
                   <Icon active={isActive} />
                   <span className="text-xs font-medium">{tab.label}</span>
@@ -87,7 +87,7 @@ export default function MobileBottomNav({ showQR = false, onQRPress }) {
             <div className="w-14 h-14 flex-shrink-0" />
             <button
               onClick={onQRPress}
-              className="absolute -top-6 left-1/2 transform -translate-x-1/2 w-14 h-14 rounded-full bg-teal-500 shadow-lg flex items-center justify-center hover:bg-teal-600 transition-all duration-200 active:scale-95 border-4 border-white z-50"
+              className="w-14 h-14 rounded-full bg-mint shadow-qr border-4 border-bg flex items-center justify-center hover:opacity-90 absolute -top-7 left-1/2 -translate-x-1/2 z-50"
             >
               <NavIcons.QRWhite />
             </button>
@@ -99,7 +99,7 @@ export default function MobileBottomNav({ showQR = false, onQRPress }) {
                 <button
                   key={tab.id}
                   onClick={() => navigate(tab.path)}
-                  className={`flex flex-col items-center gap-1 py-2 px-3 rounded-xl transition-all ${isActive ? 'text-teal-500' : 'text-gray-500 hover:text-gray-700'}`}
+                  className={`flex flex-col items-center gap-1 py-2 px-3 rounded-xl transition-colors ${isActive ? 'text-mint' : 'text-[#9CA3AF]'}`}
                 >
                   <Icon active={isActive} />
                   <span className="text-xs font-medium">{tab.label}</span>
@@ -115,7 +115,7 @@ export default function MobileBottomNav({ showQR = false, onQRPress }) {
               <button
                 key={tab.id}
                 onClick={() => navigate(tab.path)}
-                className={`flex flex-col items-center gap-1 py-2 px-3 rounded-xl transition-all ${isActive ? 'text-teal-500' : 'text-gray-500 hover:text-gray-700'}`}
+                className={`flex flex-col items-center gap-1 py-2 px-3 rounded-xl transition-colors ${isActive ? 'text-mint' : 'text-[#9CA3AF]'}`}
               >
                 <Icon active={isActive} />
                 <span className="text-xs font-medium">{tab.label}</span>

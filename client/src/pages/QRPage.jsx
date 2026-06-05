@@ -29,10 +29,10 @@ export default function QRPage() {
       setOtp(res.otp);
       const expiryTime = new Date(res.expiresAt).getTime();
       const calculateSeconds = () => Math.max(0, Math.floor((expiryTime - Date.now()) / 1000));
-      
+
       const initialSeconds = calculateSeconds();
       setSecondsLeft(initialSeconds);
-      
+
       timerRef.current = setInterval(() => {
         const left = calculateSeconds();
         setSecondsLeft(left);
@@ -100,8 +100,8 @@ export default function QRPage() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-bg px-[24px] py-[36px]">
       <div
-        className="w-full text-center rounded-[20px] bg-card border border-border p-[24px]"
-        style={{ maxWidth: 360, boxShadow: '0 8px 40px rgba(15,31,61,0.14)' }}
+        className="w-full text-center rounded-2xl bg-white border border-border p-[24px]"
+        style={{ maxWidth: 360 }}
       >
         <div className="font-display text-[22px] font-bold tracking-[-0.4px] text-navy mb-[3px]">{patient.name}</div>
         <div className="font-body text-[13px] font-medium text-muted mb-[20px]">
@@ -109,7 +109,7 @@ export default function QRPage() {
         </div>
 
         <div className="flex justify-center mb-[20px]">
-          <div style={{ borderRadius: 10, overflow: 'hidden' }} className="p-2 border border-border bg-white shadow-sm">
+          <div style={{ borderRadius: 10, overflow: 'hidden' }} className="p-2 border border-border bg-white">
             <QRCodeCanvas
               value={qrValue}
               size={180}
@@ -127,28 +127,28 @@ export default function QRPage() {
           </div>
         ) : secondsLeft > 0 ? (
           <div className="mb-[20px]">
-            <div className="text-xs font-bold text-muted uppercase tracking-wider mb-2">Temporary OTP</div>
+            <div className="text-xs font-semibold tracking-widest text-muted uppercase mb-2">Temporary OTP</div>
             <div className="flex gap-2 justify-center mb-3">
               {otp.split('').map((char, index) => (
                 <div
                   key={index}
-                  className="w-9 h-12 border-2 border-mint/20 rounded-xl flex items-center justify-center text-xl font-bold text-navy bg-faint shadow-sm animate-fadeIn"
+                  className="w-9 h-12 border-2 border-mint rounded-xl flex items-center justify-center text-xl font-bold text-navy bg-faint animate-fadeIn"
                 >
                   {char}
                 </div>
               ))}
             </div>
             <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-mint-light text-navy rounded-full text-xs font-medium">
-              <span className="font-bold font-mono text-teal-600">{formatSecondsLeft(secondsLeft)}</span>
+              <span className="font-bold font-mono text-mint">{formatSecondsLeft(secondsLeft)}</span>
               <span className="text-muted">remaining</span>
             </div>
           </div>
         ) : (
-          <div className="mb-[20px] p-3 bg-red-50 rounded-xl border border-red-100 text-center animate-shake">
-            <span className="text-xs font-bold text-red-500 block mb-1">OTP Expired</span>
+          <div className="mb-[20px] p-3 bg-red-light rounded-xl border border-red text-center animate-shake">
+            <span className="text-xs font-bold text-red block mb-1">OTP Expired</span>
             <button
               onClick={() => fetchOtp(activePatientId)}
-              className="mt-1 px-3 py-1.5 bg-red-500 text-white rounded-lg text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 mx-auto cursor-pointer"
+              className="mt-1 border border-red text-red rounded-full px-3 py-1.5 text-xs font-semibold hover:bg-red-light transition-all flex items-center gap-1.5 mx-auto cursor-pointer"
             >
               Regenerate OTP
             </button>
@@ -162,7 +162,7 @@ export default function QRPage() {
         <button
           type="button"
           onClick={() => navigate('/dashboard')}
-          className="w-full bg-primary text-white rounded-[20px] px-[16px] py-[12px] mb-[10px] text-[13px] font-bold tracking-[0.2px] cursor-pointer hover:bg-navy-mid transition-all"
+          className="w-full bg-navy text-white rounded-full px-5 py-2.5 mb-[10px] text-[13px] font-bold tracking-[0.2px] cursor-pointer hover:opacity-90 transition-all"
         >
           Back to Dashboard
         </button>
@@ -170,17 +170,17 @@ export default function QRPage() {
         <button
           type="button"
           onClick={() => navigate(`/pharma/${patient.qrToken}`)}
-          className="w-full rounded-[20px] border-[1.5px] border-border bg-transparent px-[16px] py-[11px] text-[13px] font-bold tracking-[0.2px] text-navy flex justify-center items-center gap-[8px] cursor-pointer hover:bg-faint transition-all"
+          className="w-full border border-border bg-white text-navy rounded-full px-5 py-2.5 text-[13px] font-bold tracking-[0.2px] flex justify-center items-center gap-[8px] cursor-pointer hover:bg-faint transition-all"
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
             <path
               d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"
-              stroke="#1a2540"
+              stroke="#0D1B2A"
               strokeWidth="2.5"
               strokeLinecap="round"
               strokeLinejoin="round"
             />
-            <circle cx="12" cy="12" r="3" stroke="#1a2540" strokeWidth="2.5" />
+            <circle cx="12" cy="12" r="3" stroke="#0D1B2A" strokeWidth="2.5" />
           </svg>
           Preview Pharmacist View
         </button>

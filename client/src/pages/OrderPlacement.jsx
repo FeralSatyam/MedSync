@@ -51,16 +51,16 @@ function StepIndicator({ step }) {
             <div className="flex flex-col items-center">
               <div
                 className={`w-9 h-9 rounded-full flex items-center justify-center font-semibold text-sm transition-all
-                  ${isCompleted ? 'bg-teal-500 text-white' : isActive ? 'bg-teal-600 text-white ring-4 ring-teal-100' : 'bg-gray-100 text-gray-400'}`}
+                  ${isCompleted ? 'bg-mint text-white' : isActive ? 'bg-navy text-white ring-4 ring-mint-light' : 'bg-faint text-muted'}`}
               >
                 {isCompleted ? <CheckIcon /> : num}
               </div>
-              <span className={`text-[11px] mt-1 font-medium ${isActive ? 'text-teal-600' : isCompleted ? 'text-teal-500' : 'text-gray-400'}`}>
+              <span className={`text-[11px] mt-1 font-medium ${isActive ? 'text-navy' : isCompleted ? 'text-mint' : 'text-muted'}`}>
                 {label}
               </span>
             </div>
             {idx < steps.length - 1 && (
-              <div className={`w-16 h-0.5 mx-1 mb-4 transition-all ${step > num ? 'bg-teal-500' : 'bg-gray-200'}`} />
+              <div className={`w-16 h-0.5 mx-1 mb-4 transition-all ${step > num ? 'bg-mint' : 'bg-border'}`} />
             )}
           </div>
         );
@@ -71,8 +71,8 @@ function StepIndicator({ step }) {
 
 function FieldLabel({ children, required }) {
   return (
-    <label className="block text-sm font-medium text-gray-700 mb-1">
-      {children} {required && <span className="text-red-500">*</span>}
+    <label className="block text-sm font-medium text-navy mb-1">
+      {children} {required && <span className="text-red">*</span>}
     </label>
   );
 }
@@ -80,7 +80,7 @@ function FieldLabel({ children, required }) {
 function Input({ className = '', ...props }) {
   return (
     <input
-      className={`w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-transparent transition placeholder-gray-400 ${className}`}
+      className={`w-full rounded-xl border border-border bg-faint px-4 py-3 text-sm text-navy focus:outline-none focus:border-mint transition placeholder-muted ${className}`}
       {...props}
     />
   );
@@ -89,7 +89,7 @@ function Input({ className = '', ...props }) {
 function Textarea({ className = '', ...props }) {
   return (
     <textarea
-      className={`w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-transparent transition placeholder-gray-400 resize-none ${className}`}
+      className={`w-full rounded-xl border border-border bg-faint px-4 py-3 text-sm text-navy focus:outline-none focus:border-mint transition placeholder-muted resize-none ${className}`}
       {...props}
     />
   );
@@ -98,7 +98,7 @@ function Textarea({ className = '', ...props }) {
 function Select({ className = '', children, ...props }) {
   return (
     <select
-      className={`w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-transparent transition bg-white ${className}`}
+      className={`w-full rounded-xl border border-border bg-faint px-4 py-3 text-sm text-navy focus:outline-none focus:border-mint transition ${className}`}
       {...props}
     >
       {children}
@@ -127,7 +127,7 @@ function MedicineCombobox({ value, onChange, onSelect, suggestions, placeholder 
   return (
     <div ref={wrapRef} className="relative">
       <input
-        className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-transparent transition placeholder-gray-400"
+        className="w-full rounded-xl border border-border bg-faint px-4 py-3 text-sm text-navy focus:outline-none focus:border-mint transition placeholder-muted"
         placeholder={placeholder}
         value={value}
         autoComplete="off"
@@ -135,12 +135,12 @@ function MedicineCombobox({ value, onChange, onSelect, suggestions, placeholder 
         onFocus={() => setOpen(true)}
       />
       {open && filtered.length > 0 && (
-        <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-gray-100 rounded-2xl shadow-xl z-50 max-h-52 overflow-y-auto">
+        <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-border rounded-2xl shadow-xl z-50 max-h-52 overflow-y-auto">
           {filtered.map((m, i) => (
             <button
               key={i}
               type="button"
-              className="w-full text-left px-4 py-3 hover:bg-teal-50 active:bg-teal-100 text-sm border-b last:border-0 border-gray-50 flex items-center justify-between gap-3 transition-colors"
+              className="w-full text-left px-4 py-3 hover:bg-mint-light active:bg-mint-light text-sm border-b last:border-0 border-border flex items-center justify-between gap-3 transition-colors"
               onMouseDown={(e) => {
                 e.preventDefault();
                 onSelect(m);
@@ -148,10 +148,10 @@ function MedicineCombobox({ value, onChange, onSelect, suggestions, placeholder 
               }}
             >
               <div className="min-w-0">
-                <p className="font-medium text-gray-800 truncate">{m.name}</p>
-                {m.strength && <p className="text-xs text-gray-400">{m.strength} {m.unit}</p>}
+                <p className="font-medium text-navy truncate">{m.name}</p>
+                {m.strength && <p className="text-xs text-muted">{m.strength} {m.unit}</p>}
               </div>
-              <span className="shrink-0 text-[10px] font-semibold text-teal-600 bg-teal-50 px-2 py-0.5 rounded-full">Your med</span>
+              <span className="shrink-0 text-[10px] font-semibold text-mint bg-mint-light px-2 py-0.5 rounded-full">Your med</span>
             </button>
           ))}
         </div>
@@ -171,8 +171,8 @@ function StepMedicines({ medicines, onUpdate, onAdd, onRemove, slipCount, onSlip
   return (
     <div className="space-y-5">
       <div>
-        <h3 className="text-lg font-bold text-gray-800 mb-1">Medicine Details</h3>
-        <p className="text-sm text-gray-500">
+        <h3 className="text-lg font-bold text-navy mb-1">Medicine Details</h3>
+        <p className="text-sm text-muted">
           {patientMedicines.length > 0
             ? 'Your medicines have been pre-filled. Adjust quantities or remove what you don\'t need.'
             : 'List the medicines you need and how many of each.'}
@@ -181,17 +181,17 @@ function StepMedicines({ medicines, onUpdate, onAdd, onRemove, slipCount, onSlip
 
       <div className="space-y-3">
         {medicines.map((m, idx) => (
-          <div key={idx} className={`rounded-2xl p-4 border ${m.fromProfile ? 'bg-teal-50 border-teal-100' : 'bg-gray-50 border-gray-100'}`}>
+          <div key={idx} className={`rounded-2xl p-4 border ${m.fromProfile ? 'bg-mint-light border-mint' : 'bg-faint border-border'}`}>
             <div className="flex justify-between items-center mb-3">
               <div className="flex items-center gap-2">
-                <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Medicine {idx + 1}</span>
+                <span className="text-xs font-semibold text-muted uppercase tracking-wide">Medicine {idx + 1}</span>
                 {m.fromProfile && (
-                  <span className="text-[10px] font-semibold text-teal-600 bg-teal-100 px-2 py-0.5 rounded-full">From your profile</span>
+                  <span className="text-[10px] font-semibold text-mint bg-mint-light px-2 py-0.5 rounded-full">From your profile</span>
                 )}
               </div>
               <button
                 onClick={() => onRemove(idx)}
-                className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                className="p-1.5 text-red hover:text-red hover:bg-red-light rounded-lg transition-colors"
                 type="button"
               >
                 <TrashIcon />
@@ -241,7 +241,7 @@ function StepMedicines({ medicines, onUpdate, onAdd, onRemove, slipCount, onSlip
       <button
         type="button"
         onClick={onAdd}
-        className="flex items-center gap-2 text-teal-600 text-sm font-semibold hover:bg-teal-50 px-4 py-2.5 rounded-xl border-2 border-dashed border-teal-200 w-full justify-center transition-colors"
+        className="flex items-center gap-2 text-mint text-sm font-semibold hover:bg-mint-light px-4 py-2.5 rounded-xl border-2 border-dashed border-mint w-full justify-center transition-colors"
       >
         <PlusIcon /> Add another medicine
       </button>
@@ -256,7 +256,7 @@ function StepMedicines({ medicines, onUpdate, onAdd, onRemove, slipCount, onSlip
             value={slipCount}
             onChange={(e) => onSlipCount(e.target.value)}
           />
-          <p className="text-xs text-gray-400 mt-1">How many prescription papers you have</p>
+          <p className="text-xs text-muted mt-1">How many prescription papers you have</p>
         </div>
       </div>
 
@@ -278,8 +278,8 @@ function StepDelivery({ patients, selectedPatientId, onSelectPatient, form, onFi
   return (
     <div className="space-y-5">
       <div>
-        <h3 className="text-lg font-bold text-gray-800 mb-1">Delivery & Contact</h3>
-        <p className="text-sm text-gray-500">Tell us where to deliver and how to reach you.</p>
+        <h3 className="text-lg font-bold text-navy mb-1">Delivery & Contact</h3>
+        <p className="text-sm text-muted">Tell us where to deliver and how to reach you.</p>
       </div>
 
       {patients.length > 0 && (
@@ -314,7 +314,7 @@ function StepDelivery({ patients, selectedPatientId, onSelectPatient, form, onFi
       </div>
 
       <div>
-        <FieldLabel>Email Address <span className="text-gray-400 font-normal text-xs">(optional)</span></FieldLabel>
+        <FieldLabel>Email Address <span className="text-muted font-normal text-xs">(optional)</span></FieldLabel>
         <Input
           type="email"
           placeholder="yourname@email.com"
@@ -370,7 +370,7 @@ function StepDelivery({ patients, selectedPatientId, onSelectPatient, form, onFi
         />
       </div>
 
-      <div className="bg-teal-50 border border-teal-100 rounded-xl p-3 flex gap-2 text-sm text-teal-700">
+      <div className="bg-mint-light border border-mint rounded-xl p-3 flex gap-2 text-sm text-navy">
         <svg className="shrink-0 mt-0.5" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
         </svg>
@@ -388,89 +388,89 @@ function StepReview({ medicines, slipCount, specialNotes, delivery, patients, se
   return (
     <div className="space-y-5">
       <div>
-        <h3 className="text-lg font-bold text-gray-800 mb-1">Review Your Order</h3>
-        <p className="text-sm text-gray-500">Please check all details before submitting.</p>
+        <h3 className="text-lg font-bold text-navy mb-1">Review Your Order</h3>
+        <p className="text-sm text-muted">Please check all details before submitting.</p>
       </div>
 
       {/* Pharmacy */}
       {pharmacyName && (
-        <div className="bg-teal-50 rounded-xl p-4 border border-teal-100">
-          <p className="text-xs font-semibold text-teal-600 uppercase tracking-wide mb-1">Pharmacy</p>
-          <p className="font-semibold text-gray-800">{pharmacyName}</p>
+        <div className="bg-mint-light rounded-xl p-4 border border-mint">
+          <p className="text-xs font-semibold tracking-widest text-muted uppercase mb-1">Pharmacy</p>
+          <p className="font-semibold text-navy">{pharmacyName}</p>
         </div>
       )}
 
       {/* Medicines */}
-      <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
-        <div className="px-4 py-3 bg-gray-50 border-b border-gray-100">
-          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Medicines ({medicines.length} item{medicines.length !== 1 ? 's' : ''})</p>
+      <div className="bg-white rounded-2xl border border-border overflow-hidden">
+        <div className="px-4 py-3 bg-faint border-b border-border">
+          <p className="text-xs font-semibold tracking-widest text-muted uppercase">Medicines ({medicines.length} item{medicines.length !== 1 ? 's' : ''})</p>
         </div>
-        <div className="divide-y divide-gray-50">
+        <div className="divide-y divide-border">
           {medicines.map((m, i) => (
             <div key={i} className="flex justify-between items-center px-4 py-3">
               <div>
-                <p className="text-sm font-medium text-gray-800">{m.name || <span className="text-gray-400 italic">Unnamed</span>}</p>
-                {m.unit && <p className="text-xs text-gray-400">{m.unit}</p>}
+                <p className="text-sm font-medium text-navy">{m.name || <span className="text-muted italic">Unnamed</span>}</p>
+                {m.unit && <p className="text-xs text-muted">{m.unit}</p>}
               </div>
-              <span className="text-sm font-semibold text-gray-700">× {m.quantity}</span>
+              <span className="text-sm font-semibold text-navy">× {m.quantity}</span>
             </div>
           ))}
         </div>
         {(slipCount > 0 || specialNotes) && (
-          <div className="px-4 py-3 border-t border-gray-100 space-y-1">
-            {slipCount > 0 && <p className="text-xs text-gray-500">Prescription slips: <span className="font-medium text-gray-700">{slipCount}</span></p>}
-            {specialNotes && <p className="text-xs text-gray-500">Notes: <span className="font-medium text-gray-700">{specialNotes}</span></p>}
+          <div className="px-4 py-3 border-t border-border space-y-1">
+            {slipCount > 0 && <p className="text-xs text-muted">Prescription slips: <span className="font-medium text-navy">{slipCount}</span></p>}
+            {specialNotes && <p className="text-xs text-muted">Notes: <span className="font-medium text-navy">{specialNotes}</span></p>}
           </div>
         )}
       </div>
 
       {/* Delivery */}
-      <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
-        <div className="px-4 py-3 bg-gray-50 border-b border-gray-100">
-          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Delivery Information</p>
+      <div className="bg-white rounded-2xl border border-border overflow-hidden">
+        <div className="px-4 py-3 bg-faint border-b border-border">
+          <p className="text-xs font-semibold tracking-widest text-muted uppercase">Delivery Information</p>
         </div>
         <div className="px-4 py-3 space-y-2 text-sm">
           {patient && (
             <div className="flex justify-between">
-              <span className="text-gray-500">Patient</span>
-              <span className="font-medium text-gray-800">{patient.name}</span>
+              <span className="text-muted">Patient</span>
+              <span className="font-medium text-navy">{patient.name}</span>
             </div>
           )}
           {delivery.fullName && (
             <div className="flex justify-between">
-              <span className="text-gray-500">Recipient</span>
-              <span className="font-medium text-gray-800">{delivery.fullName}</span>
+              <span className="text-muted">Recipient</span>
+              <span className="font-medium text-navy">{delivery.fullName}</span>
             </div>
           )}
           {delivery.phone && (
             <div className="flex justify-between">
-              <span className="text-gray-500">Phone</span>
-              <span className="font-medium text-gray-800">{delivery.phone}</span>
+              <span className="text-muted">Phone</span>
+              <span className="font-medium text-navy">{delivery.phone}</span>
             </div>
           )}
           {delivery.email && (
             <div className="flex justify-between">
-              <span className="text-gray-500">Email</span>
-              <span className="font-medium text-gray-800">{delivery.email}</span>
+              <span className="text-muted">Email</span>
+              <span className="font-medium text-navy">{delivery.email}</span>
             </div>
           )}
           {fullAddress && (
             <div className="flex justify-between gap-4">
-              <span className="text-gray-500 shrink-0">Address</span>
-              <span className="font-medium text-gray-800 text-right">{fullAddress}</span>
+              <span className="text-muted shrink-0">Address</span>
+              <span className="font-medium text-navy text-right">{fullAddress}</span>
             </div>
           )}
           {delivery.deliveryInstructions && (
             <div className="flex justify-between gap-4">
-              <span className="text-gray-500 shrink-0">Instructions</span>
-              <span className="font-medium text-gray-800 text-right">{delivery.deliveryInstructions}</span>
+              <span className="text-muted shrink-0">Instructions</span>
+              <span className="font-medium text-navy text-right">{delivery.deliveryInstructions}</span>
             </div>
           )}
         </div>
       </div>
 
       {/* Pricing note */}
-      <div className="bg-amber-50 border border-amber-100 rounded-xl p-3 text-sm text-amber-700 flex gap-2">
+      <div className="bg-amber-light border border-amber rounded-xl p-3 text-sm text-amber flex gap-2">
         <svg className="shrink-0 mt-0.5" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
           <line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" />
@@ -692,7 +692,7 @@ export default function OrderPlacement() {
           }
         `}</style>
 
-        <div className="success-circle w-28 h-28 rounded-full bg-teal-500 flex items-center justify-center shadow-xl shadow-teal-200">
+        <div className="success-circle w-28 h-28 rounded-full bg-mint flex items-center justify-center">
           <svg width="56" height="56" viewBox="0 0 56 56" fill="none">
             <polyline
               className="success-tick"
@@ -705,26 +705,26 @@ export default function OrderPlacement() {
           </svg>
         </div>
 
-        <p className="success-label mt-6 text-xl font-bold text-gray-800">Order Placed!</p>
-        <p className="success-label mt-1 text-sm text-gray-400">Redirecting to dashboard...</p>
+        <p className="success-label mt-6 text-xl font-bold text-navy">Order Placed!</p>
+        <p className="success-label mt-1 text-sm text-muted">Redirecting to dashboard...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-24">
+    <div className="min-h-screen bg-bg pb-24">
       {/* Header */}
-      <div className="bg-white border-b border-gray-100 sticky top-0 z-40">
+      <div className="bg-white border-b border-border sticky top-0 z-30">
         <div className="flex items-center gap-3 px-4 h-16 max-w-lg mx-auto">
           <button
             onClick={() => (step > 1 ? handleBack() : navigate(-1))}
-            className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-2 text-muted hover:bg-faint rounded-lg transition-colors"
           >
             <ArrowLeftIcon />
           </button>
-          <h1 className="text-lg font-bold text-gray-800">Place Order</h1>
+          <h1 className="text-lg font-bold text-navy">Place Order</h1>
           {notification?.pharmacyName && (
-            <span className="ml-auto text-xs text-gray-400 bg-gray-100 px-2.5 py-1 rounded-full truncate max-w-[120px]">
+            <span className="ml-auto text-xs text-muted bg-faint px-2.5 py-1 rounded-full truncate max-w-[120px]">
               {notification.pharmacyName}
             </span>
           )}
@@ -734,7 +734,7 @@ export default function OrderPlacement() {
       <div className="max-w-lg mx-auto px-4 pt-6">
         <StepIndicator step={step} />
 
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+        <div className="bg-white rounded-2xl border border-border p-5">
           {step === 1 && (
             <StepMedicines
               medicines={medicines}
@@ -772,19 +772,19 @@ export default function OrderPlacement() {
       </div>
 
       {/* Bottom action bar */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-4 py-3 z-40">
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-border px-4 py-3 z-40">
         <div className="max-w-lg mx-auto flex gap-3">
           {step > 1 ? (
             <button
               onClick={handleBack}
-              className="flex-1 border border-gray-200 text-gray-700 font-semibold py-3.5 rounded-2xl hover:bg-gray-50 transition-colors"
+              className="flex-1 border border-border bg-white text-navy font-semibold py-3.5 rounded-2xl hover:bg-faint transition-colors"
             >
               Back
             </button>
           ) : (
             <button
               onClick={() => navigate(-1)}
-              className="flex-1 border border-gray-200 text-gray-700 font-semibold py-3.5 rounded-2xl hover:bg-gray-50 transition-colors"
+              className="flex-1 border border-border bg-white text-navy font-semibold py-3.5 rounded-2xl hover:bg-faint transition-colors"
             >
               Cancel
             </button>
@@ -793,7 +793,7 @@ export default function OrderPlacement() {
           {step < TOTAL_STEPS ? (
             <button
               onClick={handleNext}
-              className="flex-[2] bg-teal-600 text-white font-semibold py-3.5 rounded-2xl hover:bg-teal-700 active:scale-95 transition-all"
+              className="flex-[2] bg-navy text-white font-semibold py-3.5 rounded-2xl hover:opacity-90 active:scale-95 transition-all"
             >
               Continue
             </button>
@@ -801,7 +801,7 @@ export default function OrderPlacement() {
             <button
               onClick={handleSubmit}
               disabled={submitting}
-              className="flex-[2] bg-teal-600 text-white font-semibold py-3.5 rounded-2xl hover:bg-teal-700 active:scale-95 transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="flex-[2] bg-navy text-white font-semibold py-3.5 rounded-2xl hover:opacity-90 active:scale-95 transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {submitting ? (
                 <>
