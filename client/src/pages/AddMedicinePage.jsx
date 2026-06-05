@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 
 import { useAppStore } from '../store/appStore';
 import { createMedicine, getMedicinesForPatient, updateMedicine } from '../api/medicineApi';
+import { getPatients } from '../api/patientApi';
 import SimpleCamera from '../components/SimpleCamera';
 
 // ── Config ────────────────────────────────────────────────────────────────────
@@ -52,10 +53,13 @@ export default function AddMedicinePage() {
   const { medicineId } = useParams();
   const isEdit = Boolean(medicineId);
   const activePatientId = useAppStore((s) => s.activePatientId);
+  const setActivePatientId = useAppStore((s) => s.setActivePatientId);
 
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showCamera, setShowCamera] = useState(false);
+  const [patients, setPatients] = useState([]);
+  const [showProfileSwitcher, setShowProfileSwitcher] = useState(false);
 
   // Step 1
   const [name, setName] = useState('');
@@ -99,6 +103,11 @@ export default function AddMedicinePage() {
       navigate('/');
     }
   }, [activePatientId, navigate]);
+
+  // Load patients for profile switcher
+  useEffect(() => {
+    getPatients().then((data) => setPatients(Array.isArray(data) ? data : [])).catch(() => {});
+  }, []);
 
   // Load data for edit mode
   useEffect(() => {
@@ -682,6 +691,16 @@ export default function AddMedicinePage() {
     </div>
   );
 
+  // ── Helpers ───────────────────────────────────────────────────────────────
+
+  const activePatient = patients.find((p) => p._id === activePatientId);
+
+  const RELATION_LABEL = {
+    self: 'Self', mother: 'Mother', father: 'Father',
+    grandmother: 'Grandmother', grandfather: 'Grandfather',
+    spouse: 'Spouse', other: 'Other',
+  };
+
   // ── Render ────────────────────────────────────────────────────────────────
 
   return (
@@ -705,6 +724,37 @@ export default function AddMedicinePage() {
       </div>
 
       <div className="max-w-lg mx-auto px-5 py-6">
+        {/* Active patient banner */}
+        {!isEdit && activePatient && (
+          <div className="flex items-center justify-between bg-white border border-border rounded-2xl px-4 py-3 mb-6">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-full bg-mint flex items-center justify-center text-white text-sm font-bold shrink-0">
+                {activePatient.name.charAt(0).toUpperCase()}
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs font-semibold text-muted uppercase tracking-widest leading-none mb-0.5">Adding for</p>
+                <p className="text-sm font-bold text-navy leading-tight truncate">{activePatient.name}</p>
+                {activePatient.relation && (
+                  <p className="text-xs text-muted capitalize">{RELATION_LABEL[activePatient.relation] || activePatient.relation}</p>
+                )}
+              </div>
+            </div>
+            {patients.length > 1 && (
+              <button
+                type="button"
+                onClick={() => setShowProfileSwitcher(true)}
+                className="flex items-center gap-1.5 text-xs font-semibold text-mint bg-mint-light rounded-full px-3 py-1.5 hover:opacity-80 transition-opacity shrink-0 ml-2"
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <path d="M17 2l4 4-4 4M3 11V9a4 4 0 0 1 4-4h11"/>
+                  <path d="M7 22l-4-4 4-4M21 13v2a4 4 0 0 1-4 4H6"/>
+                </svg>
+                Change
+              </button>
+            )}
+          </div>
+        )}
+
         {renderStepIndicator()}
 
         {step === 1 && renderStep1()}
@@ -770,6 +820,70 @@ export default function AddMedicinePage() {
 
       {showCamera && (
         <SimpleCamera onCapture={handleCameraCapture} onClose={() => setShowCamera(false)} />
+      )}
+
+      {/* Profile Switcher Modal */}
+      {showProfileSwitcher && (
+        <div
+          className="fixed inset-0 bg-navy/30 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-4"
+          onClick={() => setShowProfileSwitcher(false)}
+        >
+          <div
+            className="bg-white rounded-2xl border border-border w-full max-w-sm"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-border">
+              <h3 className="text-base font-bold text-navy">Switch Family Profile</h3>
+              <button
+                type="button"
+                onClick={() => setShowProfileSwitcher(false)}
+                className="p-1.5 text-muted hover:text-navy rounded-lg hover:bg-faint transition-colors"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M18 6L6 18M6 6l12 12"/>
+                </svg>
+              </button>
+            </div>
+            <div className="p-3 space-y-1 max-h-72 overflow-y-auto">
+              {patients.map((p) => {
+                const isActive = p._id === activePatientId;
+                return (
+                  <button
+                    key={p._id}
+                    type="button"
+                    onClick={() => {
+                      setActivePatientId(p._id);
+                      setShowProfileSwitcher(false);
+                      toast.success(`Switched to ${p.name}`);
+                    }}
+                    className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all text-left ${
+                      isActive ? 'bg-mint-light' : 'hover:bg-faint'
+                    }`}
+                  >
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold shrink-0 ${
+                      isActive ? 'bg-mint text-white' : 'bg-faint text-navy'
+                    }`}>
+                      {p.name.charAt(0).toUpperCase()}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className={`text-sm font-semibold truncate ${isActive ? 'text-mint' : 'text-navy'}`}>
+                        {p.name}
+                      </p>
+                      <p className="text-xs text-muted capitalize">
+                        {RELATION_LABEL[p.relation] || p.relation || ''}
+                      </p>
+                    </div>
+                    {isActive && (
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className="text-mint shrink-0">
+                        <polyline points="20 6 9 17 4 12"/>
+                      </svg>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
