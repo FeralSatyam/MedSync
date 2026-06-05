@@ -11,11 +11,7 @@ const minDOBStr = () => {
   d.setFullYear(d.getFullYear() - 120);
   return d.toISOString().split('T')[0];
 };
-const maxDOBStr = () => {
-  const d = new Date();
-  d.setFullYear(d.getFullYear() - 6);
-  return d.toISOString().split('T')[0];
-};
+const maxDOBStr = () => new Date().toISOString().split('T')[0];
 function validateDOB(dob) {
   if (!dob) return null;
   const d = new Date(dob);
@@ -23,7 +19,6 @@ function validateDOB(dob) {
   if (d > today) return 'Date of birth cannot be in the future';
   const ageYears = (today - d) / (365.25 * 24 * 60 * 60 * 1000);
   if (ageYears > 120) return 'Please enter a valid date of birth';
-  if (ageYears < 6) return 'Patient must be at least 6 years old';
   return null;
 }
 
@@ -135,7 +130,6 @@ function EditMemberModal({ member, onClose, onSave }) {
               onChange={(e) => setDateOfBirth(e.target.value)}
               className="w-full rounded-xl border border-border bg-faint px-4 py-3 text-sm text-navy focus:outline-none focus:border-mint"
             />
-            <p className="text-xs text-muted mt-1">Patient must be between 6 and 120 years old</p>
           </div>
 
           <div>
@@ -267,7 +261,6 @@ function AddMemberModal({ onClose, onAdd }) {
               onChange={(e) => setDateOfBirth(e.target.value)}
               className="w-full rounded-xl border border-border bg-faint px-4 py-3 text-sm text-navy focus:outline-none focus:border-mint"
             />
-            <p className="text-xs text-muted mt-1">Patient must be between 6 and 120 years old</p>
           </div>
 
           <div>

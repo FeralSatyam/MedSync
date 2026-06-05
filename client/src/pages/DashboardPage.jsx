@@ -1020,12 +1020,11 @@ export default function DashboardPage() {
                 <input
                   type="date"
                   value={addProfileForm.dateOfBirth}
-                  max={(() => { const d = new Date(); d.setFullYear(d.getFullYear() - 6); return d.toISOString().split('T')[0]; })()}
+                  max={new Date().toISOString().split('T')[0]}
                   min={(() => { const d = new Date(); d.setFullYear(d.getFullYear() - 120); return d.toISOString().split('T')[0]; })()}
                   onChange={(e) => setAddProfileForm({ ...addProfileForm, dateOfBirth: e.target.value })}
                   className="w-full rounded-xl border border-border bg-faint px-4 py-2.5 text-sm focus:outline-none focus:border-mint"
                 />
-                <p className="text-xs text-muted mt-1">Patient must be between 6 and 120 years old</p>
                 {addProfileErrors.dateOfBirth && <p className="text-xs text-red-500 mt-1">{addProfileErrors.dateOfBirth}</p>}
               </div>
               <div>
@@ -1063,7 +1062,6 @@ export default function DashboardPage() {
                       const ageYears = (today - d) / (365.25 * 24 * 60 * 60 * 1000);
                       if (d > today) errors.dateOfBirth = 'Date of birth cannot be in the future';
                       else if (ageYears > 120) errors.dateOfBirth = 'Please enter a valid date of birth';
-                      else if (ageYears < 6) errors.dateOfBirth = 'Patient must be at least 6 years old';
                     }
 
                     if (Object.keys(errors).length > 0) { setAddProfileErrors(errors); return; }

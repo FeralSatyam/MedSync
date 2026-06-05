@@ -475,7 +475,6 @@ export default function ProfilePage() {
       const ageYears = (today - d) / (365.25 * 24 * 60 * 60 * 1000);
       if (d > today) { toast.error('Date of birth cannot be in the future'); return; }
       if (ageYears > 120) { toast.error('Please enter a valid date of birth'); return; }
-      if (ageYears < 6) { toast.error('Patient must be at least 6 years old'); return; }
     }
 
     setSavingFamily(true);

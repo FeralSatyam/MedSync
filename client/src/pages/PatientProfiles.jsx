@@ -61,7 +61,6 @@ export default function PatientProfiles() {
       const ageYears = (today - d) / (365.25 * 24 * 60 * 60 * 1000);
       if (d > today) { toast.error('Date of birth cannot be in the future'); return; }
       if (ageYears > 120) { toast.error('Please enter a valid date of birth'); return; }
-      if (ageYears < 6) { toast.error('Patient must be at least 6 years old'); return; }
     }
 
     setSaving(true);
@@ -122,7 +121,7 @@ export default function PatientProfiles() {
               <input
                 type="date"
                 value={form.dateOfBirth}
-                max={(() => { const d = new Date(); d.setFullYear(d.getFullYear() - 6); return d.toISOString().split('T')[0]; })()}
+                max={new Date().toISOString().split('T')[0]}
                 min={(() => { const d = new Date(); d.setFullYear(d.getFullYear() - 120); return d.toISOString().split('T')[0]; })()}
                 onChange={(e) => setForm((f) => ({ ...f, dateOfBirth: e.target.value }))}
                 className="w-full rounded-xl border border-border bg-faint px-4 py-3 text-sm text-navy focus:outline-none focus:border-mint"
