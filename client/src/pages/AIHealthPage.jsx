@@ -1020,13 +1020,7 @@ export default function AIHealthPage() {
           <button onClick={() => navigate(-1)} className="p-2 rounded-xl text-muted hover:bg-faint transition-colors">
             <Icons.ArrowLeft />
           </button>
-          <h1 className="text-lg font-bold text-navy">AI Health Assistant</h1>
-          <div className="ml-auto">
-            <div className="flex items-center gap-1 px-2 py-1 bg-mint-light rounded-full">
-              <div className="w-2 h-2 bg-mint rounded-full animate-pulse"></div>
-              <span className="text-xs text-mint">AI Ready</span>
-            </div>
-          </div>
+          <h1 className="text-lg font-bold text-navy">Health Assistant</h1>
         </div>
       </div>
 

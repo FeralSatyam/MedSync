@@ -301,7 +301,7 @@ function DesktopSidebar({ activeTab, onTabChange, onQRPress, navigate }) {
 
   const menuItems = [
     { id: 'home', label: 'Dashboard', icon: Icons.Home },
-    { id: 'ai-health', label: 'AI Health', icon: Icons.AIHealth },
+    { id: 'ai-health', label: 'Health', icon: Icons.AIHealth },
     { id: 'orders', label: 'Orders', icon: Icons.Orders },
     { id: 'qr', label: 'Pharmacy QR', icon: Icons.QR },
     { id: 'pharmacist-link', label: 'Link to Pharmacist', icon: Icons.Profile },
