@@ -5,7 +5,13 @@ import toast from 'react-hot-toast';
 import { useAppStore } from '../store/appStore';
 import { useAuthStore } from '../store/authStore';
 import { getPatients, updatePatient, deletePatient } from '../api/patientApi';
-import { updateMe } from '../api/authApi';
+import {
+  updateMe,
+  getDispensingPinStatus,
+  setDispensingPin,
+  changeDispensingPin,
+  resetDispensingPin,
+} from '../api/authApi';
 
 // SVG Icons
 const Icons = {
@@ -346,6 +352,156 @@ function ResetPasswordModal({ onClose }) {
   );
 }
 
+// Dispensing PIN Modal — set / change / forgot the account-wide pharmacy PIN
+function DispensingPinModal({ mode, onClose, onSuccess }) {
+  const [currentPin, setCurrentPin] = useState('');
+  const [newPin, setNewPin] = useState('');
+  const [confirmPin, setConfirmPin] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const titles = {
+    set: 'Set Dispensing PIN',
+    change: 'Change Dispensing PIN',
+    forgot: 'Recover Dispensing PIN',
+  };
+  const onlyDigits = (v) => v.replace(/\D/g, '').slice(0, 4);
+
+  const handleSubmit = async () => {
+    if (!/^\d{4}$/.test(newPin)) {
+      toast.error('PIN must be exactly 4 digits');
+      return;
+    }
+    if (newPin !== confirmPin) {
+      toast.error('PINs do not match');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      if (mode === 'set') {
+        await setDispensingPin(newPin);
+        toast.success('Dispensing PIN set successfully');
+      } else if (mode === 'change') {
+        if (!/^\d{4}$/.test(currentPin)) {
+          toast.error('Enter your current 4-digit PIN');
+          setLoading(false);
+          return;
+        }
+        await changeDispensingPin(currentPin, newPin);
+        toast.success('Dispensing PIN changed successfully');
+      } else {
+        if (!currentPin && !password) {
+          toast.error('Enter your previous PIN or account password');
+          setLoading(false);
+          return;
+        }
+        await resetDispensingPin({
+          newPin,
+          ...(currentPin ? { currentPin } : {}),
+          ...(password ? { password } : {}),
+        });
+        toast.success('Dispensing PIN reset successfully');
+      }
+      onSuccess();
+      onClose();
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to update dispensing PIN');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-navy/30 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={onClose}>
+      <div className="bg-white rounded-2xl border border-border p-6 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-xl font-bold text-navy">{titles[mode]}</h3>
+          <button onClick={onClose} className="text-muted hover:text-navy cursor-pointer"><Icons.Close /></button>
+        </div>
+
+        <div className="space-y-4">
+          <p className="text-sm text-muted">
+            This PIN is shared across all your patients and is required at the pharmacy to confirm stock dispensing.
+          </p>
+
+          {mode === 'change' && (
+            <div>
+              <label className="block text-xs font-semibold tracking-widest text-muted uppercase mb-3">Current PIN</label>
+              <input
+                type="password" inputMode="numeric" maxLength={4} value={currentPin}
+                onChange={(e) => setCurrentPin(onlyDigits(e.target.value))}
+                className="w-full text-center text-2xl tracking-widest rounded-xl border border-border bg-faint px-4 py-3 text-navy focus:outline-none focus:border-mint"
+                placeholder="••••"
+              />
+            </div>
+          )}
+
+          {mode === 'forgot' && (
+            <>
+              <p className="text-xs text-muted">Authenticate with either your previous PIN or your account password.</p>
+              <div>
+                <label className="block text-xs font-semibold tracking-widest text-muted uppercase mb-3">Previous PIN</label>
+                <input
+                  type="password" inputMode="numeric" maxLength={4} value={currentPin}
+                  onChange={(e) => setCurrentPin(onlyDigits(e.target.value))}
+                  className="w-full text-center text-2xl tracking-widest rounded-xl border border-border bg-faint px-4 py-3 text-navy focus:outline-none focus:border-mint"
+                  placeholder="••••"
+                />
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="h-px bg-border flex-1" />
+                <span className="text-xs text-muted">or</span>
+                <div className="h-px bg-border flex-1" />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold tracking-widest text-muted uppercase mb-3">Account Password</label>
+                <input
+                  type="password" value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full rounded-xl border border-border bg-faint px-4 py-3 text-sm text-navy focus:outline-none focus:border-mint"
+                  placeholder="Enter account password"
+                />
+              </div>
+            </>
+          )}
+
+          <div>
+            <label className="block text-xs font-semibold tracking-widest text-muted uppercase mb-3">
+              {mode === 'set' ? 'New PIN' : 'New PIN'}
+            </label>
+            <input
+              type="password" inputMode="numeric" maxLength={4} value={newPin}
+              onChange={(e) => setNewPin(onlyDigits(e.target.value))}
+              className="w-full text-center text-2xl tracking-widest rounded-xl border border-border bg-faint px-4 py-3 text-navy focus:outline-none focus:border-mint"
+              placeholder="••••"
+              autoFocus={mode === 'set'}
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold tracking-widest text-muted uppercase mb-3">Confirm New PIN</label>
+            <input
+              type="password" inputMode="numeric" maxLength={4} value={confirmPin}
+              onChange={(e) => setConfirmPin(onlyDigits(e.target.value))}
+              className="w-full text-center text-2xl tracking-widest rounded-xl border border-border bg-faint px-4 py-3 text-navy focus:outline-none focus:border-mint"
+              placeholder="••••"
+            />
+          </div>
+        </div>
+
+        <div className="flex gap-3 mt-6">
+          <button onClick={onClose} className="flex-1 border border-border bg-white text-navy rounded-full px-5 py-2.5 text-sm font-semibold hover:bg-faint cursor-pointer">
+            Cancel
+          </button>
+          <button onClick={handleSubmit} disabled={loading} className="flex-1 bg-mint text-white rounded-full px-5 py-2.5 text-sm font-semibold hover:opacity-90 disabled:opacity-50 cursor-pointer">
+            {loading ? 'Saving...' : 'Save PIN'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function ProfilePage() {
   const navigate = useNavigate();
   const authUser = useAuthStore((s) => s.user);
@@ -362,6 +518,10 @@ export default function ProfilePage() {
   const [biometricEnabled, setBiometricEnabled] = useState(false);
   const [showChangePassword, setShowChangePassword] = useState(false);
   const [passwordForm, setPasswordForm] = useState({ current: '', new: '', confirm: '' });
+
+  // Account-wide dispensing PIN
+  const [dispensingPinSet, setDispensingPinSet] = useState(false);
+  const [dispensingPinModal, setDispensingPinModal] = useState(null); // 'set' | 'change' | 'forgot'
 
   // Primary user editing
   const [editingUser, setEditingUser] = useState(false);
@@ -408,6 +568,19 @@ export default function ProfilePage() {
   useEffect(() => {
     loadPatients();
   }, [loadPatients]);
+
+  const loadDispensingPinStatus = useCallback(async () => {
+    try {
+      const { isSet } = await getDispensingPinStatus();
+      setDispensingPinSet(Boolean(isSet));
+    } catch (error) {
+      console.error('Error loading dispensing PIN status:', error);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadDispensingPinStatus();
+  }, [loadDispensingPinStatus]);
 
   // ─── Primary user handlers ───
   const handleProfilePicUpload = (e) => {
@@ -814,6 +987,58 @@ export default function ProfilePage() {
           </div>
         </div>
 
+        {/* ══════════════ DISPENSING PIN ══════════════ */}
+        <div className="bg-white rounded-2xl border border-border p-5">
+          <div className="flex justify-between items-center mb-1">
+            <h2 className="font-semibold text-navy">Pharmacy Dispensing PIN</h2>
+            <span className={`text-[10px] font-bold px-2 py-1 rounded-full ${dispensingPinSet ? 'bg-mint-light text-mint' : 'bg-amber-100 text-amber-700'}`}>
+              {dispensingPinSet ? 'ACTIVE' : 'NOT SET'}
+            </span>
+          </div>
+          <p className="text-sm text-muted mb-4">
+            A single 4-digit PIN, shared across all your patients, that the pharmacy needs to confirm stock dispensing.
+          </p>
+
+          {!dispensingPinSet ? (
+            <button
+              onClick={() => setDispensingPinModal('set')}
+              className="w-full flex items-center justify-between p-3 rounded-lg bg-faint hover:bg-bg transition-colors cursor-pointer"
+            >
+              <div className="flex items-center gap-3">
+                <Icons.Lock />
+                <span className="text-navy">Set Dispensing PIN</span>
+              </div>
+              <span className="text-muted text-sm">→</span>
+            </button>
+          ) : (
+            <div className="space-y-3">
+              <button
+                onClick={() => setDispensingPinModal('change')}
+                className="w-full flex items-center justify-between p-3 rounded-lg bg-faint hover:bg-bg transition-colors cursor-pointer"
+              >
+                <div className="flex items-center gap-3">
+                  <Icons.Lock />
+                  <span className="text-navy">Change Dispensing PIN</span>
+                </div>
+                <span className="text-muted text-sm">→</span>
+              </button>
+              <button
+                onClick={() => setDispensingPinModal('forgot')}
+                className="w-full flex items-center justify-between p-3 rounded-lg bg-faint hover:bg-bg transition-colors cursor-pointer"
+              >
+                <div className="flex items-center gap-3">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                    <path d="M1 12C1 12 4 4 12 4C20 4 23 12 23 12C23 12 20 20 12 20C4 20 1 12 1 12Z" />
+                    <circle cx="12" cy="12" r="3" />
+                  </svg>
+                  <span className="text-navy">Forgot PIN</span>
+                </div>
+                <span className="text-muted text-sm">→</span>
+              </button>
+            </div>
+          )}
+        </div>
+
         {/* ══════════════ SUBSCRIPTION ══════════════ */}
         <div className={`rounded-2xl border border-border p-5 ${isPro ? 'bg-amber-50 border-amber-400' : 'bg-white'}`}>
           <div className="flex justify-between items-start mb-3">
@@ -1059,6 +1284,15 @@ export default function ProfilePage() {
           </div>
         </div>
       )}
+      {/* ══════════════ DISPENSING PIN MODAL ══════════════ */}
+      {dispensingPinModal && (
+        <DispensingPinModal
+          mode={dispensingPinModal}
+          onClose={() => setDispensingPinModal(null)}
+          onSuccess={loadDispensingPinStatus}
+        />
+      )}
+
       <MobileBottomNav />
     </div>
   );
