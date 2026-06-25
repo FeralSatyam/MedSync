@@ -14,6 +14,12 @@ import {
   sendVerifyOtp,
   verifyEmail,
 } from '../controllers/authController.js';
+import {
+  getDispensingPinStatus,
+  setDispensingPin,
+  changeDispensingPin,
+  resetDispensingPin,
+} from '../controllers/dispensingPinController.js';
 import { protect } from '../middleware/authMiddleware.js';
 import User from '../models/User.js';
 
@@ -143,6 +149,29 @@ router.put(
       res.status(500).json({ message: 'Failed to change password' });
     }
   }
+);
+
+// Dispensing PIN Routes (account-wide pharmacy PIN, requires authentication)
+const pinFormat = (field) =>
+  body(field).matches(/^\d{4}$/).withMessage('PIN must be exactly 4 digits');
+
+router.get('/dispensing-pin', protect, getDispensingPinStatus);
+router.post('/dispensing-pin', protect, [pinFormat('pin')], setDispensingPin);
+router.put(
+  '/dispensing-pin',
+  protect,
+  [pinFormat('currentPin'), pinFormat('newPin')],
+  changeDispensingPin
+);
+router.post(
+  '/dispensing-pin/reset',
+  protect,
+  [
+    pinFormat('newPin'),
+    body('currentPin').optional().matches(/^\d{4}$/).withMessage('Previous PIN must be exactly 4 digits'),
+    body('password').optional().isString(),
+  ],
+  resetDispensingPin
 );
 
 export default router;
