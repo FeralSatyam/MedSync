@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { getPatientByQrToken } from '../api/patientApi';
 import { getMedicinesForPatient } from '../api/medicineApi';
 import { getStockStatus } from '../utils/stockUtils';
+import { formatStock, stockUnitLabel } from '../utils/medicineUnits';
 
 export default function PharmacistPage() {
   const { qrToken } = useParams();
@@ -175,7 +176,7 @@ export default function PharmacistPage() {
                   <div className="mb-2">
                     <div className="flex justify-between text-sm mb-1">
                       <span className="text-gray-600">Stock Remaining</span>
-                      <span className="font-medium">{medicine.currentStock} tablets</span>
+                      <span className="font-medium">{formatStock(medicine)}</span>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-2">
                       <div 
@@ -193,7 +194,7 @@ export default function PharmacistPage() {
                     </div>
                     <div>
                       <p className="text-gray-500 text-xs">Daily Consumption</p>
-                      <p className="font-medium">{dailyConsumption} tablets</p>
+                      <p className="font-medium">{dailyConsumption} {stockUnitLabel(medicine, dailyConsumption)}</p>
                     </div>
                   </div>
                 </div>

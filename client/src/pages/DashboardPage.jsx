@@ -7,6 +7,7 @@ import { createPatient, getPatients, generatePatientOtp } from '../api/patientAp
 import { deleteMedicine, getMedicinesForPatient, restockMedicine, updateMedicine } from '../api/medicineApi';
 import { getNotifications, markNotificationAsRead } from '../api/notificationApi';
 import { getStockStatus, sortMedicinesByUrgency } from '../utils/stockUtils';
+import { formatStock } from '../utils/medicineUnits';
 import { useAppStore } from '../store/appStore';
 import { useAuthStore } from '../store/authStore';
 import { QRCodeCanvas } from 'qrcode.react';
@@ -242,7 +243,7 @@ const MobileMedicineCard = memo(function MobileMedicineCard({ medicine, onRestoc
       </div>
       <div className="mb-3">
         <div className="flex justify-between text-xs text-muted mb-1.5">
-          <span>Remaining: {medicine.currentStock} tablets</span>
+          <span>Remaining: {formatStock(medicine)}</span>
           <span className="font-medium">{daysRemaining} days left</span>
         </div>
         <div className="w-full bg-border rounded-full h-1.5 overflow-hidden">
@@ -833,7 +834,7 @@ export default function DashboardPage() {
                       </div>
                     </div>
                     <div className="flex justify-between items-center text-[10px] text-muted">
-                      <span>Stock: {a.currentStock} {a.unit || 'tablets'}</span>
+                      <span>Stock: {formatStock(a)}</span>
                     </div>
                   </div>
                 ))}
@@ -1098,7 +1099,7 @@ export default function DashboardPage() {
             </div>
             <div className="mb-4 p-3 bg-faint rounded-xl border border-border">
               <p className="font-medium text-navy">{restockTarget.name}</p>
-              <p className="text-sm text-muted">Current stock: {restockTarget.currentStock} tablets</p>
+              <p className="text-sm text-muted">Current stock: {formatStock(restockTarget)}</p>
             </div>
             <div>
               <label className="block text-sm font-medium text-navy mb-1">Quantity Purchased</label>

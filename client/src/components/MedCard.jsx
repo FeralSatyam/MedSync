@@ -1,4 +1,5 @@
 import StockBadge from './StockBadge';
+import { stockUnitLabel } from '../utils/medicineUnits';
 
 function statusToColors(status) {
   if (status === 'red') {
@@ -159,7 +160,7 @@ export default function MedCard({ medicine, index = 0, onRestock, onViewRx, onRe
 
       {/* Stock Row & Bar */}
       <div className="mb-[4px] flex items-center justify-between text-[11px] font-body">
-        <div className="font-medium text-muted">Tablets left</div>
+        <div className="font-medium text-muted">Stock left ({stockUnitLabel(medicine)})</div>
         <div className="font-bold text-navy">{medicine.currentStock}</div>
       </div>
       

@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import StockBadge from './StockBadge';
 import { getStockStatus } from '../utils/stockUtils';
+import { stockUnitLabel } from '../utils/medicineUnits';
 
 export default function MedicineCard({ medicine, patientId, onRestock }) {
   const { status, daysLeft } = getStockStatus(medicine);
@@ -14,7 +15,7 @@ export default function MedicineCard({ medicine, patientId, onRestock }) {
             {medicine.strength} · {medicine.frequencyPerDay}× daily · {medicine.dosePerIntake} per dose
           </p>
           <p className="mt-3 text-sm text-slate-600">
-            Stock: <strong>{medicine.currentStock}</strong> units
+            Stock: <strong>{medicine.currentStock}</strong> {stockUnitLabel(medicine, medicine.currentStock)}
           </p>
         </div>
         <StockBadge status={status} daysLeft={daysLeft} />

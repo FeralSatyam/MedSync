@@ -5,6 +5,7 @@ import { getPharmacistData, dispense, verifyPharmacistOtp } from '../api/pharmac
 import PrescriptionViewer from '../components/PrescriptionViewer';
 import StockBadge from '../components/StockBadge';
 import { getStockStatus, getRefillQuantity } from '../utils/stockUtils';
+import { stockUnitLabel } from '../utils/medicineUnits';
 
 const border = {
   red: 'border-l-4 border-red',
@@ -343,7 +344,7 @@ export default function PharmacistView() {
                         {m.strength} · {m.frequencyPerDay}× daily · {m.dosePerIntake} per dose
                       </p>
                       <p className="mt-1 text-sm text-navy">
-                        Tablets left: <strong>{m.currentStock}</strong> · Suggested refill qty (30 days):{' '}
+                        Stock left: <strong>{m.currentStock}</strong> {stockUnitLabel(m)} · Suggested refill qty (30 days):{' '}
                         <strong>{refillQty}</strong>
                       </p>
                     </div>
