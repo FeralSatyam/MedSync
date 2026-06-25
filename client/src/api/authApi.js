@@ -48,3 +48,16 @@ export const verifyEmail = (email, otp) =>
 // Change Password - API call only (backend logic is in server)
 export const changePassword = (payload) =>
   axiosInstance.put('/auth/change-password', payload).then((r) => r.data);
+
+// ─── Account-wide dispensing PIN ───
+export const getDispensingPinStatus = () =>
+  axiosInstance.get('/auth/dispensing-pin').then((r) => r.data);
+
+export const setDispensingPin = (pin) =>
+  axiosInstance.post('/auth/dispensing-pin', { pin }).then((r) => r.data);
+
+export const changeDispensingPin = (currentPin, newPin) =>
+  axiosInstance.put('/auth/dispensing-pin', { currentPin, newPin }).then((r) => r.data);
+
+export const resetDispensingPin = (payload) =>
+  axiosInstance.post('/auth/dispensing-pin/reset', payload).then((r) => r.data);
