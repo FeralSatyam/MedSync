@@ -12,7 +12,10 @@ const PatientSchema = new mongoose.Schema(
       default: 'self',
     },
     allergies: { type: String, default: '' },
-    pharmacyPin: { type: String, required: true }, // stored as bcrypt hash
+    // Deprecated: the dispensing PIN now lives on the account owner (User) and is
+    // shared across all patients. Kept optional for backwards compatibility with
+    // patients created before the account-wide PIN was introduced.
+    pharmacyPin: { type: String, default: '' }, // legacy per-patient bcrypt hash
     qrToken: { type: String, unique: true, index: true }, // UUID v4
     tempOtp: { type: String, default: null },
     tempOtpExpires: { type: Date, default: null },

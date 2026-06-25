@@ -28,7 +28,7 @@ export const createPatient = async (req, res, next) => {
     if (!errors.isEmpty()) {
       return res.status(400).json({ message: 'Validation failed', errors: errors.array() });
     }
-    const { name, dateOfBirth, relation, allergies, pharmacyPin } = req.body;
+    const { name, dateOfBirth, relation, allergies } = req.body;
     const qrToken = uuidv4();
     const patient = await Patient.create({
       userId: req.user._id,
@@ -37,7 +37,6 @@ export const createPatient = async (req, res, next) => {
       relation,
       allergies: allergies || '',
       qrToken,
-      pharmacyPin: String(pharmacyPin),
     });
     const out = patient.toObject();
     delete out.pharmacyPin;

@@ -44,11 +44,6 @@ router.get('/qr/:qrToken', async (req, res) => {
 // All routes below this line require authentication
 router.use(protect);
 
-// Validation for pharmacy PIN
-const pinValidation = body('pharmacyPin')
-  .matches(/^\d{4}$/)
-  .withMessage('Pharmacy PIN must be exactly 4 digits');
-
 // Get all patients for the authenticated user
 router.get('/', getPatients);
 
@@ -64,7 +59,6 @@ router.post(
       .isIn(['self', 'mother', 'father', 'grandmother', 'grandfather', 'spouse', 'other'])
       .withMessage('Relation is invalid'),
     body('allergies').optional().isString(),
-    pinValidation,
   ],
   createPatient
 );
