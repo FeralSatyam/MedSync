@@ -455,7 +455,6 @@ export default function DashboardPage() {
     dateOfBirth: '',
     relation: 'self',
     allergies: '',
-    pharmacyPin: '',
   });
   const [isAddingProfile, setIsAddingProfile] = useState(false);
   const [addProfileErrors, setAddProfileErrors] = useState({});
@@ -547,7 +546,7 @@ export default function DashboardPage() {
 
   const handleAddMember = useCallback(() => {
     setAddProfileErrors({});
-    setAddProfileForm({ name: '', dateOfBirth: '', relation: 'self', allergies: '', pharmacyPin: '' });
+    setAddProfileForm({ name: '', dateOfBirth: '', relation: 'self', allergies: '' });
     setAddProfileOpen(true);
   }, []);
 
@@ -1040,12 +1039,6 @@ export default function DashboardPage() {
                 <label className="block text-sm font-medium text-navy mb-1">Allergies / Notes</label>
                 <textarea value={addProfileForm.allergies} onChange={(e) => setAddProfileForm({ ...addProfileForm, allergies: e.target.value })} placeholder="e.g., Allergic to penicillin" className="w-full rounded-xl border border-border bg-faint px-4 py-2.5 text-sm focus:outline-none focus:border-mint" rows={3} />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-navy mb-1">Pharmacy PIN (4-digit) *</label>
-                <input type="text" placeholder="Enter 4-digit PIN" maxLength={4} value={addProfileForm.pharmacyPin} onChange={(e) => setAddProfileForm({ ...addProfileForm, pharmacyPin: e.target.value.replace(/\D/g, '') })} className="w-full rounded-xl border border-border bg-faint px-4 py-2.5 text-sm focus:outline-none focus:border-mint" />
-                <p className="text-xs text-muted mt-1">This PIN will be hashed and used for pharmacy verification</p>
-                {addProfileErrors.pharmacyPin && <p className="text-xs text-red-500 mt-1">{addProfileErrors.pharmacyPin}</p>}
-              </div>
               <div className="flex gap-3 pt-2">
                 <button onClick={() => setAddProfileOpen(false)} className="flex-1 border border-border bg-white text-navy rounded-full py-2.5 text-sm font-semibold hover:bg-faint transition-colors">Cancel</button>
                 <button
@@ -1054,7 +1047,6 @@ export default function DashboardPage() {
                     const errors = {};
                     if (!addProfileForm.name.trim()) errors.name = 'Name is required';
                     if (!addProfileForm.relation) errors.relation = 'Relation is required';
-                    if (!/^\d{4}$/.test(addProfileForm.pharmacyPin)) errors.pharmacyPin = 'PIN must be exactly 4 digits';
 
                     if (addProfileForm.dateOfBirth) {
                       const d = new Date(addProfileForm.dateOfBirth);
@@ -1075,7 +1067,6 @@ export default function DashboardPage() {
                         dateOfBirth: addProfileForm.dateOfBirth || undefined,
                         relation: addProfileForm.relation,
                         allergies: addProfileForm.allergies || '',
-                        pharmacyPin: addProfileForm.pharmacyPin,
                       });
                       toast.success('Profile added successfully');
                       setAddProfileOpen(false);
