@@ -719,7 +719,6 @@ export default function ProfilePage() {
     toast.success('Password changed successfully');
     setShowChangePassword(false); setPasswordForm({ current: '', new: '', confirm: '' });
   };
-  const handleResetPassword = () => { toast.success('Password reset link sent to your email'); };
 
   const userInitials = (authUser?.name || 'U').split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
 
@@ -954,20 +953,6 @@ export default function ProfilePage() {
               <div className="flex items-center gap-3">
                 <Icons.Lock />
                 <span className="text-navy">Change Password</span>
-              </div>
-              <span className="text-muted text-sm">→</span>
-            </button>
-
-            <button
-              onClick={handleResetPassword}
-              className="w-full flex items-center justify-between p-3 rounded-lg bg-faint hover:bg-bg transition-colors cursor-pointer"
-            >
-              <div className="flex items-center gap-3">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                  <path d="M1 12C1 12 4 4 12 4C20 4 23 12 23 12C23 12 20 20 12 20C4 20 1 12 1 12Z" />
-                  <circle cx="12" cy="12" r="3" />
-                </svg>
-                <span className="text-navy">Reset Password</span>
               </div>
               <span className="text-muted text-sm">→</span>
             </button>
