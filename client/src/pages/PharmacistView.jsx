@@ -107,7 +107,7 @@ export default function PharmacistView() {
       return;
     }
     if (!/^\d{4}$/.test(pin)) {
-      toast.error('Enter the 4-digit pharmacy PIN');
+      toast.error("Enter the account's 4-digit dispensing PIN");
       return;
     }
 
@@ -382,7 +382,7 @@ export default function PharmacistView() {
           >
             <h3 className="text-lg font-semibold text-navy">Confirm dispensed</h3>
             <p className="mt-1 text-sm text-muted">
-              Enter the patient&apos;s 4-digit pharmacy PIN and quantities added to stock.
+              Enter the account&apos;s 4-digit dispensing PIN and quantities added to stock.
             </p>
             <div className="mt-4">
               <label className="mb-1 block text-sm font-medium text-navy">PIN</label>
