@@ -21,17 +21,6 @@ const Icons = {
       <circle cx="12" cy="13" r="4" stroke="currentColor" strokeWidth="1.5" fill="none"/>
     </svg>
   ),
-  Fingerprint: () => (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M12 2C8.5 2 5.5 4.5 5.5 8.5V12C5.5 12 5 14 5 15C5 18 7 20 10 20" stroke="currentColor" strokeWidth="1.5" fill="none"/>
-      <path d="M18.5 12V9.5C18.5 6 16 3.5 12 3.5" stroke="currentColor" strokeWidth="1.5" fill="none"/>
-      <path d="M19 18C19 20.5 16.5 22 14 22" stroke="currentColor" strokeWidth="1.5" fill="none"/>
-      <path d="M15 12V15C15 17 13.5 18.5 12 18.5" stroke="currentColor" strokeWidth="1.5" fill="none"/>
-      <path d="M8 12V14C8 15.5 7 17 6 17" stroke="currentColor" strokeWidth="1.5" fill="none"/>
-      <path d="M21 12V13C21 15 20 17 18.5 18" stroke="currentColor" strokeWidth="1.5" fill="none"/>
-      <circle cx="12" cy="12" r="1.5" fill="currentColor"/>
-    </svg>
-  ),
   Lock: () => (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
       <rect x="5" y="11" width="14" height="11" rx="2" stroke="currentColor" strokeWidth="1.5" fill="none"/>
@@ -515,7 +504,6 @@ export default function ProfilePage() {
   const [showPinModal, setShowPinModal] = useState(false);
   const [pinInput, setPinInput] = useState('');
   const [pinError, setPinError] = useState('');
-  const [biometricEnabled, setBiometricEnabled] = useState(false);
   const [showChangePassword, setShowChangePassword] = useState(false);
   const [passwordForm, setPasswordForm] = useState({ current: '', new: '', confirm: '' });
 
@@ -552,8 +540,6 @@ export default function ProfilePage() {
     }
     const proStatus = localStorage.getItem('medsync_pro_status');
     if (proStatus === 'active') setIsPro(true);
-    const bioStatus = localStorage.getItem('medsync_biometric');
-    if (bioStatus === 'enabled') setBiometricEnabled(true);
   }, [authUser]);
 
   const loadPatients = useCallback(async () => {
@@ -687,7 +673,6 @@ export default function ProfilePage() {
     logout();
     localStorage.removeItem('medsync-auth');
     localStorage.removeItem('medsync_pro_status');
-    localStorage.removeItem('medsync_biometric');
     toast.success('Logged out successfully');
     navigate('/login');
   };
@@ -701,17 +686,6 @@ export default function ProfilePage() {
     } else { setPinError('Invalid PIN. Please try again.'); }
   };
   const handleRemovePro = () => { localStorage.removeItem('medsync_pro_status'); setIsPro(false); toast.success('Pro subscription removed'); };
-  const toggleBiometric = () => {
-    if (!biometricEnabled) {
-      if (window.PublicKeyCredential) {
-        toast.success('Biometric authentication enabled (demo)');
-        localStorage.setItem('medsync_biometric', 'enabled'); setBiometricEnabled(true);
-      } else { toast.error('Biometric authentication not supported on this device'); }
-    } else {
-      localStorage.removeItem('medsync_biometric'); setBiometricEnabled(false);
-      toast.success('Biometric authentication disabled');
-    }
-  };
   const handleChangePassword = async () => {
     if (!passwordForm.current || !passwordForm.new || !passwordForm.confirm) { toast.error('Please fill all fields'); return; }
     if (passwordForm.new !== passwordForm.confirm) { toast.error('New passwords do not match'); return; }
@@ -955,19 +929,6 @@ export default function ProfilePage() {
                 <span className="text-navy">Change Password</span>
               </div>
               <span className="text-muted text-sm">→</span>
-            </button>
-
-            <button
-              onClick={toggleBiometric}
-              className="w-full flex items-center justify-between p-3 rounded-lg bg-faint hover:bg-bg transition-colors cursor-pointer"
-            >
-              <div className="flex items-center gap-3">
-                <Icons.Fingerprint />
-                <span className="text-navy">Biometric Login</span>
-              </div>
-              <div className={`w-10 h-6 rounded-full transition-colors ${biometricEnabled ? 'bg-mint' : 'bg-gray-300'}`}>
-                <div className={`w-5 h-5 rounded-full bg-white transform transition-transform mt-0.5 ${biometricEnabled ? 'translate-x-4' : 'translate-x-0.5'}`} />
-              </div>
             </button>
           </div>
         </div>
