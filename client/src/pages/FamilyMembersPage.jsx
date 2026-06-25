@@ -193,18 +193,16 @@ function AddMemberModal({ onClose, onAdd }) {
   const [relation, setRelation] = useState('self');
   const [dateOfBirth, setDateOfBirth] = useState('');
   const [allergies, setAllergies] = useState('');
-  const [pharmacyPin, setPharmacyPin] = useState('');
   const [saving, setSaving] = useState(false);
 
   const handleSubmit = async () => {
     if (!name.trim()) { toast.error('Name is required'); return; }
-    if (!pharmacyPin || pharmacyPin.length !== 4) { toast.error('Pharmacy PIN must be exactly 4 digits'); return; }
     const dobErr = validateDOB(dateOfBirth);
     if (dobErr) { toast.error(dobErr); return; }
 
     setSaving(true);
     try {
-      await onAdd({ name, relation, dateOfBirth, allergies, pharmacyPin });
+      await onAdd({ name, relation, dateOfBirth, allergies });
       onClose();
     } catch (error) {
       console.error('Error adding member:', error);
@@ -271,18 +269,6 @@ function AddMemberModal({ onClose, onAdd }) {
               rows={2}
               className="w-full rounded-xl border border-border bg-faint px-4 py-3 text-sm text-navy focus:outline-none focus:border-mint"
             />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-navy mb-1">Pharmacy PIN (4-digit) *</label>
-            <input
-              type="text"
-              maxLength={4}
-              value={pharmacyPin}
-              onChange={(e) => setPharmacyPin(e.target.value.replace(/\D/g, ''))}
-              className="w-full rounded-xl border border-border bg-faint px-4 py-3 text-sm text-navy focus:outline-none focus:border-mint"
-            />
-            <p className="text-xs text-muted mt-1">Required for pharmacy verification</p>
           </div>
 
           <div className="flex gap-3 pt-2">

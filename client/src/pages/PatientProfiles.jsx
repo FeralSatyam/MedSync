@@ -13,7 +13,6 @@ export default function PatientProfiles() {
     dateOfBirth: '',
     allergies: '',
     notes: '',
-    pharmacyPin: '',
   });
   const [saving, setSaving] = useState(false);
 
@@ -50,11 +49,6 @@ export default function PatientProfiles() {
       return;
     }
 
-    if (!/^\d{4}$/.test(form.pharmacyPin)) {
-      toast.error('Pharmacy PIN must be exactly 4 digits');
-      return;
-    }
-
     if (form.dateOfBirth) {
       const d = new Date(form.dateOfBirth);
       const today = new Date(); today.setHours(0, 0, 0, 0);
@@ -71,10 +65,9 @@ export default function PatientProfiles() {
         dateOfBirth: form.dateOfBirth || undefined,
         allergies: form.allergies,
         notes: form.notes,
-        pharmacyPin: form.pharmacyPin,
       });
       toast.success('Profile created');
-      setForm({ name: '', dateOfBirth: '', allergies: '', notes: '', pharmacyPin: '' });
+      setForm({ name: '', dateOfBirth: '', allergies: '', notes: '' });
       load();
     } catch (err) {
       console.error('Error:', err.response?.data);
@@ -124,18 +117,6 @@ export default function PatientProfiles() {
                 max={new Date().toISOString().split('T')[0]}
                 min={(() => { const d = new Date(); d.setFullYear(d.getFullYear() - 120); return d.toISOString().split('T')[0]; })()}
                 onChange={(e) => setForm((f) => ({ ...f, dateOfBirth: e.target.value }))}
-                className="w-full rounded-xl border border-border bg-faint px-4 py-3 text-sm text-navy focus:outline-none focus:border-mint"
-              />
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-medium text-navy">4-digit pharmacy PIN *</label>
-              <input
-                required
-                inputMode="numeric"
-                maxLength={4}
-                placeholder="e.g. 1234"
-                value={form.pharmacyPin}
-                onChange={(e) => setForm((f) => ({ ...f, pharmacyPin: e.target.value.replace(/\D/g, '').slice(0, 4) }))}
                 className="w-full rounded-xl border border-border bg-faint px-4 py-3 text-sm text-navy focus:outline-none focus:border-mint"
               />
             </div>
