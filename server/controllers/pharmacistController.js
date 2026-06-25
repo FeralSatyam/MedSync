@@ -1,5 +1,6 @@
 import Patient from '../models/Patient.js';
 import Medicine from '../models/Medicine.js';
+import User from '../models/User.js';
 import { validationResult } from 'express-validator';
 import { getStockStatus, getRefillQuantity } from '../utils/stockUtils.js';
 
@@ -102,7 +103,15 @@ export const dispense = async (req, res, next) => {
     }
 
     const { pin, items } = req.body;
-    const ok = await patient.verifyPin(pin);
+
+    // The dispensing PIN is owned by the account holder and shared across all
+    // of their patients, so it is verified against the patient's account owner.
+    const owner = await User.findById(patient.userId).select('+dispensingPin');
+    if (!owner || !owner.dispensingPin) {
+      return res.status(400).json({ message: 'The account owner has not set a dispensing PIN yet.' });
+    }
+
+    const ok = await owner.matchDispensingPin(pin);
     if (!ok) return res.status(401).json({ message: 'Invalid PIN' });
 
     if (!Array.isArray(items) || items.length === 0) {
